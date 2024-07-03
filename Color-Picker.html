@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Picker</title>
+    <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/128/4508/4508394.png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #282c34;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #363b45;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .color-input {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        #colorPicker {
+            margin-top: 1.5rem;
+            width: 85px;
+            height: 85px;
+        }
+        #hexInput {
+            background-color: #282c34;
+            color: #ffffff;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 5px;
+            width: 75px;
+            text-align: center;
+            font-size: 16px;
+        }
+        .color-display {
+            margin-bottom: 2rem;
+            color: #5a6272;
+        }
+        .color-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .color-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        h3 {
+            margin-bottom: 0.5rem;
+        }
+        #message {
+            position: fixed;
+            top: 5%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+        }
+        #randomPalette {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+        #randomPalette .color-box {
+            flex: 1;
+            margin: 0 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="color-input">
+            <input type="color" id="colorPicker" value="#282c34">
+        </div>
+        <div class="color-input">
+            <input type="text" id="hexInput" value="#282c34" maxlength="7">
+        </div>
+        <div class="color-display">
+            <h3>Shades and Tints</h3>
+            <div id="shadesAndTints" class="color-row"></div>
+        </div>
+        <div class="color-display">
+            <h3>Tones</h3>
+            <div id="tones" class="color-row"></div>
+        </div>
+        <div class="color-display">
+            <h3>Color Palette</h3>
+            <div id="randomPalette" class="color-row"></div>
+            <div id="randomPalette" class="color-row"></div>
+        </div>
+        
+    </div>
+    <div id="message"></div>
+
+    <script>
+        const colorPicker = document.getElementById('colorPicker');
+        const hexInput = document.getElementById('hexInput');
+        const shadesAndTints = document.getElementById('shadesAndTints');
+        const tones = document.getElementById('tones');
+        const randomPalette = document.getElementById('randomPalette');
+        const message = document.getElementById('message');
+
+        function updateColor(color) {
+            colorPicker.value = color;
+            hexInput.value = color;
+            updateVariations(color);
+            generateRandomPalette(color);
+        }
+
+        function updateVariations(color) {
+            const rgb = hexToRgb(color);
+            shadesAndTints.innerHTML = '';
+            tones.innerHTML = '';
+
+            for (let i = -5; i <= 5; i++) {
+                if (i !== 0) {
+                    const variation = i < 0 ? shadeColor(rgb, Math.abs(i) * 0.1) : tintColor(rgb, i * 0.1);
+                    shadesAndTints.innerHTML += `<div class="color-box" style="background-color: rgb(${variation.join(',')})" data-color="${rgbToHex(variation)}"></div>`;
+                } else {
+                    shadesAndTints.innerHTML += `<div class="color-box" style="background-color: ${color}" data-color="${color}"></div>`;
+                }
+            }
+
+            for (let i = 0; i <= 10; i++) {
+                const tone = toneColor(rgb, i * 0.1);
+                tones.innerHTML += `<div class="color-box" style="background-color: rgb(${tone.join(',')})" data-color="${rgbToHex(tone)}"></div>`;
+            }
+
+            addClickListeners();
+        }
+
+        function hexToRgb(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return [r, g, b];
+        }
+
+        function rgbToHex(rgb) {
+            return "#" + rgb.map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? "0" + hex : hex;
+            }).join('');
+        }
+
+        function shadeColor(rgb, percent) {
+            return rgb.map(c => Math.max(0, Math.floor(c * (1 - percent))));
+        }
+
+        function tintColor(rgb, percent) {
+            return rgb.map(c => Math.min(255, Math.floor(c + (255 - c) * percent)));
+        }
+
+        function toneColor(rgb, percent) {
+            const gray = (rgb[0] + rgb[1] + rgb[2]) / 3;
+            return rgb.map(c => Math.floor(c + (gray - c) * percent));
+        }
+
+        function addClickListeners() {
+            document.querySelectorAll('.color-box').forEach(box => {
+                box.addEventListener('click', (e) => {
+                    const color = e.target.dataset.color;
+                    navigator.clipboard.writeText(color);
+                    showMessage(`${color} Copied`);
+                });
+            });
+        }
+
+        function showMessage(text) {
+            message.textContent = text;
+            message.style.display = 'block';
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 2000);
+        }
+
+        function generateRandomPalette(baseColor) {
+            const baseHsl = rgbToHsl(hexToRgb(baseColor));
+            randomPalette.innerHTML = '';
+            
+            for (let i = 0; i < 8; i++) {
+                const hue = (baseHsl[0] + i * 30) % 360;
+                const saturation = 70 + Math.random() * 30;
+                const lightness = 40 + Math.random() * 20;
+                const rgb = hslToRgb(hue, saturation, lightness);
+                const hex = rgbToHex(rgb);
+                randomPalette.innerHTML += `<div class="color-box" style="background-color: ${hex}" data-color="${hex}"></div>`;
+            }
+            
+            addClickListeners();
+        }
+
+        function rgbToHsl(rgb) {
+            let r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+
+            return [h * 360, s * 100, l * 100];
+        }
+
+        function hslToRgb(h, s, l) {
+            h /= 360;
+            s /= 100;
+            l /= 100;
+            let r, g, b;
+
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+
+        colorPicker.addEventListener('input', (e) => updateColor(e.target.value));
+        hexInput.addEventListener('input', (e) => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                updateColor(e.target.value);
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                generateRandomPalette(colorPicker.value);
+            }
+        });
+
+        updateColor('#282c34');
+    </script>
+</body>
+</html>
