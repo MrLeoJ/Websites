@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter</title>
+    <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/128/1372/1372789.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #282c34;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #3a3f4b;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .converter {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        input {
+            background-color: #282c34;
+            border: none;
+            color: #ffffff;
+            padding: 0.5rem;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            width: 200px;
+        }
+        select {
+            background-color: #282c34;
+            border: none;
+            color: #ffffff;
+            padding: 0.5rem;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .result {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .swap-btn {
+            background-color: #61dafb;
+            border: none;
+            color: #282c34;
+            padding: 0.5rem 1rem;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .swap-btn:hover {
+            background-color: #4fa8d5;
+        }
+        .rates {
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+        .popup {
+            position: fixed;
+            top: 15%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #3a3f4b;
+            padding: 1rem 2rem;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="converter">
+            <input type="text" id="amount" placeholder="Enter amount">
+            <select id="from-currency">
+                <option value="GBP">GBP</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="JPY">JPY</option>
+            </select>
+            
+            <button class="swap-btn" id="swap-btn"><i class="fas fa-exchange-alt"></i></button>
+            <select id="to-currency">
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="JPY">JPY</option>
+            </select>
+        </div>
+        <div class="result" id="result"></div>
+        <div class="rates" id="rates"></div>
+    </div>
+    <div class="popup" id="popup"></div>
+
+    <script>
+        const fromCurrency = document.getElementById('from-currency');
+        const toCurrency = document.getElementById('to-currency');
+        const amount = document.getElementById('amount');
+        const result = document.getElementById('result');
+        const rates = document.getElementById('rates');
+        const popup = document.getElementById('popup');
+        const swapBtn = document.getElementById('swap-btn');
+
+        const API_KEY = '487c9278ce23ab3ee59448f3';
+        const API_URL = 'https://v6.exchangerate-api.com/v6/';
+
+        let exchangeRates = {};
+
+        const currencySymbols = {
+            USD: '$',
+            EUR: '€',
+            GBP: '£',
+            JPY: '¥'
+        };
+
+        async function fetchExchangeRates() {
+            try {
+                const response = await fetch(`${API_URL}${API_KEY}/latest/USD`);
+                const data = await response.json();
+                if (data.result === 'success') {
+                    exchangeRates = data.conversion_rates;
+                    showPopup('Exchange rates updated');
+                    convertCurrency();
+                } else {
+                    throw new Error('Failed to fetch exchange rates');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showPopup('Failed to update rates. Using last known rates.');
+            }
+        }
+
+        function convertCurrency() {
+            const from = fromCurrency.value;
+            const to = toCurrency.value;
+            const value = parseFloat(amount.value.replace(/[^\d.]/g, ''));
+
+            if (isNaN(value) || Object.keys(exchangeRates).length === 0) {
+                result.textContent = '';
+                return;
+            }
+
+            const rate = exchangeRates[to] / exchangeRates[from];
+            const convertedAmount = value * rate;
+            result.textContent = `${currencySymbols[to]}${convertedAmount.toFixed(2)}`;
+            updateRates(rate);
+        }
+
+        function updateAmountWithSymbol() {
+            const symbol = currencySymbols[fromCurrency.value];
+            let value = amount.value.replace(/[^\d.]/g, '');
+            amount.value = `${symbol}${value}`;
+        }
+
+        function updateRates(rate) {
+            const from = fromCurrency.value;
+            const to = toCurrency.value;
+            rates.textContent = `1 ${from} = ${rate.toFixed(4)} ${to} | 1 ${to} = ${(1/rate).toFixed(4)} ${from}`;
+        }
+
+        function showPopup(message) {
+            popup.textContent = message;
+            popup.style.display = 'block';
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 3000);
+        }
+
+        function swapCurrencies() {
+            const temp = fromCurrency.value;
+            fromCurrency.value = toCurrency.value;
+            toCurrency.value = temp;
+            updateAmountWithSymbol();
+            convertCurrency();
+            showPopup('Currencies swapped');
+        }
+
+        fromCurrency.addEventListener('change', () => {
+            updateAmountWithSymbol();
+            convertCurrency();
+            showPopup(`Changed from currency to ${fromCurrency.value}`);
+        });
+
+        toCurrency.addEventListener('change', () => {
+            convertCurrency();
+            showPopup(`Changed to currency to ${toCurrency.value}`);
+        });
+
+        amount.addEventListener('input', () => {
+            updateAmountWithSymbol();
+            convertCurrency();
+        });
+
+        swapBtn.addEventListener('click', swapCurrencies);
+
+        // Initialize
+        fetchExchangeRates();
+        setInterval(fetchExchangeRates, 3600000); // Update rates every hour
+    </script>
+</body>
+</html>
