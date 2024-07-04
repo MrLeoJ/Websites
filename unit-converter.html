@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #282c34;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #363b44;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .converter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        input, select {
+            background-color: #282c34;
+            color: #ffffff;
+            border: 1px solid #4a4f57;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        input {
+            width: 150px;
+        }
+        select {
+            width: 175px;
+        }
+        #swapBtn {
+            background-color: #61dafb;
+            color: #282c34;
+            border: none;
+            border-radius: 5px;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #swapBtn:hover {
+            background-color: #4fa8d5;
+        }
+        #result {
+            font-size: 25px;
+            font-weight: bolder;
+            text-align: center;
+        }
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #363b44;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="converter">
+            <input type="text" id="fromValue" placeholder="Enter amount">
+            <select id="fromUnit"></select>
+            <button id="swapBtn">⇄</button>
+            <select id="toUnit"></select>
+        </div>
+    </div>
+    <div id="result"></div>
+    <div class="popup" id="popup"></div>
+
+    <script>
+        const units = {
+            distance: {
+                km: 1000,
+                m: 1,
+                cm: 0.01,
+                mm: 0.001,
+                mi: 1609.34,
+                yd: 0.9144,
+                ft: 0.3048,
+                in: 0.0254
+            },
+            weight: {
+                kg: 1,
+                g: 0.001,
+                mg: 0.000001,
+                lb: 0.453592,
+                oz: 0.0283495,
+                st: 6.35029
+            }
+        };
+
+        const fromUnit = document.getElementById('fromUnit');
+        const toUnit = document.getElementById('toUnit');
+        const fromValue = document.getElementById('fromValue');
+        const result = document.getElementById('result');
+        const popup = document.getElementById('popup');
+        const swapBtn = document.getElementById('swapBtn');
+
+        function populateSelects() {
+            for (const category in units) {
+                for (const unit in units[category]) {
+                    const option1 = new Option(`${unit} (${category})`, unit);
+                    const option2 = new Option(`${unit} (${category})`, unit);
+                    fromUnit.add(option1);
+                    toUnit.add(option2);
+                }
+            }
+        }
+
+        function showPopup(message) {
+            popup.textContent = message;
+            popup.style.display = 'block';
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 3000);
+        }
+
+        function convert() {
+            const from = fromUnit.value;
+            const to = toUnit.value;
+            const value = parseFloat(fromValue.value);
+
+            if (isNaN(value)) {
+                result.textContent = 'Please enter a valid number';
+                return;
+            }
+
+            let convertedValue;
+            for (const category in units) {
+                if (from in units[category] && to in units[category]) {
+                    convertedValue = value * (units[category][from] / units[category][to]);
+                    break;
+                }
+            }
+
+            if (convertedValue === undefined) {
+                result.textContent = 'Cannot convert between different categories';
+            } else {
+                result.textContent = `${convertedValue.toFixed(4)} ${to}`;
+            }
+        }
+
+        function swapUnits() {
+            const temp = fromUnit.value;
+            fromUnit.value = toUnit.value;
+            toUnit.value = temp;
+            convert();
+        }
+
+        populateSelects();
+        fromUnit.addEventListener('change', convert);
+        toUnit.addEventListener('change', convert);
+        fromValue.addEventListener('input', convert);
+        swapBtn.addEventListener('click', swapUnits);
+    </script>
+</body>
+</html>
