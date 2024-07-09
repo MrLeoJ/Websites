@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #282c34;
+            color: #FFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #3a3f4b;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        input, button {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .GenerateButton{
+            width: 100%;
+            height: 4rem;
+        }
+
+        input {
+            flex-grow: 1;
+            background-color: #282c34;
+            color: #FFF;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #61dafb;
+            box-shadow: 0 0 5px #61dafb;
+        }
+
+        button {
+            background-color: #61dafb;
+            color: #282c34;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #4fa8c9;
+        }
+
+        .history {
+            margin-top: 2rem;
+        }
+
+        .history h2 {
+            margin-bottom: 1rem;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #282c34;
+            padding: 0.5rem;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-item button {
+            margin-left: 0.5rem;
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #61dafb;
+            color: #282c34;
+            padding: 1rem 2rem;
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .popup.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>URL Shortener</h1>
+        <div class="input-group">
+            <input type="url" id="longUrl" placeholder="Enter Long URL" required>
+        </div>
+        <div class="input-group">
+            <input type="text" id="title" placeholder="Title (optional)">
+            <input type="text" id="customUrl" placeholder="Custom URL (optional)">
+        </div>
+        <button id="generateBtn" class="GenerateButton">Generate</button>
+        <div class="history">
+            <h2>History</h2>
+            <div id="historyList"></div>
+        </div>
+    </div>
+    <div class="popup" id="popup"></div>
+
+    <script>
+        const longUrlInput = document.getElementById('longUrl');
+        const titleInput = document.getElementById('title');
+        const customUrlInput = document.getElementById('customUrl');
+        const generateBtn = document.getElementById('generateBtn');
+        const historyList = document.getElementById('historyList');
+        const popup = document.getElementById('popup');
+
+        let history = JSON.parse(localStorage.getItem('urlHistory')) || [];
+
+        function showPopup(message) {
+            popup.textContent = message;
+            popup.classList.add('show');
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, 2000);
+        }
+
+        function addToHistory(longUrl, shortUrl, title) {
+            history.unshift({ longUrl, shortUrl, title });
+            localStorage.setItem('urlHistory', JSON.stringify(history));
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            historyList.innerHTML = '';
+            history.forEach((item, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.classList.add('history-item');
+                historyItem.innerHTML = `
+                    <span><b>${item.title || 'Untitled'}</b><br> ${item.shortUrl}</span>
+                    <div>
+                        <button onclick="copyToClipboard('${item.shortUrl}', ${index})">Copy</button>
+                        <button onclick="openUrl('${item.shortUrl}')">Open</button>
+                    </div>
+                `;
+                historyList.appendChild(historyItem);
+            });
+        }
+
+        function copyToClipboard(text, index) {
+            navigator.clipboard.writeText(text).then(() => {
+                showPopup('URL Copied');
+            });
+        }
+
+        function openUrl(url) {
+            window.open(url, '_blank');
+        }
+
+        generateBtn.addEventListener('click', () => {
+            const longUrl = longUrlInput.value;
+            const title = titleInput.value;
+            const customUrl = customUrlInput.value;
+
+            if (!longUrl) {
+                showPopup('Please enter a URL');
+                return;
+            }
+
+            let apiUrl = `https://v.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}`;
+            if (customUrl) {
+                apiUrl += `&shorturl=${encodeURIComponent(customUrl)}`;
+            }
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.shorturl) {
+                        navigator.clipboard.writeText(data.shorturl).then(() => {
+                            showPopup('URL Shortened');
+                            addToHistory(longUrl, data.shorturl, title);
+                            longUrlInput.value = '';
+                            titleInput.value = '';
+                            customUrlInput.value = '';
+                        });
+                    } else {
+                        showPopup(`Error: ${data.errormessage}`);
+                    }
+                })
+                .catch(error => {
+                    showPopup('An error occurred. Please try again.');
+                    console.error('Error:', error);
+                });
+        });
+
+        updateHistoryDisplay();
+    </script>
+</body>
+</html>
