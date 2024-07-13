@@ -38,16 +38,37 @@
             margin-bottom: 1.5rem;
         }
 
-        /* Radio buttons */
-        .radio-group {
+        /* Tab styles */
+        .tabs {
             display: flex;
             justify-content: center;
             margin-bottom: 1.5rem;
+ 
         }
 
-        .radio-group label {
-            margin: 0 1rem;
+        .tab {
+            padding: 0.5rem 1rem;
             cursor: pointer;
+            border: 1px solid #4a90e2;
+            background-color: transparent;
+            color: #FFF;
+            transition: background-color 0.3s, color 0.3s;
+            width: 100%;
+        }
+
+        .tab:first-child {
+            border-top-left-radius: 5px;
+            border-bottom-left-radius: 5px;
+        }
+
+        .tab:last-child {
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+
+        .tab.active {
+            background-color: #4a90e2;
+            color: #FFF;
         }
 
         /* Input and button styles */
@@ -163,10 +184,22 @@
             border-radius: 10px;
             width: 90%;
             max-width: 400px;
+            position: relative;
         }
 
         .popup h2 {
             margin-bottom: 1rem;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #FFF;
+            font-size: 1.5rem;
+            cursor: pointer;
         }
 
         /* Responsive design */
@@ -180,13 +213,10 @@
 <body>
     <div class="container">
         <h1>Cipher</h1>
-        <div class="radio-group">
-            <label>
-                <input type="radio" name="mode" value="encrypt" checked> Encryption
-            </label>
-            <label>
-                <input type="radio" name="mode" value="decrypt"> Decryption
-            </label>
+        <div class="tabs">
+            <button class="tab active" data-mode="encrypt">Encryption</button>
+            <button class="tab" data-mode="decrypt">Decryption</button>
+            <button class="tab" data-mode="random">Key Gen</button>
         </div>
         <div class="input-group">
             <div class="input-wrapper">
@@ -202,11 +232,15 @@
 
     <div id="keyPopup" class="popup-overlay" style="display: none;">
         <div class="popup">
+            <button class="close-popup" aria-label="Close popup">&times;</button>
             <h2>Enter Encryption Key</h2>
             <div class="input-group">
                 <div class="input-wrapper">
                     <i class="fas fa-key"></i>
                     <input type="password" id="key" placeholder="Enter encryption key..." aria-label="Enter encryption key" data-tooltip="Enter a secret key for encryption/decryption">
+                    <button id="toggleKey" aria-label="Toggle key visibility">
+                        <i class="fas fa-eye"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -215,31 +249,55 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script>
         // DOM elements
-        const modeRadios = document.getElementsByName('mode');
+        const tabs = document.querySelectorAll('.tab');
         const input = document.getElementById('input');
         const submitBtn = document.getElementById('submit');
         const result = document.getElementById('result');
         const keyPopup = document.getElementById('keyPopup');
         const keyInput = document.getElementById('key');
+        const toggleKeyBtn = document.getElementById('toggleKey');
+        const closePopupBtn = document.querySelector('.close-popup');
+
+        let currentMode = 'encrypt';
 
         // Event listeners
-        submitBtn.addEventListener('click', showKeyPopup);
+        tabs.forEach(tab => tab.addEventListener('click', switchTab));
+        submitBtn.addEventListener('click', handleSubmit);
         input.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                showKeyPopup();
-            }
-        });
-        keyInput.addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
                 handleSubmit();
             }
         });
-        result.addEventListener('click', copyToClipboard);
-
-        // Add event listeners to radio buttons
-        modeRadios.forEach(radio => {
-            radio.addEventListener('change', resetInputs);
+        keyInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                processInput();
+            }
         });
+        result.addEventListener('click', copyToClipboard);
+        toggleKeyBtn.addEventListener('click', toggleKeyVisibility);
+        closePopupBtn.addEventListener('click', closeKeyPopup);
+
+        function switchTab(event) {
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            currentMode = event.target.dataset.mode;
+            resetInputs();
+            updatePlaceholder();
+        }
+
+        function updatePlaceholder() {
+            switch(currentMode) {
+                case 'encrypt':
+                    input.placeholder = 'Enter text to encrypt...';
+                    break;
+                case 'decrypt':
+                    input.placeholder = 'Enter text to decrypt...';
+                    break;
+                case 'random':
+                    input.placeholder = 'Enter number of words...';
+                    break;
+            }
+        }
 
         function resetInputs() {
             input.value = '';
@@ -247,18 +305,21 @@
             result.textContent = '';
         }
 
-        function showKeyPopup() {
+        function handleSubmit() {
             const text = input.value.trim();
             if (!text) {
                 showMessage('Please enter some text.');
                 return;
             }
-            keyPopup.style.display = 'flex';
-            keyInput.focus();
+            if (currentMode === 'random') {
+                generateRandomWords(parseInt(text));
+            } else {
+                keyPopup.style.display = 'flex';
+                keyInput.focus();
+            }
         }
 
-        // Main function to handle encryption/decryption
-        function handleSubmit() {
+        function processInput() {
             const text = input.value.trim();
             const key = keyInput.value.trim();
             if (!key) {
@@ -266,26 +327,21 @@
                 return;
             }
 
-            const mode = document.querySelector('input[name="mode"]:checked').value;
             let processedText;
-
-            if (mode === 'encrypt') {
+            if (currentMode === 'encrypt') {
                 processedText = encrypt(text, key);
             } else {
                 processedText = decrypt(text, key);
             }
 
             displayResult(processedText);
-            keyPopup.style.display = 'none';
-            keyInput.value = '';
+            closeKeyPopup();
         }
 
-        // Secure encryption function using AES
         function encrypt(text, key) {
             return CryptoJS.AES.encrypt(text, key).toString();
         }
 
-        // Secure decryption function using AES
         function decrypt(text, key) {
             try {
                 const bytes = CryptoJS.AES.decrypt(text, key);
@@ -296,21 +352,41 @@
             }
         }
 
-        // Display the result
+        function generateRandomWords(count) {
+            const words = ['abacus', 'apple', 'ball', 'banana', 'book', 'box', 'bottle', 'brush', 'camera', 'candle', 'car', 'card', 'carpet', 'chair', 'clock', 'coat', 'coin', 'comb', 'computer', 'cup', 'desk', 'door', 'drawer', 'envelope', 'eraser', 'fan', 'flower', 'fork', 'frame', 'fridge', 'glove', 'hammer', 'hat', 'headphone', 'helmet', 'hose', 'ink', 'jar', 'jug', 'key', 'kettle', 'knife', 'lamp', 'lantern', 'lock', 'map', 'mirror', 'mop', 'mouse', 'mug', 'nail', 'notebook', 'oven', 'paint', 'paper', 'pen', 'pencil', 'phone', 'pillow', 'pin', 'plate', 'plug', 'pot', 'purse', 'radio', 'rake', 'remote', 'ring', 'rope', 'ruler', 'saw', 'scarf', 'scissors', 'screw', 'shelf', 'shoe', 'shovel', 'soap', 'sock', 'spade', 'spoon', 'stapler', 'stick', 'stool', 'string', 'table', 'tap', 'tape', 'thermos', 'tie', 'toaster', 'towel', 'tray', 'umbrella', 'vase', 'wallet', 'watch', 'wheel', 'whistle', 'window', 'wire', 'wrench', 'bag', 'basket', 'bean', 'bed', 'bell', 'biscuit', 'blanket', 'board', 'bread', 'brick', 'bucket', 'button', 'can', 'cap', 'carrot', 'cart', 'cat', 'chain', 'chest', 'cloth', 'cloud', 'coin', 'cupboard', 'cushion', 'dog', 'doll', 'dot', 'drill', 'drum', 'dust', 'egg', 'fan', 'feather', 'file', 'fish', 'flag', 'glass', 'guitar', 'hair', 'hanger', 'hat', 'honey', 'horn', 'hose', 'iron', 'jeans', 'kettle', 'leaf', 'lid', 'light', 'mat', 'milk', 'mop', 'nail', 'needle', 'net', 'nut', 'oil', 'onion', 'oven', 'pad', 'paint', 'pan', 'pants', 'paper', 'paste', 'pencil', 'pepper', 'piano', 'pipe', 'plant', 'plate', 'plug', 'pocket', 'puzzle', 'rack', 'radio', 'rake', 'razor', 'rice', 'ring', 'rock', 'roof', 'rug', 'salt', 'sand', 'saw', 'scale', 'scarf', 'scissors', 'screw', 'seat', 'seed', 'shirt', 'shoe', 'shovel', 'soap', 'sock', 'soup', 'spade', 'spoon', 'stamp', 'stick', 'stone', 'stool', 'string', 'sugar', 'tape', 'teapot', 'tie', 'tile', 'towel', 'toy', 'tray', 'tub', 'twig', 'vest', 'vial', 'wall', 'wax', 'whistle', 'wire', 'worm', 'wrench', 'yarn', 'zinc', 'bag', 'bat', 'belt', 'blouse', 'book', 'box', 'brush', 'bucket', 'cap', 'cat', 'chain', 'chair', 'chisel', 'clock', 'clothes', 'cloud', 'coat', 'coin', 'comb', 'cord', 'curtain', 'cushion', 'dog', 'door', 'drawer', 'drill', 'dust', 'fan', 'feather', 'file', 'fish', 'fork', 'frame', 'glass', 'glove', 'guitar', 'hammer', 'hanger', 'hat', 'horn', 'hose', 'iron', 'jar', 'jeans', 'jug', 'key', 'lamp', 'leaf', 'lid', 'lock', 'mat', 'mop', 'nail', 'needle', 'net', 'nut', 'oil', 'oven', 'pad', 'paint', 'pan', 'pants', 'paper', 'paste', 'pencil', 'pepper', 'piano', 'pipe', 'plant', 'plate', 'plug', 'pocket', 'puzzle', 'rack', 'radio', 'rake', 'razor', 'rice', 'ring', 'rock', 'roof', 'rug', 'salt', 'sand', 'saw', 'scale', 'scarf', 'scissors', 'screw', 'seat', 'seed', 'shirt', 'shoe', 'shovel', 'soap', 'sock', 'soup', 'spade', 'spoon', 'stamp', 'stick', 'stone', 'stool', 'string', 'sugar', 'tape', 'teapot', 'tie', 'tile', 'towel', 'toy', 'tray', 'tub', 'twig', 'vest', 'vial', 'wall', 'wax', 'whistle', 'wire', 'worm', 'wrench', 'yarn', 'zinc', 'bag', 'bat', 'belt', 'blouse', 'book', 'box', 'brush', 'bucket', 'cap', 'cat', 'chain', 'chair', 'chisel', 'clock', 'clothes', 'cloud', 'coat', 'coin', 'comb', 'cord', 'curtain', 'cushion', 'dog', 'door', 'drawer', 'drill', 'dust', 'fan', 'feather', 'file', 'fish', 'fork', 'frame', 'glass', 'glove', 'guitar', 'hammer', 'hanger', 'hat', 'horn', 'hose', 'iron', 'jar', 'jeans', 'jug', 'key', 'lamp', 'leaf', 'lid', 'lock', 'mat', 'mop', 'nail', 'needle', 'net', 'nut', 'oil', 'oven', 'pad', 'paint', 'pan', 'pants', 'paper', 'paste', 'pencil', 'pepper', 'piano', 'pipe', 'plant', 'plate', 'plug', 'pocket', 'puzzle', 'rack', 'radio', 'rake', 'razor', 'rice', 'ring', 'rock', 'roof', 'rug', 'salt', 'sand', 'saw', 'scale', 'scarf', 'scissors', 'screw', 'seat', 'seed', 'shirt', 'shoe', 'shovel', 'soap', 'sock', 'soup', 'spade', 'spoon', 'stamp', 'stick', 'stone', 'stool', 'string', 'sugar', 'tape', 'teapot', 'tie', 'tile', 'towel', 'toy', 'tray', 'tub', 'twig', 'vest', 'vial', 'wall', 'wax', 'whistle', 'wire', 'worm', 'wrench', 'yarn', 'zinc', 'bag', 'bat', 'belt', 'blouse', 'book', 'box', 'brush', 'bucket', 'cap', 'cat', 'chain', 'chair', 'chisel', 'clock', 'clothes', 'cloud', 'coat', 'coin', 'comb', 'cord', 'curtain', 'cushion', 'dog', 'door', 'drawer', 'drill', 'dust', 'fan', 'feather', 'file', 'fish', 'fork', 'frame', 'glass', 'glove', 'guitar', 'hammer', 'hanger', 'hat', 'horn', 'hose', 'iron', 'jar', 'jeans', 'jug', 'key', 'lamp', 'leaf', 'lid', 'lock', 'mat', 'mop', 'nail', 'needle', 'net', 'nut', 'oil', 'oven', 'pad', 'paint', 'pan', 'pants', 'paper', 'paste', 'pencil', 'pepper', 'piano', 'pipe', 'plant', 'plate', 'plug', 'pocket', 'puzzle', 'rack', 'radio', 'rake', 'razor', 'rice', 'ring', 'rock', 'roof', 'rug', 'salt', 'sand', 'saw', 'scale', 'scarf', 'scissors', 'screw', 'seat', 'seed', 'shirt', 'shoe', 'shovel', 'soap', 'sock', 'soup', 'spade', 'spoon', 'stamp', 'stick', 'stone', 'stool', 'string', 'sugar', 'tape', 'teapot', 'tie', 'tile', 'towel', 'toy', 'tray', 'tub', 'twig', 'vest', 'vial', 'wall', 'wax', 'whistle', 'wire', 'worm', 'wrench', 'yarn', 'zinc', 'bag', 'bat', 'belt', 'blouse', 'book', 'box', 'brush', 'bucket', 'cap', 'cat', 'chain', 'chair', 'chisel', 'clock', 'clothes', 'cloud', 'coat', 'coin', 'comb', 'cord', 'curtain', 'cushion', 'dog', 'door', 'drawer', 'drill', 'dust', 'fan', 'feather', 'file', 'fish', 'fork', 'frame', 'glass', 'glove', 'guitar', 'hammer', 'hanger', 'hat', 'horn', 'hose', 'iron', 'jar', 'jeans', 'jug', 'key', 'lamp', 'leaf', 'lid', 'lock', 'mat', 'mop', 'nail', 'needle', 'net', 'nut', 'oil', 'oven', 'pad', 'paint', 'pan', 'pants', 'paper', 'paste', 'pencil', 'pepper', 'piano', 'pipe', 'plant', 'plate', 'plug', 'pocket', 'puzzle', 'rack', 'radio', 'rake', 'razor', 'rice', 'ring', 'rock', 'roof', 'rug', 'salt', 'sand', 'saw', 'scale', 'scarf', 'scissors', 'screw', 'seat', 'seed', 'shirt', 'shoe', 'shovel', 'soap', 'sock', 'soup', 'spade', 'spoon', 'stamp', 'stick', 'stone', 'stool', 'string', 'sugar', 'tape', 'teapot', 'tie', 'tile', 'towel', 'toy', 'tray', 'tub', 'twig', 'vest', 'vial', 'wall', 'wax', 'whistle', 'wire', 'worm', 'wrench', 'yarn', 'zinc', 'bag', 'bat', 'belt', 'blouse', 'book', 'box', 'brush', 'bucket', 'cap', 'cat', 'chain', 'chair', 'chisel', 'clock', 'clothes', 'cloud', 'coat', 'coin', 'comb', 'cord', 'curtain', 'cushion', 'dog', 'door', 'drawer', 'drill', 'dust', 'fan', 'feather', 'file', 'fish', 'fork', 'frame', 'glass', 'glove', 'guitar', 'hammer', 'hanger', 'hat', 'horn', 'hose', 'iron', 'jar', 'jeans', 'jug', 'key', 'lamp', 'leaf', 'lid', 'lock', 'mat', 'mop', 'nail', 'needle', 'net', 'nut', 'oil', 'oven', 'pad', 'paint', 'pan', 'pants', 'paper', 'paste', 'pencil', 'pepper', 'piano', 'pipe', 'plant', 'plate', 'plug', 'pocket', 'puzzle', 'rack', 'radio', 'rake', 'razor', 'rice', 'ring', 'rock', 'roof', 'rug', 'salt', 'sand', 'saw', 'scale', 'scarf', 'scissors', 'screw', 'seat', 'seed', 'shirt', 'shoe', 'shovel', 'soap', 'sock', 'soup', 'spade', 'spoon', 'stamp', 'stick', 'stone', 'stool', 'string', 'sugar', 'tape', 'teapot', 'tie', 'tile', 'towel', 'toy', 'tray', 'tub', 'twig', 'vest', 'vial', 'wall', 'wax', 'whistle', 'wire', 'worm', 'wrench', 'yarn', 'zinc'];
+            let randomWords = [];
+            for (let i = 0; i < count; i++) {
+                const randomIndex = Math.floor(Math.random() * words.length);
+                randomWords.push(words[randomIndex]);
+            }
+            displayResult(randomWords.join(' '));
+        }
+
         function displayResult(text) {
             result.textContent = text;
             result.style.display = 'block';
             result.classList.add('fade-in');
         }
 
-        // Copy result to clipboard
         function copyToClipboard() {
             navigator.clipboard.writeText(result.textContent)
                 .then(() => showMessage('Copied to clipboard!'))
                 .catch(() => showMessage('Failed to copy. Please try again.'));
         }
 
-        // Show message as a pop-up
+        function toggleKeyVisibility() {
+            const type = keyInput.type === 'password' ? 'text' : 'password';
+            keyInput.type = type;
+            toggleKeyBtn.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        }
+
+        function closeKeyPopup() {
+            keyPopup.style.display = 'none';
+            keyInput.value = '';
+            keyInput.type = 'password';
+            toggleKeyBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        }
+
         function showMessage(msg) {
             const popup = document.createElement('div');
             popup.textContent = msg;
@@ -330,6 +406,9 @@
                 popup.remove();
             }, 3000);
         }
+
+        // Initialize
+        updatePlaceholder();
     </script>
 </body>
 </html>
