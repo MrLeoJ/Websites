@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cipher</title>
+    <link rel="icon" type="image/x-icon" href="https://i.postimg.cc/W4JjxD7G/Cipher.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #282c34;
+            color: #FFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #3a3f4b;
+            border-radius: 10px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Radio buttons */
+        .radio-group {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .radio-group label {
+            margin: 0 1rem;
+            cursor: pointer;
+        }
+
+        /* Input and button styles */
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 0.75rem;
+            color: #FFF;
+            z-index: 1;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            padding-left: 2.5rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #282c34;
+            color: #FFF;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #4a90e2;
+        }
+
+        .input-group button {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #FFF;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        /* Result styles */
+        .result {
+            background-color: #282c34;
+            border-radius: 5px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            word-break: break-all;
+            cursor: pointer;
+        }
+
+        /* Tooltip styles */
+        [data-tooltip] {
+            position: relative;
+        }
+
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4a90e2;
+            color: #FFF;
+            padding: 0.5rem;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        [data-tooltip]:hover::after {
+            opacity: 1;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        /* Pop-up styles */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup {
+            background-color: #3a3f4b;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .popup h2 {
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .container, .popup {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cipher</h1>
+        <div class="radio-group">
+            <label>
+                <input type="radio" name="mode" value="encrypt" checked> Encryption
+            </label>
+            <label>
+                <input type="radio" name="mode" value="decrypt"> Decryption
+            </label>
+        </div>
+        <div class="input-group">
+            <div class="input-wrapper">
+                <i class="fas fa-lock"></i>
+                <input type="text" id="input" placeholder="Enter text..." aria-label="Enter text to encrypt or decrypt" data-tooltip="Enter text to encrypt or decrypt">
+            </div>
+            <button id="submit" aria-label="Submit" data-tooltip="Submit">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <div id="keyPopup" class="popup-overlay" style="display: none;">
+        <div class="popup">
+            <h2>Enter Encryption Key</h2>
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <i class="fas fa-key"></i>
+                    <input type="password" id="key" placeholder="Enter encryption key..." aria-label="Enter encryption key" data-tooltip="Enter a secret key for encryption/decryption">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        // DOM elements
+        const modeRadios = document.getElementsByName('mode');
+        const input = document.getElementById('input');
+        const submitBtn = document.getElementById('submit');
+        const result = document.getElementById('result');
+        const keyPopup = document.getElementById('keyPopup');
+        const keyInput = document.getElementById('key');
+
+        // Event listeners
+        submitBtn.addEventListener('click', showKeyPopup);
+        input.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                showKeyPopup();
+            }
+        });
+        keyInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                handleSubmit();
+            }
+        });
+        result.addEventListener('click', copyToClipboard);
+
+        // Add event listeners to radio buttons
+        modeRadios.forEach(radio => {
+            radio.addEventListener('change', resetInputs);
+        });
+
+        function resetInputs() {
+            input.value = '';
+            result.style.display = 'none';
+            result.textContent = '';
+        }
+
+        function showKeyPopup() {
+            const text = input.value.trim();
+            if (!text) {
+                showMessage('Please enter some text.');
+                return;
+            }
+            keyPopup.style.display = 'flex';
+            keyInput.focus();
+        }
+
+        // Main function to handle encryption/decryption
+        function handleSubmit() {
+            const text = input.value.trim();
+            const key = keyInput.value.trim();
+            if (!key) {
+                showMessage('Please enter an encryption key.');
+                return;
+            }
+
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+            let processedText;
+
+            if (mode === 'encrypt') {
+                processedText = encrypt(text, key);
+            } else {
+                processedText = decrypt(text, key);
+            }
+
+            displayResult(processedText);
+            keyPopup.style.display = 'none';
+            keyInput.value = '';
+        }
+
+        // Secure encryption function using AES
+        function encrypt(text, key) {
+            return CryptoJS.AES.encrypt(text, key).toString();
+        }
+
+        // Secure decryption function using AES
+        function decrypt(text, key) {
+            try {
+                const bytes = CryptoJS.AES.decrypt(text, key);
+                return bytes.toString(CryptoJS.enc.Utf8);
+            } catch (e) {
+                showMessage('Invalid encrypted text or key. Please try again.');
+                return '';
+            }
+        }
+
+        // Display the result
+        function displayResult(text) {
+            result.textContent = text;
+            result.style.display = 'block';
+            result.classList.add('fade-in');
+        }
+
+        // Copy result to clipboard
+        function copyToClipboard() {
+            navigator.clipboard.writeText(result.textContent)
+                .then(() => showMessage('Copied to clipboard!'))
+                .catch(() => showMessage('Failed to copy. Please try again.'));
+        }
+
+        // Show message as a pop-up
+        function showMessage(msg) {
+            const popup = document.createElement('div');
+            popup.textContent = msg;
+            popup.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: #4a90e2;
+                color: #FFF;
+                padding: 10px 20px;
+                border-radius: 5px;
+                z-index: 1000;
+            `;
+            document.body.appendChild(popup);
+            setTimeout(() => {
+                popup.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
