@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Pronunciation</title>
+    <link rel="icon" type="image/x-icon" href="https://i.postimg.cc/MX2R15Qr/Word-Pronunciation.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #282c34;
+            color: #FFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #3a3f4b;
+            border-radius: 10px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4a4f5c;
+            color: #FFF;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #61dafb;
+        }
+
+        input[type="text"]::placeholder {
+            color: #a0a5b1;
+        }
+
+        .input-group .fa-microphone {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0a5b1;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .input-group .fa-microphone:hover {
+            color: #FFF;
+        }
+
+        .result {
+            background-color: #4a4f5c;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .word {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .pronunciation {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .pronunciation .fa-volume-up {
+            margin-right: 10px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .pronunciation .fa-volume-up:hover {
+            color: #61dafb;
+        }
+
+        .definition-box {
+            background-color: #4a4f5c;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .definition-box.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .definition-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .definition-content {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        [data-tooltip] {
+            position: relative;
+            cursor: text;
+        }
+
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #282c34;
+            color: #FFF;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 14px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        [data-tooltip]:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4a4f5c;
+            color: #FFF;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+        }
+
+        .popup.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .word {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Word Pronunciation</h1>
+        <div class="input-group">
+            <input type="text" id="word-input" placeholder="Enter a word or phrase" data-tooltip="Type a word or phrase">
+            <i class="fas fa-microphone" id="pronounce-btn"></i>
+        </div>
+        <div class="result" id="result">
+            <div class="word" id="result-word"></div>
+            <div class="pronunciation">
+                <i class="fas fa-volume-up" id="play-btn"></i>
+                <span>Listen to pronunciation</span>
+            </div>
+        </div>
+        <div class="definition-box" id="definition-box">
+            <div class="definition-title">Definition:</div>
+            <div class="definition-content" id="definition-content"></div>
+        </div>
+    </div>
+    <div class="popup" id="popup"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.5/axios.min.js"></script>
+    <script>
+        // DOM elements
+        const wordInput = document.getElementById('word-input');
+        const pronounceBtn = document.getElementById('pronounce-btn');
+        const result = document.getElementById('result');
+        const resultWord = document.getElementById('result-word');
+        const playBtn = document.getElementById('play-btn');
+        const definitionBox = document.getElementById('definition-box');
+        const definitionContent = document.getElementById('definition-content');
+        const popup = document.getElementById('popup');
+
+        // Eleven Labs API configuration
+        const API_KEY = 'sk_f2d3b36f0264204940a01743c04d0bc02adda2aeb91656b0';
+        const VOICE_ID = 'JBFqnCBsd6RMkjVDRZzb';
+
+        // Event listeners
+        pronounceBtn.addEventListener('click', handlePronounceAndDefine);
+        wordInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') handlePronounceAndDefine();
+        });
+        playBtn.addEventListener('click', playPronunciation);
+
+        let audioBlob = null;
+
+        async function handlePronounceAndDefine() {
+            const text = wordInput.value.trim();
+            if (!text) {
+                showPopup('Please enter a word or phrase');
+                return;
+            }
+
+            try {
+                await Promise.all([generatePronunciation(text), fetchDefinition(text)]);
+            } catch (error) {
+                showPopup('An error occurred. Please try again.');
+                console.error('Error:', error);
+            }
+        }
+
+        async function generatePronunciation(text) {
+            try {
+                const response = await axios.post(
+                    `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
+                    { text },
+                    {
+                        headers: {
+                            'Accept': 'audio/mpeg',
+                            'xi-api-key': API_KEY,
+                            'Content-Type': 'application/json',
+                        },
+                        responseType: 'arraybuffer',
+                    }
+                );
+
+                audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
+                resultWord.textContent = text;
+                result.classList.add('show');
+            } catch (error) {
+                throw new Error('Failed to generate pronunciation');
+            }
+        }
+
+        async function fetchDefinition(word) {
+            try {
+                const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                const data = response.data[0];
+                
+                if (data && data.meanings && data.meanings.length > 0) {
+                    const definition = data.meanings[0].definitions[0].definition;
+                    definitionContent.textContent = definition;
+                    definitionBox.classList.add('show');
+                } else {
+                    definitionContent.textContent = 'No definition found.';
+                    definitionBox.classList.add('show');
+                }
+            } catch (error) {
+                definitionContent.textContent = 'Ooops! This is embarrassing. I do not know what that means. 😕 ';
+                definitionBox.classList.add('show');
+            }
+        }
+
+        function playPronunciation() {
+            if (audioBlob) {
+                const audio = new Audio(URL.createObjectURL(audioBlob));
+                audio.play();
+            } else {
+                showPopup('No pronunciation available. Please generate one first.');
+            }
+        }
+
+        function showPopup(message) {
+            popup.textContent = message;
+            popup.classList.add('show');
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
