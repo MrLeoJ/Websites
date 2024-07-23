@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minutes to Hours</title>
+    <link rel="icon" type="image/x-icon" href="https://i.postimg.cc/3RkpGK84/time-converter.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <style>
+        /* CSS styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #282c34;
+            color: #FFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #3a3f4b;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        h1 {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-container {
+            position: relative;
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+
+        input {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            padding: 1.5rem 1rem;
+            width: 100%;
+            box-sizing: border-box;
+            border: none;
+            border-radius: 5px;
+            background-color: #4a4f5b;
+            color: #FFF;
+        }
+
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #61dafb;
+        }
+
+        .convert-btn {
+            width: 100%;
+            padding: 0.5rem;
+            background-color: #61dafb;
+            color: #FFF;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .convert-btn:hover {
+            background-color: #4fa8c7;
+        }
+
+        .convert-btn i {
+            margin-right: 0.5rem;
+        }
+
+        .result {
+            font-size: 40px;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .container {
+                width: 90%;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Minutes to Hours</h1>
+        <div class="input-container tooltip">
+            <input type="text" id="minutesInput" placeholder="Insert minutes" aria-label="Enter minutes or arithmetic expression">
+            <span class="tooltiptext">Example: 10+10-15</span>
+        </div>
+        <button class="convert-btn" onclick="convertMinutes()" aria-label="Convert minutes to hours">
+            <i class="fa-solid fa-clock"></i> Convert
+        </button>
+        <div class="result" id="result" aria-live="polite"></div>
+    </div>
+
+    <script>
+        // JavaScript functionality
+        function convertMinutes() {
+            const input = document.getElementById('minutesInput').value;
+            const resultElement = document.getElementById('result');
+
+            try {
+                // Use math.js to evaluate the input expression
+                const totalMinutes = math.evaluate(input);
+
+                if (isNaN(totalMinutes)) {
+                    throw new Error('Invalid input');
+                }
+
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = Math.round(totalMinutes % 60);
+
+                resultElement.textContent = `${hours} Hrs ${minutes} min`;
+            } catch (error) {
+                showMessage('Please enter a valid number or expression');
+            }
+        }
+
+        function showMessage(message) {
+            const popup = document.createElement('div');
+            popup.textContent = message;
+            popup.style.position = 'fixed';
+            popup.style.top = '10%';
+            popup.style.left = '50%';
+            popup.style.transform = 'translateX(-50%)';
+            popup.style.backgroundColor = '#f33b6f';
+            popup.style.color = 'white';
+            popup.style.padding = '15px';
+            popup.style.borderRadius = '5px';
+            popup.style.zIndex = '1000';
+
+            document.body.appendChild(popup);
+
+            setTimeout(() => {
+                popup.remove();
+            }, 3000);
+        }
+
+        // Event listener for Enter key
+        document.getElementById('minutesInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                convertMinutes();
+            }
+        });
+    </script>
+</body>
+</html>
