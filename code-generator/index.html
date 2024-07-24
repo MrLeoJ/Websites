@@ -1,1 +1,271 @@
--
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Code Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #282c34;
+            color: #FFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Container styles */
+        .container {
+            background-color: #3a3f4b;
+            border-radius: 10px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        /* Form styles */
+        .form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        /* Input styles */
+        .input {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #4a4f5b;
+            color: #FFF;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .input:focus {
+            outline: 2px solid #61dafb;
+        }
+
+        .input::-webkit-inner-spin-button,
+        .input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Button styles */
+        .btn {
+            background-color: #61dafb;
+            color: #FFF;
+            border: none;
+            border-radius: 5px;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #4fa8c7;
+        }
+
+        /* Toggle switch styles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #4a4f5b;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: #FFF;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #61dafb;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Output styles */
+        .output {
+            margin-top: 1rem;
+            background-color: #4a4f5b;
+            border-radius: 5px;
+            padding: 1rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 600px) {
+            .container {
+                width: 95%;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form id="codeGeneratorForm" class="form">
+            <div class="tooltip">
+                <input type="text" id="prefix" class="input" placeholder="Prefix" aria-label="Prefix">
+                <span class="tooltiptext">Enter prefix for the code</span>
+            </div>
+            <div class="tooltip">
+                <input type="text" id="suffix" class="input" placeholder="Suffix" aria-label="Suffix">
+                <span class="tooltiptext">Enter suffix for the code</span>
+            </div>
+            <div class="tooltip">
+                <input type="number" id="quantity" class="input" placeholder="Quantity" min="1" max="100" aria-label="Quantity">
+                <span class="tooltiptext">Enter number of codes to generate (1-100)</span>
+            </div>
+            <div class="tooltip">
+                <label class="switch">
+                    <input type="checkbox" id="includeNumbers">
+                    <span class="slider"></span>
+                </label>
+                <span>Include Numbers</span>
+                <span class="tooltiptext">Toggle to include numbers in the code</span>
+            </div>
+            <div class="tooltip">
+                <label class="switch">
+                    <input type="checkbox" id="includeSymbols">
+                    <span class="slider"></span>
+                </label>
+                <span>Include Symbols</span>
+                <span class="tooltiptext">Toggle to include symbols in the code</span>
+            </div>
+            <button type="submit" class="btn tooltip">
+                <i class="fas fa-random"></i> Generate
+                <span class="tooltiptext">Click to generate random codes</span>
+            </button>
+        </form>
+        <div id="output" class="output"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('codeGeneratorForm');
+            const output = document.getElementById('output');
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                generateCodes();
+            });
+
+            function generateCodes() {
+                const prefix = document.getElementById('prefix').value;
+                const suffix = document.getElementById('suffix').value;
+                const quantity = parseInt(document.getElementById('quantity').value) || 1;
+                const includeNumbers = document.getElementById('includeNumbers').checked;
+                const includeSymbols = document.getElementById('includeSymbols').checked;
+
+                let charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                if (includeNumbers) charset += '0123456789';
+                if (includeSymbols) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+                const codes = [];
+                for (let i = 0; i < quantity; i++) {
+                    let code = prefix;
+                    for (let j = 0; j < 8; j++) {
+                        code += charset.charAt(Math.floor(Math.random() * charset.length));
+                    }
+                    code += suffix;
+                    codes.push(code);
+                }
+
+                output.textContent = codes.join('\n');
+                showMessage('Codes generated successfully!');
+            }
+
+            function showMessage(message) {
+                const popup = document.createElement('div');
+                popup.textContent = message;
+                popup.style.position = 'fixed';
+                popup.style.top = '20px';
+                popup.style.left = '50%';
+                popup.style.transform = 'translateX(-50%)';
+                popup.style.backgroundColor = '#61dafb';
+                popup.style.color = '#FFF';
+                popup.style.padding = '10px 20px';
+                popup.style.borderRadius = '5px';
+                popup.style.zIndex = '1000';
+                document.body.appendChild(popup);
+
+                setTimeout(() => {
+                    popup.style.opacity = '0';
+                    popup.style.transition = 'opacity 0.5s ease';
+                    setTimeout(() => {
+                        document.body.removeChild(popup);
+                    }, 500);
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
