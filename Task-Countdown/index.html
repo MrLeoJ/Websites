@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Timer</title>
+    <link rel="icon" type="image/x-icon" href="https://i.postimg.cc/6Q376Gvy/Countdown.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="theme-toggle">
+            <button id="themeToggle" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        <div class="timer-display">
+            <span id="hours">00</span>:<span id="minutes">00</span>:<span id="seconds">00</span>
+        </div>
+        <div class="task-name">
+            <input type="text" id="taskInput" placeholder="Enter task name" aria-label="Task name">
+        </div>
+        <div class="timer-inputs">
+            <input type="number" id="hoursInput" placeholder="Hours" min="0" max="23" aria-label="Hours">
+            <input type="number" id="minutesInput" placeholder="Minutes" min="0" max="59" aria-label="Minutes">
+            <input type="number" id="secondsInput" placeholder="Seconds" min="0" max="59" aria-label="Seconds">
+        </div>
+        <div class="end-time-input">
+            <input type="time" id="endTimeInput" aria-label="End time">
+        </div>
+        <div class="timer-controls">
+            <button id="startBtn" aria-label="Start timer"><i class="fas fa-play"></i></button>
+            <button id="pauseBtn" aria-label="Pause timer"><i class="fas fa-pause"></i></button>
+            <button id="resetBtn" aria-label="Reset timer"><i class="fas fa-undo"></i></button>
+        </div>
+        <div class="alarm-settings">
+            <select id="alarmSound" aria-label="Select alarm sound">
+                <option value="beep">Beep</option>
+                <option value="chime">Chime</option>
+                <option value="bell">Bell</option>
+            </select>
+        </div>
+        <div class="task-duration">
+            <h3>Total Time</h3>
+            <p><span id="totalTime">00:00:00</span></p>
+        </div>
+    </div>
+    <div id="notification" class="notification hidden">
+        <h2>Time's up!</h2>
+        <div class="snooze-inputs">
+            <input type="number" id="snoozeHoursInput" placeholder="Hours" min="0" max="23" aria-label="Snooze hours">
+            <input type="number" id="snoozeMinutesInput" placeholder="Minutes" min="0" max="59" aria-label="Snooze minutes">
+            <input type="number" id="snoozeSecondsInput" placeholder="Seconds" min="0" max="59" aria-label="Snooze seconds">
+        </div>
+        <div class="snooze-controls">
+            <button id="snoozeBtn"><i class="fa-regular fa-clock"></i></button>
+            <button id="stopAlarmBtn"><i class="fa-solid fa-stop"></i></button>
+        </div>
+        <button id="closeNotificationBtn" aria-label="Close notification"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="overlay" class="overlay hidden"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
