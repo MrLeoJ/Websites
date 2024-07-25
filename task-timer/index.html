@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Timer</title>
+    <link rel="icon" type="image/x-icon" href="https://i.postimg.cc/6Q376Gvy/Countdown.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="theme-toggle">
+            <button id="themeToggle"><i class="fas fa-sun"></i></button>
+        </div>
+
+        <div class="task-name">
+            <h2 id="taskTitle" class="task-title" contenteditable="true">Add Task</h2>
+        </div>
+
+        <div class="timer-display">
+            <span id="hours">00</span>:<span id="minutes">00</span>:<span id="seconds">00</span>
+        </div>
+
+        <div class="timer-inputs">
+            <input type="number" id="hoursInput" placeholder="Hours" min="0" max="23">
+            <input type="number" id="minutesInput" placeholder="Minutes" min="0" max="59">
+            <input type="number" id="secondsInput" placeholder="Seconds" min="0" max="59">
+        </div>
+
+        <div class="end-time-input">
+            <input type="time" id="endTimeInput">
+        </div>
+
+        <div class="timer-controls">
+            <button id="startBtn"><i class="fas fa-play"></i></button>
+            <button id="pauseBtn"><i class="fas fa-pause"></i></button>
+            <button id="resetBtn"><i class="fas fa-undo"></i></button>
+        </div>
+
+        <div class="time-log">
+            <table id="timeLogTable" class="hidden">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Start</th>
+                        <th>Stop</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody id="timeLogBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="notification" class="notification hidden">
+        <h2>Time's up!</h2>
+        <div class="snooze-inputs">
+            <input type="number" id="snoozeHoursInput" placeholder="Hours" min="0" max="23">
+            <input type="number" id="snoozeMinutesInput" placeholder="Minutes" min="0" max="59">
+            <input type="number" id="snoozeSecondsInput" placeholder="Seconds" min="0" max="59">
+        </div>
+        <div class="snooze-controls">
+            <button id="snoozeBtn"><i class="fa-solid fa-clock"></i></button>
+            <button id="silenceBtn"><i class="fas fa-volume-mute"></i></button>
+            <button id="stopAlarmBtn"><i class="fas fa-stop"></i></button>
+        </div>
+        <button id="closeNotificationBtn"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div id="overlay" class="overlay hidden"></div>
+    <div id="messagePopup" class="message-popup hidden"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
