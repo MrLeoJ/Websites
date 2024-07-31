@@ -6,7 +6,7 @@ let startTime = null;
 let timeLog = [];
 
 // Initialize Audio object for alarm sound
-const alarmSound = new Audio('https://www.soundjay.com/buttons/sounds/beep-25.mp3');
+const alarmSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-elevator-tone-2863.mp3');
 alarmSound.loop = true;
 
 // DOM elements
