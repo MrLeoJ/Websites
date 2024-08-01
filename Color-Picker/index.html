@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colour Picker</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="color-display">
+            <div id="selected-color"></div>
+            <div class="color-codes">
+                <div class="color-code">
+                    <input type="text" id="color-hex" placeholder="HEX" title="HEX Code">
+                    <button class="copy-btn" data-clipboard="hex" title="Copy HEX">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <div class="color-code">
+                    <input type="text" id="color-rgb" placeholder="RGB" title="RGB Code">
+                    <button class="copy-btn" data-clipboard="rgb" title="Copy RGB">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <div class="color-code">
+                    <input type="text" id="color-hsl" placeholder="HSL" title="HSL Code">
+                    <button class="copy-btn" data-clipboard="hsl" title="Copy HSL">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="tools">
+            <button id="eyedropper" title="Eyedropper">
+                <i class="fas fa-eye-dropper"></i>
+            </button>
+            <button id="color-wheel" title="Random Color">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+            <label for="color-input" class="color-input-label" title="Color Picker">
+                <i class="fas fa-palette"></i>
+                <input type="color" id="color-input">
+            </label>
+        </div>
+
+        <div class="color-variations">
+            <div class="variation-row" id="shades"></div>
+            <div class="variation-row" id="tones"></div>
+            <div class="variation-row" id="tints"></div>
+            
+        </div>
+
+        <div class="palettes">
+            <div class="palette" id="palette-1"></div>
+            <div class="palette" id="palette-2"></div>
+            <div class="palette" id="palette-3"></div>
+        </div>
+        
+    </div>
+    <div id="toast" class="toast"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
