@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const copyButtons = document.querySelectorAll('.copy-btn');
     const toast = document.getElementById('toast');
 
-    let currentColor = '#61dafb';
+    let currentColor = '#3a3f4b';
     updateColor(currentColor);
 
     // Eyedropper tool
