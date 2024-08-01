@@ -60,9 +60,10 @@ input {
     width: 100%;
     padding: 0.5rem;
     margin-bottom: 1rem;
-    border: 1px solid #ccc;
+    border: 1px solid #e8e8e8;
     border-radius: 4px;
     font-family: 'Poppins', sans-serif;
+    text-align: center;
 }
 
 input:focus {outline: 1px solid #36cadd;}
@@ -109,7 +110,7 @@ button:hover {
     font-weight: 600;
     text-align: center;
     margin-top: 1rem;
-    color: #212121;
+    color: #848484;
 }
 
 #time-log {
