@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
             eyeDropper.open().then(result => {
                 updateColor(result.sRGBHex);
             }).catch(e => {
-                showToast('Eyedropper cancelled');
+                showToast('Cancelled');
             });
         });
     } else {
