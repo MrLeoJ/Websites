@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>URL Shortener</h1>
+        <div class="input-group">
+            <input type="url" id="longUrl" placeholder="Enter Long URL" required>
+        </div>
+        <div class="input-group">
+            <input type="text" id="title" placeholder="Title (optional)">
+            <input type="text" id="customUrl" placeholder="Custom URL (optional)">
+        </div>
+        <div class="toggle-container">
+            <span>is.gd</span>
+            <label class="switch">
+                <input type="checkbox" id="serviceToggle">
+                <span class="slider round"></span>
+            </label>
+            <span>v.gd</span>
+        </div>
+        <button id="generateBtn" class="GenerateButton">Generate</button>
+        <div class="history" id="historySection">
+            <h2>History</h2>
+            <div id="historyList"></div>
+        </div>
+
+        <div class="PoweredBy">Powered by <a href="https://is.gd" target="_blank">is.gd</a> / <a href="https://v.gd" target="_blank">v.gd</a></div>
+
+    </div>
+    <div class="popup" id="popup"></div>
+    <div class="delete-popup" id="deletePopup">
+        <p>Are you sure you want to delete this shortened URL?</p>
+        <div class="delete-popup-buttons">
+            <button id="deleteYes">Yes</button>
+            <button id="deleteNo">No</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

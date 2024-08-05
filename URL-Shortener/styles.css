@@ -1,0 +1,227 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #282c34;
+    color: #FFF;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    background-color: #3a3f4b;
+    padding: 2rem;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 600px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.input-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+input, button {
+    padding: 0.5rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.GenerateButton {
+    width: 100%;
+    height: 4rem;
+}
+
+input {
+    flex-grow: 1;
+    background-color: #282c34;
+    color: #FFF;
+    outline: none;
+}
+
+input:focus {
+    border-color: #61dafb;
+    box-shadow: 0 0 5px #61dafb;
+}
+
+button {
+    background-color: #61dafb;
+    color: #282c34;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #4fa8c9;
+}
+
+.history {
+    margin-top: 2rem;
+}
+
+.history h2 {
+    margin-bottom: 1rem;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #282c34;
+    padding: 0.5rem;
+    border-radius: 5px;
+    margin-bottom: 0.5rem;
+}
+
+.history-item button {
+    margin-left: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.history-item button {
+    color: #61dafb;
+}
+
+.history-item button:hover {
+    color: #4fa8c9;
+}
+
+.history-item button.delete {
+    color: #ff9794;
+}
+
+.history-item button.delete:hover {
+    color: #ff6b6b;
+}
+
+.popup {
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #61dafb;
+    color: #282c34;
+    border: 2px solid #FFF;
+    padding: 1rem 2rem;
+    border-radius: 5px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.popup.show {
+    opacity: 1;
+}
+
+.delete-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #3a3f4b;
+    color: #FFF;
+    border: 2px solid #61dafb;
+    padding: 1rem 2rem;
+    border-radius: 5px;
+    display: none;
+    text-align: center;
+}
+
+.delete-popup-buttons {
+    margin-top: 1rem;
+}
+
+.delete-popup-buttons button {
+    margin: 0 0.5rem;
+    padding: 0.5rem 1rem;
+}
+
+/* Toggle Switch Styles */
+.toggle-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.toggle-container span {
+    margin: 0 10px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 75px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #282c34;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider:before {
+    transform: translateX(21px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.PoweredBy{
+    margin-top: 2rem;
+    text-align: center;
+    font-size: 13px;
+}
+
+.PoweredBy a{
+    color: #61dafb;
+    text-decoration: none;
+}
+
+.PoweredBy a:hover{
+    color: #4fa8c9;
+}
