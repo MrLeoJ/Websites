@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Timer</title>
+    <link rel="icon" type="image/x-icon" href="i1.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="tabs">
+            <button id="countdownTab" class="tab-button active" aria-selected="true">Countdown</button>
+            <button id="alarmTab" class="tab-button" aria-selected="false">Alarm</button>
+        </div>
+        
+        <div id="countdownSection" class="section active">
+            <div class="input-group">
+                <input type="text" id="countdownTaskName" placeholder="What's the Task?" aria-label="Task name">
+                <div class="time-inputs">
+                    <input type="number" id="countdownHours" min="0" max="23" placeholder="HH" aria-label="Hours">
+                    <input type="number" id="countdownMinutes" min="0" max="59" placeholder="MM" aria-label="Minutes">
+                    <input type="number" id="countdownSeconds" min="0" max="59" placeholder="SS" aria-label="Seconds">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button id="startCountdown" class="icon-button" aria-label="Start Countdown" title="Start Countdown">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button id="resetCountdown" class="icon-button" aria-label="Reset Countdown" title="Reset Countdown">
+                    <i class="fas fa-stop"></i>
+                </button>
+            </div>
+
+            <div id="countdownDisplay" class="time-display" aria-live="polite">00:00:00</div>
+
+            <div id="countdownEndTime" class="end-time" aria-live="polite"></div>
+            
+        </div>
+        
+        <div id="alarmSection" class="section">
+            <div class="input-group">
+                <input type="text" id="alarmTaskName" placeholder="What's the Task?" aria-label="Task name">
+                <input type="time" id="alarmTime" aria-label="Alarm time">
+            </div>
+
+            <div class="button-group">
+                <button id="setAlarm" class="icon-button" aria-label="Set Alarm" title="Set Alarm">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button id="cancelAlarm" class="icon-button" aria-label="Cancel Alarm" title="Cancel Alarm">
+                    <i class="fas fa-stop"></i>
+                </button>
+            </div>
+
+            <div id="alarmDisplay" class="time-display" aria-live="polite">00:00:00</div>
+
+            <div id="alarmEndTime" class="end-time" aria-live="polite"></div>
+            
+        </div>
+        
+        <div id="timeLog" class="time-log">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th class="timeLogCenter">Start</th>
+                        <th class="timeLogCenter">End</th>
+                        <th class="timeLogCenter">Duration</th>
+                    </tr>
+                </thead>
+                <tbody id="timeLogBody"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div id="alarmPopup" class="popup" aria-hidden="true">
+        <div class="popup-content">
+            <i class="fas fa-bell fa-3x"></i>
+            <p>Time's up!</p>
+            <button id="silenceAlarm" class="button">Silence Alarm</button>
+            <button id="closeAlarmPopup" class="close-button" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    
+    <audio id="alarmSound" loop>
+        <source src="https://assets.mixkit.co/active_storage/sfx/911/911-preview.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <script src="script.js"></script>
+</body>
+</html>
