@@ -75,7 +75,7 @@ function startCountdownTimer() {
     updateCountdownEndTime(new Date(countdownEndTimeValue));
 
     isCountdownRunning = true;
-    requestAnimationFrame(updateCountdown);
+    updateCountdown();
 }
 
 function updateCountdown() {
@@ -90,12 +90,13 @@ function updateCountdown() {
         addToTimeLog('countdown');
     } else {
         updateCountdownDisplay(remainingTime);
-        requestAnimationFrame(updateCountdown);
+        setTimeout(updateCountdown, 100); // Update more frequently to improve accuracy
     }
 }
 
 function resetCountdownTimer() {
     isCountdownRunning = false;
+    clearInterval(countdownInterval);
     countdownHours.value = '';
     countdownMinutes.value = '';
     countdownSeconds.value = '';
