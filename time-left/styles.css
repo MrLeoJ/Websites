@@ -1,0 +1,137 @@
+:root {
+    --container-bg: #3a3f4b;
+    --website-bg: #282c34;
+    --button-bg: #61dafb;
+    --button-hover-bg: #4fa8c7;
+    --font-color: #FFF;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--website-bg);
+    color: var(--font-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    background-color: var(--container-bg);
+    border-radius: 10px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+input[type="date"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--font-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    text-align: center;
+    outline: none;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+.btn {
+    background-color: var(--button-bg);
+    color: var(--website-bg);
+    border: none;
+    padding: 0.75rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+.btn:hover {
+    background-color: var(--button-hover-bg);
+}
+
+.result {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.result p {
+    margin-bottom: 0.5rem;
+}
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: #fff;
+    padding: 1rem;
+    border-radius: 5px;
+    display: none;
+    z-index: 1000;
+}
+
+/* ALTERATIONS */
+.result{
+    font-size: larger;
+}
+
+.result strong{
+    color: #878c98;
+}
