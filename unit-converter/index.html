@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Converter</title>
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="converter-box">
+            <h1 class="title">Unit Converter</h1>
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="distance">Distance</button>
+                <button class="tab-btn" data-tab="weight">Weight</button>
+                <button class="tab-btn" data-tab="height">Height</button>
+            </div>
+            <div class="input-group">
+                <input type="number" id="fromValue" placeholder="Enter value" aria-label="Enter value">
+            </div>
+            <div class="input-group">
+                <select id="fromUnit" aria-label="Select from unit"></select>
+                <span class="select-icon">&#9662;</span>
+            </div>
+            <div class="input-group">
+                <select id="toUnit" aria-label="Select to unit"></select>
+                <span class="select-icon">&#9662;</span>
+            </div>
+            <button id="swapBtn" aria-label="Swap units">
+                <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+            <div id="result" class="result" aria-live="polite"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
