@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Countdown</title>
+    <link rel="icon" type="image/x-icon" href="icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 23rem;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid transparent;
+            margin-bottom: 30px;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            border-bottom: 2px solid #CECECE;
+            padding: 10px;
+            color: #cecece;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .tab.active {
+            border-bottom: 2px solid #36cadd;
+            color: #36cadd;
+        }
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        input {
+            width: 32%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+            outline: none;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="text"], input[type="time"] {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        input[type="time"] {
+            text-align: center;
+        }
+        button {
+            width: 49%;
+            height: 2.5rem;
+            padding: 10px;
+            background-color: #36cadd;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+        button:hover {
+            background-color: #2ba9bc;
+        }
+        #timer {
+            font-size: 65px;
+            text-align: center;
+            font-weight: bolder;
+            margin: 20px 0;
+            color: #a9a9a9;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+        }
+        #endTime {
+            text-align: center;
+            margin-top: 10px;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 12px;
+            display: none;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: none;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            color: #333;
+            font-weight: 600;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('countdown')">Countdown</div>
+            <div class="tab" onclick="switchTab('alarm')">Alarm</div>
+        </div>
+        <input type="text" id="task" placeholder="What's the Task?">
+        <div id="countdownTab">
+            <div class="input-group">
+                <input type="number" id="hours" min="0" max="23" placeholder="HH">
+                <input type="number" id="minutes" min="0" max="59" placeholder="MM">
+                <input type="number" id="seconds" min="0" max="59" placeholder="ss">
+            </div>
+        </div>
+        <div id="alarmTab" style="display:none;">
+            <div class="input-group">
+                <input type="time" id="alarmTime">
+            </div>
+        </div>
+        <div class="button-group">
+            <button id="startButton" onclick="startTimer()"><i class="fa-solid fa-play"></i></button>
+            <button id="stopButton" onclick="stopTimer()" disabled><i class="fa-solid fa-stop"></i></button>
+        </div>
+        <div id="timer">00:00:00</div>
+        <div id="endTime"></div>
+
+        <table id="timerRecords">
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th style="text-align: center;">Start</th>
+                    <th style="text-align: center;">End</th>
+                    <th style="text-align: center;">Duration</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let countdown;
+        let alarmSound;
+        let endTime;
+        let worker;
+        let startTime;
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`.tab:nth-child(${tabName === 'countdown' ? '1' : '2'})`).classList.add('active');
+            document.getElementById('countdownTab').style.display = tabName === 'countdown' ? 'block' : 'none';
+            document.getElementById('alarmTab').style.display = tabName === 'alarm' ? 'block' : 'none';
+        }
+
+        document.getElementById('hours').addEventListener('input', updateEndTimeDisplay);
+        document.getElementById('minutes').addEventListener('input', updateEndTimeDisplay);
+        document.getElementById('seconds').addEventListener('input', updateEndTimeDisplay);
+
+        function updateEndTimeDisplay() {
+            if (document.querySelector('.tab.active').textContent === 'Countdown') {
+                const hours = parseInt(document.getElementById('hours').value) || 0;
+                const minutes = parseInt(document.getElementById('minutes').value) || 0;
+                const seconds = parseInt(document.getElementById('seconds').value) || 0;
+
+                const duration = hours * 3600 + minutes * 60 + seconds;
+                const startTime = new Date();
+                const calculatedEndTime = new Date(startTime.getTime() + duration * 1000);
+
+                const endTimeStr = calculatedEndTime.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                document.getElementById('endTime').textContent = `End time: ${endTimeStr}`;
+            }
+        }
+
+        function startTimer() {
+            if (worker) {
+                worker.terminate();
+            }
+
+            let duration;
+            startTime = new Date();
+
+            if (document.querySelector('.tab.active').textContent === 'Countdown') {
+                const hours = parseInt(document.getElementById('hours').value) || 0;
+                const minutes = parseInt(document.getElementById('minutes').value) || 0;
+                const seconds = parseInt(document.getElementById('seconds').value) || 0;
+                duration = hours * 3600 + minutes * 60 + seconds;
+            } else {
+                const alarmTime = document.getElementById('alarmTime').value;
+                if (!alarmTime) {
+                    alert('Please set an alarm time');
+                    return;
+                }
+                const [hours, minutes] = alarmTime.split(':');
+                const now = new Date();
+                const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+                if (target <= now) {
+                    target.setDate(target.getDate() + 1);
+                }
+                duration = (target - now) / 1000;
+            }
+
+            endTime = new Date(startTime.getTime() + duration * 1000);
+
+            updateEndTimeDisplay();
+
+            worker = new Worker(URL.createObjectURL(new Blob([`
+                let countdown;
+                let endTime;
+
+                self.onmessage = function(e) {
+                    if (e.data.type === 'start') {
+                        endTime = e.data.endTime;
+                        updateTimer();
+                    } else if (e.data.type === 'stop') {
+                        clearTimeout(countdown);
+                    }
+                };
+
+                function updateTimer() {
+                    const remaining = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+                    
+                    if (remaining === 0) {
+                        self.postMessage({type: 'finished'});
+                        return;
+                    }
+
+                    const hours = Math.floor(remaining / 3600);
+                    const minutes = Math.floor((remaining % 3600) / 60);
+                    const seconds = remaining % 60;
+
+                    self.postMessage({
+                        type: 'update',
+                        time: \`\${hours.toString().padStart(2, '0')}:\${minutes.toString().padStart(2, '0')}:\${seconds.toString().padStart(2, '0')}\`
+                    });
+                    
+                    countdown = setTimeout(updateTimer, 1000);
+                }
+            `], {type: 'text/javascript'})));
+
+            worker.onmessage = function(e) {
+                if (e.data.type === 'update') {
+                    document.getElementById('timer').textContent = e.data.time;
+                } else if (e.data.type === 'finished') {
+                    startAlarm();
+                    addTimerRecord();
+                }
+            };
+
+            worker.postMessage({type: 'start', endTime: endTime.getTime()});
+
+            document.getElementById('startButton').disabled = true;
+            document.getElementById('stopButton').disabled = false;
+        }
+
+        function stopTimer() {
+            if (worker) {
+                worker.terminate();
+                worker = null;
+            }
+            stopAlarm();
+            document.getElementById('timer').textContent = "00:00:00";
+            document.getElementById('startButton').disabled = false;
+            document.getElementById('stopButton').disabled = true;
+            document.getElementById('endTime').textContent = '';
+        }
+
+        function startAlarm() {
+            alarmSound = new Audio('https://assets.mixkit.co/active_storage/sfx/911/911-preview.mp3');
+            alarmSound.loop = true;
+            alarmSound.play();
+        }
+
+        function stopAlarm() {
+            if (alarmSound) {
+                alarmSound.pause();
+                alarmSound.currentTime = 0;
+                alarmSound = null;
+            }
+        }
+
+        function addTimerRecord() {
+            const task = document.getElementById('task').value || 'N/A';
+            const start = startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const end = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const duration = calculateDuration(startTime, new Date());
+
+            const table = document.getElementById('timerRecords');
+            const tbody = table.getElementsByTagName('tbody')[0];
+            const newRow = tbody.insertRow(0);
+            newRow.innerHTML = `
+                <td>${task}</td>
+                <td style="text-align: center;">${start}</td>
+                <td style="text-align: center;">${end}</td>
+                <td style="text-align: center;">${duration}</td>
+            `;
+
+            table.style.display = 'table';
+        }
+
+        function calculateDuration(start, end) {
+    const diff = end - start;
+    const hours = Math.floor(diff / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+    </script>
+</body>
+</html>
