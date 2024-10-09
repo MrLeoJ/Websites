@@ -139,8 +139,37 @@
 
   .content-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 20px;
+  }
+
+  @media (min-width: 576px) {
+    .content-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 992px) {
+    .content-grid {
+      grid-template-columns: repeat(6, 1fr);
+    }
+  }
+
+  @media (min-width: 1400px) {
+    .content-grid {
+      grid-template-columns: repeat(9, 1fr);
+    }
+  }
+
+  @media (min-width: 1920px) {
+    .content-grid {
+      grid-template-columns: repeat(12, 1fr);
+    }
+  }
+
+  @media (min-width: 3840px) {
+    .content-grid {
+      grid-template-columns: repeat(15, 1fr);
+    }
   }
 
   .content-card {
@@ -359,13 +388,13 @@
   /* Adjust content grid for different screen sizes */
   @media (min-width: 768px) {
     .content-grid {
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
     }
   }
 
   @media (min-width: 1200px) {
     .content-grid {
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(6, 1fr);
     }
   }
 
@@ -390,7 +419,7 @@
     }
 
     .content-grid {
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      grid-template-columns: repeat(9, 1fr);
       gap: 30px;
     }
 
@@ -465,7 +494,7 @@
     }
 
     .content-grid {
-      grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+      grid-template-columns: repeat(15, 1fr);
       gap: 40px;
     }
 
@@ -774,7 +803,7 @@
       watchButton.style.borderRadius = '5px';
       watchButton.style.cursor = 'pointer';
 
-      select.addEventListener('change', () => showEpisodes(container, content.id, select.value, seasons.find(s => s.season_number == select.value)?.episode_count || 0, content));
+      select.addEventListener('change', () => showEpisodes(container, content.id, select.value, seasons.find(s => s.season_number == select.value).episode_count, content));
       
       watchButton.addEventListener('click', () => {
         const seasonNumber = select.value;
