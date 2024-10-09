@@ -1,7 +1,8 @@
 <html><head><base href="https://trending_series.html?language=en-EN">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trailer Nation</title>
+<title>Cinehub</title>
+<link rel="icon" type="image/x-icon" href="favicon.png">
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
@@ -114,17 +115,26 @@
     border: none;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    width: 120px;
+    width: 150px;
     text-align: center;
+    font-weight: bold;
   }
 
   .tab.active, .filter-dropdown:hover, .clear-filters:hover {
     background-color: var(--primary-color);
+    color: #3a3f4b;
   }
 
   .filter-dropdown {
-    background-color: #3a3f4b;
+    background-color: transparent;
+    color: #878c98;
     text-align: left;
+    outline: none;
+  }
+
+  .filter-dropdown:hover{
+    background-color: transparent;
+    color: #3a3f4b;
   }
 
   .filter-dropdown option {
@@ -133,8 +143,16 @@
   }
 
   .clear-filters {
-    background-color: #bf1e54;
+    background-color: transparent;
+    border: 1px solid #ff6666;
+    color: #ff6666;
     text-align: center;
+  }
+
+  .clear-filters:hover {
+    background-color: #ff6666;
+    border: 1px solid #ff6666;
+    color: white;
   }
 
   .content-grid {
@@ -193,18 +211,45 @@
 
   .content-info {
     padding: 15px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .watch-button {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease;
+  }
+
+  .watch-button:hover {
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
   }
 
   .content-title {
     font-size: 16px;
     font-weight: bold;
     margin-bottom: 5px;
+    order: 2;
   }
 
   .content-details {
     font-size: 14px;
     color: #666;
+    order: 3;
   }
+
+  .content-details span{
+      line-height: 30px;
+    }
 
   .modal {
     display: none;
@@ -238,6 +283,21 @@
   }
 
   .close-modal:hover {
+    color: #000;
+  }
+
+  .back-button {
+    background-color: transparent;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+
+  .back-button:hover {
     color: #000;
   }
 
@@ -287,22 +347,17 @@
     font-size: 18px;
   }
 
-  .back-button {
-    background-color: transparent;
-    border: none;
-    color: var(--secondary-color);
-    cursor: pointer;
-    font-size: 16px;
-    margin-bottom: 10px;
-  }
-
-  .back-button:hover {
-    color: var(--primary-color);
-  }
-
   .details-container {
     margin-top: 20px;
     margin-bottom: 20px;
+    border: 1px solid #bcbcbc;
+    color: #666;
+    padding: 20px;
+    border-radius: 15px;
+  }
+
+  .details-container span{
+    line-height: 45px;
   }
 
   #trailer-container {
@@ -315,6 +370,7 @@
   }
 
   #watch-buttons-container button {
+    width: 50%;
     background-color: var(--secondary-color);
     color: white;
     border: none;
@@ -322,10 +378,12 @@
     margin: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
+    font-weight: bold;
   }
 
   #watch-buttons-container button:hover {
     background-color: var(--primary-color);
+    color: var(--secondary-color);
   }
 
   #back-to-top {
@@ -336,7 +394,7 @@
     background-color: var(--secondary-color);
     color: white;
     border: none;
-    border-radius: 50%;
+    border-radius: 18%;
     width: 50px;
     height: 50px;
     font-size: 24px;
@@ -437,6 +495,10 @@
 
     .content-details {
       font-size: 18px;
+    }
+
+    .content-details span i{
+      line-height: 40px;
     }
 
     .modal-content {
@@ -542,11 +604,14 @@
     #trailer-container iframe {
       height: 800px;
     }
+
+/* Lx | Changes */
+
 </style>
 </head>
 <body>
   <div class="topbar">
-    <div class="logo"><a href="https://trending_series.html?language=en-EN"><img src="/a/189b44fd-98c0-417e-8867-598449d202ab" alt="Trailer Nation Logo" height="50"></a></div>
+    <div class="logo"><a href="index.html"><img src="logo.png" alt="CineHub Logo" height="50"></a></div>
     <div class="search-container">
       <input type="text" class="search-input" id="search-input" placeholder="Search movies or series...">
     </div>
@@ -642,22 +707,96 @@
         const country = document.getElementById('country-filter').value;
         const language = document.getElementById('language-filter').value;
 
-        let url = `${BASE_URL}/discover/${currentType}?api_key=${API_KEY}&language=en-US&sort_by=popularity.desc&page=${page}`;
+        let url = `${BASE_URL}/discover/${currentType}?api_key=${API_KEY}&language=en-US&sort_by=popularity.desc&page=${page}&append_to_response=production_countries`;
         if (genreId) url += `&with_genres=${genreId}`;
-        if (year) url += `&primary_release_year=${year}`;
+        if (year) {
+          if (currentType === 'movie') {
+            url += `&primary_release_year=${year}`;
+          } else {
+            url += `&first_air_date_year=${year}`;
+          }
+        }
         if (country) url += `&with_origin_country=${country}`;
         if (language) url += `&with_original_language=${language}`;
 
+        url += '&without_genres=10764,10763';
+
         const response = await axios.get(url);
         const content = response.data.results.filter(item => !item.genre_ids.includes(10767));
-        updateUI(content, page === 1);
+        
+        const sortedContent = await sortContentByCountry(content);
+        
+        updateUI(sortedContent, page === 1);
         currentPage = page;
+
+        // Update year filter options based on fetched content
+        updateYearFilter(sortedContent);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
         isLoading = false;
         document.getElementById('loading').style.display = 'none';
       }
+    }
+
+    function updateYearFilter(content) {
+      const yearFilter = document.getElementById('year-filter');
+      const currentYear = new Date().getFullYear();
+      const years = new Set();
+
+      // Add years from content
+      content.forEach(item => {
+        const year = new Date(item.release_date || item.first_air_date).getFullYear();
+        if (!isNaN(year)) {
+          years.add(year);
+        }
+      });
+
+      // Add current year and previous years if not already in the set
+      for (let year = currentYear; year >= 1900; year--) {
+        years.add(year);
+      }
+
+      // Sort years in descending order
+      const sortedYears = Array.from(years).sort((a, b) => b - a);
+
+      // Update the year filter options
+      yearFilter.innerHTML = '<option value="">Year</option>';
+      sortedYears.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearFilter.appendChild(option);
+      });
+    }
+
+    async function sortContentByCountry(content) {
+      const contentWithDetails = await Promise.all(content.map(async (item) => {
+        try {
+          const detailsResponse = await axios.get(`${BASE_URL}/${currentType}/${item.id}?api_key=${API_KEY}&language=en-US`);
+          const details = detailsResponse.data;
+          return { ...item, production_countries: details.production_countries };
+        } catch (error) {
+          console.error('Error fetching details for item:', item.id, error);
+          return item;
+        }
+      }));
+
+      return contentWithDetails.sort((a, b) => {
+        const aCountries = a.production_countries || [];
+        const bCountries = b.production_countries || [];
+
+        const aHasUS = aCountries.some(country => country.iso_3166_1 === 'US');
+        const bHasUS = bCountries.some(country => country.iso_3166_1 === 'US');
+        const aHasUK = aCountries.some(country => country.iso_3166_1 === 'GB');
+        const bHasUK = bCountries.some(country => country.iso_3166_1 === 'GB');
+
+        if (aHasUS && !bHasUS) return -1;
+        if (!aHasUS && bHasUS) return 1;
+        if (aHasUK && !bHasUK) return -1;
+        if (!aHasUK && bHasUK) return 1;
+        return 0;
+      });
     }
 
     async function updateUI(content, clearExisting = false) {
@@ -677,7 +816,13 @@
               ? Math.round(details.episode_run_time.reduce((a, b) => a + b) / details.episode_run_time.length)
               : null;
           }
-          
+
+          const formattedCountries = details.production_countries.map(country => {
+            if (country.iso_3166_1 === 'US') return 'US';
+            if (country.iso_3166_1 === 'GB') return 'UK';
+            return country.name;
+          }).join(', ');
+
           const contentCard = document.createElement('div');
           contentCard.className = 'content-card';
           contentCard.innerHTML = `
@@ -685,10 +830,11 @@
             <div class="content-info">
               <h2 class="content-title">${item.title || item.name || 'No title'}</h2>
               <p class="content-details">
-                <span><i class="fas fa-calendar-alt"></i> ${item.release_date || item.first_air_date ? new Date(item.release_date || item.first_air_date).getFullYear() : 'N/A'}</span><br>
-                <span><i class="fas fa-film"></i> ${getGenres(item.genre_ids || [])}</span><br>
-                <span><i class="fas fa-clock"></i> ${formatRuntime(runtime)}</span><br>
-                <span><i class="fas fa-star"></i> ${item.vote_average ? item.vote_average.toFixed(1) : 'N/A'}/10</span>
+                <span><i class="fa-regular fa-calendar"></i> ${item.release_date || item.first_air_date ? new Date(item.release_date || item.first_air_date).getFullYear() : 'N/A'}</span><br>
+                <span><i class="fa-solid fa-earth-americas"></i> ${formattedCountries || 'N/A'}</span><br>
+                <span><i class="fa-solid fa-clapperboard"></i> ${getGenres(item.genre_ids || [])}</span><br>
+                <span><i class="fa-regular fa-clock"></i> ${formatRuntime(runtime)}</span><br>
+                <span><i class="fa-regular fa-star"></i> ${item.vote_average ? item.vote_average.toFixed(1) : 'N/A'}/10</span>
               </p>
             </div>
           `;
@@ -702,7 +848,7 @@
 
     async function openContentModal(contentId) {
       try {
-        const response = await axios.get(`${BASE_URL}/${currentType}/${contentId}?api_key=${API_KEY}&language=en-US&append_to_response=credits,videos`);
+        const response = await axios.get(`${BASE_URL}/${currentType}/${contentId}?api_key=${API_KEY}&language=en-US&append_to_response=credits,videos,production_countries`);
         const content = response.data;
         
         if (!content) {
@@ -723,6 +869,12 @@
           watchButtonsContainer.appendChild(movieButton);
         }
 
+        const formattedCountries = content.production_countries.map(country => {
+          if (country.iso_3166_1 === 'US') return 'US';
+          if (country.iso_3166_1 === 'GB') return 'UK';
+          return country.name;
+        }).join(', ');
+
         const trailerContainer = document.getElementById('trailer-container');
         if (content.videos && content.videos.results && content.videos.results.length > 0) {
           const trailer = content.videos.results.find(video => video.type === 'Trailer') || content.videos.results[0];
@@ -734,11 +886,13 @@
         const modalContent = document.getElementById('content-modal-details');
         modalContent.innerHTML = `
           <div style="text-align: center; margin: 10px 0;">
-            <span style="margin: 0 10px;"><i class="fas fa-calendar-alt"></i> ${content.release_date || content.first_air_date ? new Date(content.release_date || content.first_air_date).getFullYear() : 'N/A'}</span>
-            <span style="margin: 0 10px;"><i class="fas fa-film"></i> ${content.genres ? content.genres.map(genre => genre.name).join(', ') : 'N/A'}</span>
-            <span style="margin: 0 10px;"><i class="fas fa-clock"></i> ${formatRuntime(content.runtime || (content.episode_run_time && content.episode_run_time[0]))}</span>
-            <span style="margin: 0 10px;"><i class="fas fa-star"></i> ${content.vote_average ? content.vote_average.toFixed(1) : 'N/A'}/10</span>
+            <span style="margin: 0 10px;"><i class="fa-regular fa-calendar"></i> ${content.release_date || content.first_air_date ? new Date(content.release_date || content.first_air_date).getFullYear() : 'N/A'}</span>|
+            <span style="margin: 0 10px;"><i class="fa-solid fa-earth-americas"></i> ${formattedCountries || 'N/A'}</span>|
+            <span style="margin: 0 10px;"><i class="fa-solid fa-clapperboard"></i> ${content.genres ? content.genres.map(genre => genre.name).join(', ') : 'N/A'}</span>|
+            <span style="margin: 0 10px;"><i class="fa-regular fa-clock"></i> ${formatRuntime(content.runtime || (content.episode_run_time && content.episode_run_time[0]))}</span>|
+            <span style="margin: 0 10px;"><i class="fa-regular fa-star"></i> ${content.vote_average ? content.vote_average.toFixed(1) : 'N/A'}/10</span>
           </div>
+
           <p style="text-align: justify;">${content.overview || 'No synopsis available.'}</p>
         `;
 
@@ -798,7 +952,7 @@
       watchButton.textContent = 'Watch';
       watchButton.style.padding = '10px 20px';
       watchButton.style.backgroundColor = 'var(--primary-color)';
-      watchButton.style.color = 'white';
+      watchButton.style.color = 'var(--secondary-color)';
       watchButton.style.border = 'none';
       watchButton.style.borderRadius = '5px';
       watchButton.style.cursor = 'pointer';
@@ -873,9 +1027,9 @@
           const totalPages = Math.ceil(allCredits.length / itemsPerPage);
           return `
             <div class="pagination" style="text-align: center; margin-top: 20px;">
-              <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>&lt; Prev</button>
-              <span>Page ${currentPage} of ${totalPages}</span>
-              <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next &gt;</button>
+              <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-left"></i></button>
+              <span>${currentPage} of ${totalPages}</span>
+              <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>
             </div>
           `;
         }
@@ -898,7 +1052,8 @@
                   <img src="${IMG_BASE_URL}${image.file_path}" alt="${actor.name}" style="width: 30%; height: auto; cursor: pointer;" onclick="maximizeImage(this.src)">
                 `).join('') : 'No images available'}
               </div>
-              <p style="text-align: left; margin-top: 10px;">
+              
+              <p style="width: 96%; border: 1px solid #bcbcbc; padding: 10px; border-radius: 10px; left; margin-top: 20px; line-height: 35px; color: #666;">
                 <i class="fa-solid fa-cake-candles"></i> ${actor.birthday ? calculateAge(actor.birthday) : 'Unknown'}
                 <br>
                 <i class="fa-solid fa-location-dot"></i> ${actor.place_of_birth || 'Unknown'}
@@ -1073,7 +1228,14 @@
     function updateLanguageFilter() {
       const languageFilter = document.getElementById('language-filter');
       languageFilter.innerHTML = '<option value="">Language</option>';
-      languages.forEach(language => {
+      const allowedLanguages = [
+        { iso_639_1: 'en', english_name: 'English' },
+        { iso_639_1: 'pt', english_name: 'Portuguese' },
+        { iso_639_1: 'es', english_name: 'Spanish' },
+        { iso_639_1: 'it', english_name: 'Italian' },
+        { iso_639_1: 'fr', english_name: 'French' }
+      ];
+      allowedLanguages.forEach(language => {
         const option = document.createElement('option');
         option.value = language.iso_639_1;
         option.textContent = language.english_name;
@@ -1157,4 +1319,5 @@
     fetchLanguages();
     fetchContent();
   </script>
-</body></html>
+</body>
+</html>
