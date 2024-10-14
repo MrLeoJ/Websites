@@ -1,1 +1,426 @@
+<html><head><base href="https://your-website.com">
+    <title>CineHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3B8EA5;
+            --secondary-color: #01b4e4;
+            --text-color: #333;
+            --background-color: #f5f5f5;
+        }
 
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            padding: 1em;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header__title {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+
+        .header__nav {
+            display: flex;
+            gap: 1em;
+        }
+
+        .header__nav-item {
+            cursor: pointer;
+            padding: 0.5em 1em;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .header__nav-item:hover,
+        .header__nav-item--active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .main {
+            max-width: 1200px;
+            margin: 2em auto;
+            padding: 0 2em;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1em;
+            margin-bottom: 2em;
+        }
+
+        .filters__item {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .filters__select {
+            width: 100%;
+            padding: 0.5em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 0.5em;
+            margin-bottom: 2em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .watchlist {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 2em;
+        }
+
+        .watchlist__item {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .watchlist__item:hover {
+            transform: scale(1.05);
+        }
+
+        .watchlist__item-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+        }
+
+        .watchlist__item-info {
+            padding: 1em;
+        }
+
+        .watchlist__item-title {
+            font-weight: 600;
+            margin-bottom: 0.5em;
+        }
+
+        .watchlist__item-type {
+            font-size: 0.9em;
+            color: var(--secondary-color);
+        }
+
+        .watchlist__item-details {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 0.5em;
+        }
+
+        .watchlist__item-details div {
+            margin-bottom: 0.2em;
+        }
+
+        .watchlist__item-details i {
+            width: 20px;
+            text-align: center;
+            margin-right: 0.3em;
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 1.5em;
+            margin-top: 2em;
+            color: var(--secondary-color);
+        }
+
+        @media (max-width: 768px) {
+            .watchlist {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header__nav {
+                margin-top: 1em;
+            }
+
+            .watchlist {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
+
+        .full-screen-player {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+        }
+
+        .full-screen-player iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .close-player {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1 class="header__title">CineHub</h1>
+        <nav class="header__nav">
+            <div class="header__nav-item header__nav-item--active" data-type="all">All</div>
+            <div class="header__nav-item" data-type="movie">Films</div>
+            <div class="header__nav-item" data-type="tv">TV Series</div>
+        </nav>
+    </header>
+    <main class="main">
+        <div class="filters">
+            <div class="filters__item">
+                <select class="filters__select" id="genreFilter" aria-label="Filter by genre">
+                    <option value="">Genre</option>
+                    <!-- Genre options will be populated dynamically -->
+                </select>
+            </div>
+            <div class="filters__item">
+                <select class="filters__select" id="yearFilter" aria-label="Filter by year">
+                    <option value="">Year</option>
+                    <!-- Year options will be populated dynamically -->
+                </select>
+            </div>
+            <div class="filters__item">
+                <select class="filters__select" id="countryFilter" aria-label="Filter by country">
+                    <option value="">Country</option>
+                    <!-- Country options will be populated dynamically -->
+                </select>
+            </div>
+            <div class="filters__item">
+                <select class="filters__select" id="languageFilter" aria-label="Filter by language">
+                    <option value="">Language</option>
+                    <!-- Language options will be populated dynamically -->
+                </select>
+            </div>
+        </div>
+        <input type="text" class="search-bar" id="searchInput" placeholder="Search titles..." aria-label="Search titles">
+        <div id="watchlist" class="watchlist" aria-live="polite">
+            <!-- Watchlist content will be dynamically inserted here -->
+        </div>
+    </main>
+    <div id="fullScreenPlayer" class="full-screen-player">
+        <button id="closePlayer" class="close-player"><i class="fas fa-times"></i></button>
+        <iframe id="playerIframe" src="" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+    <script>
+        const API_READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzMjlmODk4ZTU2NDJjOTA3MTVmZDJiNGE4MWYwZTJkNiIsIm5iZiI6MTcyODkxNTY1OS42NTAyMTksInN1YiI6IjYzYTRkNWQ3MzM0NGM2MDA3ZGMwYzRlOSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.7JRz28RfwmrRWR058vIiUztw_4L-FbBfL8BICq73-vc';
+        let combinedWatchlist = [];
+        let currentType = 'all';
+
+        async function getWatchlist(type) {
+            const response = await fetch(`https://api.themoviedb.org/3/account/AgentKan3/watchlist/${type}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${API_READ_ACCESS_TOKEN}`,
+                    'Content-Type': 'application/json;charset=utf-8'
+                }
+            });
+            const data = await response.json();
+            
+            const detailedResults = await Promise.all(data.results.map(async (item) => {
+                const detailsResponse = await fetch(`https://api.themoviedb.org/3/${type === 'movies' ? 'movie' : 'tv'}/${item.id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${API_READ_ACCESS_TOKEN}`,
+                        'Content-Type': 'application/json;charset=utf-8'
+                    }
+                });
+                const details = await detailsResponse.json();
+                return { ...item, ...details };
+            }));
+
+            return detailedResults;
+        }
+
+        async function fetchAndPopulateFilters() {
+            const genres = ['Action', 'Comedy', 'Drama', 'Sci-Fi'];
+            const years = ['2023', '2022', '2021', '2020'];
+            const countries = ['USA', 'UK', 'France', 'Japan'];
+            const languages = ['English', 'French', 'Japanese', 'Spanish'];
+
+            populateFilterOptions('genreFilter', genres);
+            populateFilterOptions('yearFilter', years);
+            populateFilterOptions('countryFilter', countries);
+            populateFilterOptions('languageFilter', languages);
+        }
+
+        function populateFilterOptions(filterId, options) {
+            const select = document.getElementById(filterId);
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option;
+                select.appendChild(optionElement);
+            });
+        }
+
+        function filterWatchlist() {
+            const genre = document.getElementById('genreFilter').value;
+            const year = document.getElementById('yearFilter').value;
+            const country = document.getElementById('countryFilter').value;
+            const language = document.getElementById('languageFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            const filteredList = combinedWatchlist.filter(item => {
+                const matchesType = currentType === 'all' || (currentType === 'movie' && !item.first_air_date) || (currentType === 'tv' && item.first_air_date);
+                const matchesGenre = !genre || (item.genre_ids && item.genre_ids.includes(genre));
+                const matchesYear = !year || (item.release_date && item.release_date.startsWith(year)) || (item.first_air_date && item.first_air_date.startsWith(year));
+                const matchesCountry = !country || (item.origin_country && item.origin_country.includes(country));
+                const matchesLanguage = !language || item.original_language === language;
+                const matchesSearch = !searchTerm || (item.title || item.name).toLowerCase().includes(searchTerm);
+
+                return matchesType && matchesGenre && matchesYear && matchesCountry && matchesLanguage && matchesSearch;
+            });
+
+            displayFilteredWatchlist(filteredList);
+        }
+
+        function displayFilteredWatchlist(filteredList) {
+            const watchlistContainer = document.getElementById('watchlist');
+            watchlistContainer.innerHTML = '';
+
+            if (filteredList.length === 0) {
+                watchlistContainer.innerHTML = '<p>No items match the current filters.</p>';
+                return;
+            }
+
+            filteredList.forEach(item => {
+                const type = item.first_air_date ? 'TV Series' : 'Movie';
+                const title = item.title || item.name;
+                const posterPath = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750.png?text=No+Poster+Available';
+                const releaseYear = (item.release_date || item.first_air_date || '').split('-')[0];
+                const country = (item.production_countries && item.production_countries[0] && item.production_countries[0].iso_3166_1) || 'N/A';
+                const genre = (item.genres && item.genres[0] && item.genres[0].name) || 'N/A';
+                const runtime = item.runtime || (item.episode_run_time && item.episode_run_time[0]) || 'N/A';
+                const rating = item.vote_average || 'N/A';
+
+                const itemElement = document.createElement('div');
+                itemElement.className = 'watchlist__item';
+                itemElement.innerHTML = `
+                    <img class="watchlist__item-image" src="${posterPath}" alt="${title} poster" width="200" height="300">
+                    <div class="watchlist__item-info">
+                        <div class="watchlist__item-title">${title}</div>
+                        <div class="watchlist__item-type">
+                            <i class="fas ${type === 'TV Series' ? 'fa-tv' : 'fa-film'}" aria-hidden="true"></i>
+                            <span class="sr-only">${type}</span>
+                            ${type}
+                        </div>
+                        <div class="watchlist__item-details">
+                            <div><i class="fa-regular fa-calendar" aria-hidden="true"></i> <span class="sr-only">Release year:</span> ${releaseYear}</div>
+                            <div><i class="fa-solid fa-earth-americas" aria-hidden="true"></i> <span class="sr-only">Country of Origin:</span> ${country}</div>
+                            <div><i class="fa-solid fa-film" aria-hidden="true"></i> <span class="sr-only">Genre:</span> ${genre}</div>
+                            <div><i class="fa-regular fa-clock" aria-hidden="true"></i> <span class="sr-only">Runtime:</span> ${runtime} min</div>
+                            <div><i class="fa-regular fa-star" aria-hidden="true"></i> <span class="sr-only">Rating:</span> ${rating}</div>
+                        </div>
+                    </div>
+                `;
+                itemElement.addEventListener('click', () => openFullScreenPlayer(item));
+                watchlistContainer.appendChild(itemElement);
+            });
+        }
+
+        function openFullScreenPlayer(item) {
+            const player = document.getElementById('fullScreenPlayer');
+            const iframe = document.getElementById('playerIframe');
+            const isTVSeries = item.first_air_date !== undefined;
+            const tmdbId = item.id;
+
+            let src = isTVSeries
+                ? `https://vidsrc.xyz/embed/tv?tmdb=${tmdbId}&season=1&episode=1`
+                : `https://vidsrc.xyz/embed/movie?tmdb=${tmdbId}`;
+
+            iframe.src = src;
+            player.style.display = 'block';
+        }
+
+        function closeFullScreenPlayer() {
+            const player = document.getElementById('fullScreenPlayer');
+            const iframe = document.getElementById('playerIframe');
+            iframe.src = '';
+            player.style.display = 'none';
+        }
+
+        async function displayWatchlist() {
+            const watchlistContainer = document.getElementById('watchlist');
+            watchlistContainer.innerHTML = '<div class="loading" role="status" aria-label="Loading watchlist"><i class="fas fa-spinner fa-spin"></i> Loading watchlist...</div>';
+
+            try {
+                const movies = await getWatchlist('movies');
+                const tvShows = await getWatchlist('tv');
+                combinedWatchlist = [...movies, ...tvShows];
+
+                if (combinedWatchlist.length === 0) {
+                    watchlistContainer.innerHTML = '<p>The watchlist is currently empty.</p>';
+                    return;
+                }
+
+                filterWatchlist();
+            } catch (error) {
+                console.error('Error fetching watchlist:', error);
+                watchlistContainer.innerHTML = '<p>Error loading the watchlist. Please try again later.</p>';
+            }
+        }
+
+        document.querySelectorAll('.header__nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelector('.header__nav-item--active').classList.remove('header__nav-item--active');
+                this.classList.add('header__nav-item--active');
+                currentType = this.dataset.type;
+                filterWatchlist();
+            });
+        });
+
+        ['genreFilter', 'yearFilter', 'countryFilter', 'languageFilter'].forEach(filterId => {
+            document.getElementById(filterId).addEventListener('change', filterWatchlist);
+        });
+
+        document.getElementById('searchInput').addEventListener('input', filterWatchlist);
+        document.getElementById('closePlayer').addEventListener('click', closeFullScreenPlayer);
+
+        window.onload = async () => {
+            await fetchAndPopulateFilters();
+            await displayWatchlist();
+        };
+    </script>
+</body></html>
