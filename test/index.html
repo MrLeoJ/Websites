@@ -150,22 +150,6 @@
             margin-right: 0.3em;
         }
 
-        .watchlist__item-play {
-            display: block;
-            width: 100%;
-            padding: 0.5em;
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-family: 'Poppins', sans-serif;
-            transition: background-color 0.3s ease;
-        }
-
-        .watchlist__item-play:hover {
-            background-color: #0196c0;
-        }
-
         .loading {
             text-align: center;
             font-size: 1.5em;
@@ -212,6 +196,39 @@
             }
         }
 
+        .watchlist__item-controls {
+            padding: 1em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5em;
+        }
+
+        .season-select,
+        .episode-select {
+            padding: 0.5em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .play-button {
+            padding: 0.5em 1em;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+        }
+
+        .play-button:hover {
+            background-color: #0196c0;
+        }
+
         .full-screen-player {
             display: none;
             position: fixed;
@@ -223,22 +240,9 @@
             z-index: 1000;
         }
 
-        .full-screen-player .player-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 1em;
-        }
-
-        #seasonSelect, #episodeSelect {
-            margin-bottom: 1em;
-            padding: 0.5em;
-            font-family: 'Poppins', sans-serif;
-        }
-
         .full-screen-player iframe {
-            width: 80%;
-            height: 80%;
+            width: 100%;
+            height: 100%;
             border: none;
         }
 
@@ -301,11 +305,7 @@
     </main>
     <div id="fullScreenPlayer" class="full-screen-player">
         <button id="closePlayer" class="close-player"><i class="fas fa-times"></i></button>
-        <div class="player-content">
-            <select id="seasonSelect"></select>
-            <select id="episodeSelect"></select>
-            <iframe id="playerIframe" src="" frameborder="0" allowfullscreen=""></iframe>
-        </div>
+        <iframe id="playerIframe" src="" frameborder="0" allowfullscreen=""></iframe>
     </div>
 
     <script>
@@ -442,9 +442,6 @@
                 itemElement.className = 'watchlist__item';
                 itemElement.innerHTML = `
                     <img class="watchlist__item-image" src="${posterPath}" alt="${title} poster" width="200" height="300">
-                    <button class="watchlist__item-play" aria-label="Play ${title}">
-                        <i class="fas fa-play"></i> Play
-                    </button>
                     <div class="watchlist__item-info">
                         <div class="watchlist__item-title">${title}</div>
                         <div class="watchlist__item-type">
@@ -460,13 +457,45 @@
                             <div><i class="fa-regular fa-star" aria-hidden="true"></i> <span class="sr-only">Rating:</span> ${rating}</div>
                         </div>
                     </div>
+                    <div class="watchlist__item-controls">
+                        ${type === 'TV Series' ? `
+                            <select class="season-select" aria-label="Select season">
+                                ${generateSeasonOptions(item.number_of_seasons)}
+                            </select>
+                            <select class="episode-select" aria-label="Select episode">
+                                ${generateEpisodeOptions(item.seasons[0].episode_count)}
+                            </select>
+                        ` : ''}
+                        <button class="play-button" aria-label="Play ${title}">
+                            <i class="fas fa-play"></i> Play
+                        </button>
+                    </div>
                 `;
-                itemElement.querySelector('.watchlist__item-play').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    openFullScreenPlayer(item);
-                });
+
+                const playButton = itemElement.querySelector('.play-button');
+                playButton.addEventListener('click', () => openFullScreenPlayer(item));
+
+                if (type === 'TV Series') {
+                    const seasonSelect = itemElement.querySelector('.season-select');
+                    const episodeSelect = itemElement.querySelector('.episode-select');
+
+                    seasonSelect.addEventListener('change', (e) => {
+                        const selectedSeason = parseInt(e.target.value);
+                        const episodeCount = item.seasons[selectedSeason - 1].episode_count;
+                        episodeSelect.innerHTML = generateEpisodeOptions(episodeCount);
+                    });
+                }
+
                 watchlistContainer.appendChild(itemElement);
             });
+        }
+
+        function generateSeasonOptions(numberOfSeasons) {
+            return Array.from({ length: numberOfSeasons }, (_, i) => `<option value="${i + 1}">Season ${i + 1}</option>`).join('');
+        }
+
+        function generateEpisodeOptions(episodeCount) {
+            return Array.from({ length: episodeCount }, (_, i) => `<option value="${i + 1}">Episode ${i + 1}</option>`).join('');
         }
 
         function openFullScreenPlayer(item) {
@@ -475,79 +504,26 @@
             const isTVSeries = item.first_air_date !== undefined;
             const tmdbId = item.id;
 
+            let src;
             if (isTVSeries) {
-                openTVSeriesPlayer(item, tmdbId);
+                const seasonSelect = document.querySelector('.season-select');
+                const episodeSelect = document.querySelector('.episode-select');
+                const season = seasonSelect ? seasonSelect.value : '1';
+                const episode = episodeSelect ? episodeSelect.value : '1';
+                src = `https://vidsrc.xyz/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}`;
             } else {
-                iframe.src = `https://vidsrc.xyz/embed/movie?tmdb=${tmdbId}`;
-                player.style.display = 'block';
-            }
-        }
-
-        function openTVSeriesPlayer(item, tmdbId) {
-            const player = document.getElementById('fullScreenPlayer');
-            const iframe = document.getElementById('playerIframe');
-            
-            // Create season and episode selection
-            const seasonSelect = document.createElement('select');
-            seasonSelect.id = 'seasonSelect';
-            const episodeSelect = document.createElement('select');
-            episodeSelect.id = 'episodeSelect';
-
-            // Populate season options
-            for (let i = 1; i <= item.number_of_seasons; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = `Season ${i}`;
-                seasonSelect.appendChild(option);
+                src = `https://vidsrc.xyz/embed/movie?tmdb=${tmdbId}`;
             }
 
-            // Function to update episode options based on selected season
-            function updateEpisodeOptions() {
-                const selectedSeason = parseInt(seasonSelect.value);
-                const season = item.seasons.find(s => s.season_number === selectedSeason);
-                episodeSelect.innerHTML = '';
-                for (let i = 1; i <= season.episode_count; i++) {
-                    const option = document.createElement('option');
-                    option.value = i;
-                    option.textContent = `Episode ${i}`;
-                    episodeSelect.appendChild(option);
-                }
-            }
-
-            // Initial population of episode options
-            updateEpisodeOptions();
-
-            // Event listeners for season and episode changes
-            seasonSelect.addEventListener('change', () => {
-                updateEpisodeOptions();
-                updatePlayerSrc();
-            });
-            episodeSelect.addEventListener('change', updatePlayerSrc);
-
-            // Function to update player source
-            function updatePlayerSrc() {
-                const season = seasonSelect.value;
-                const episode = episodeSelect.value;
-                iframe.src = `https://vidsrc.xyz/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}`;
-            }
-
-            // Initial source set
-            updatePlayerSrc();
-
-            // Clear existing content and add new elements
-            const playerContent = document.querySelector('.player-content');
-            playerContent.innerHTML = ''; 
-            playerContent.appendChild(seasonSelect);
-            playerContent.appendChild(episodeSelect);
-            playerContent.appendChild(iframe);
+            iframe.src = src;
             player.style.display = 'block';
         }
 
         function closeFullScreenPlayer() {
             const player = document.getElementById('fullScreenPlayer');
             const iframe = document.getElementById('playerIframe');
+            iframe.src = '';
             player.style.display = 'none';
-            iframe.src = ''; // Clear the iframe source
         }
 
         async function displayWatchlist() {
