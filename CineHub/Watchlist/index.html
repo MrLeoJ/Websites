@@ -1,4 +1,10 @@
-<html><head><base href="https://mrleoj.github.io/Websites/CineHub/"><title>CineHub | Watchlist</title><link rel="icon" type="image/x-icon" href="../favicon.png"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&amp;display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>
+<html>
+    <head>
+    <title>CineHub | Watchlist</title>
+    <link rel="icon" type="image/x-icon" href="icon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>
         :root {
             --primary-color: #3B8EA5;
             --secondary-color: #01b4e4;
@@ -31,6 +37,7 @@
 
         .header__title img {
             transition: width 0.3s ease, height 0.3s ease;
+            margin-top: 0.5em;
             margin-left: 3.5em;
         }
 
@@ -67,12 +74,17 @@
             border: none;
             padding: 0.5em;
             font-family: 'Poppins', sans-serif;
-            font-size: 0.9em;
+            font-size: 1em;
+            outline: none;
+            /* This removes the down arrow from the dropdown menu */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
 
         .sort-select option {
-            background-color: #3a3f4b;
-            color: white;
+            background-color: white;
+            color: #3a3f4b;
         }
 
         .sort-order {
@@ -80,8 +92,9 @@
             border: none;
             cursor: pointer;
             color: white;
-            font-size: 1em;
+            font-size: 0.75em;
             padding: 0.5em;
+            margin-top: 0.1rem;
         }
 
         .header__nav {
@@ -159,7 +172,7 @@
             text-align: center;
             font-size: 1.5em;
             color: #949494;
-            background-color: rgba(255, 255, 255, 0.8);
+            /*background-color: rgba(255, 255, 255, 0.8);*/
             padding: 20px;
             border-radius: 10px;
             z-index: 1000;
@@ -334,11 +347,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            border-radius: 50%;
+            border-radius: 15%;
+            transition: background-color 0.3s ease;
         }
 
         .player-control-btn:hover {
             background-color: rgba(255, 255, 255, 0.2);
+            color: rgba(0, 0, 0, 0.7);
+            transition: background-color 0.3s ease;
         }
 
         .back-to-top {
@@ -401,32 +417,41 @@
                 grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             }
         }
+
+        /* Lx */
+        .hidden-text{
+            color: transparent;
+            font-size: 0.01px;
+        }
+        
     </style>
 </head>
 <body>
     <header class="header" style="background-color: #3a3f4b;">
         <div class="header__top">
             <h1 class="header__title">
-                <a href="https://mrleoj.github.io/Websites/CineHub/index.html" target="_blank"><img src="CineHub-Watchlist.png" alt="CineHub" width="150" height="50"></a>
+                <a href="https://mrleoj.github.io/Websites/CineHub/index.html" target="_blank"><img src="logo.png" alt="CineHub" width="150" height="50"></a>
             </h1>
             <div class="header__controls">
-                <div class="sort-container">
-                    <select id="sortBy" class="sort-select" aria-label="Sort by">
-                        <option value="date_added">Date Added</option>
-                        <option value="alphabetical">Alphabetical</option>
-                        <option value="rating">Rating</option>
-                        <option value="release_date">Release Date</option>
-                        <option value="country">Country</option>
-                        <option value="genre">Genre</option>
-                    </select>
-                    <button id="sortOrder" class="sort-order" aria-label="Sort order">
-                        <i class="fa-solid fa-sort-down"></i>
-                    </button>
-                </div>
                 <nav class="header__nav">
                     <div class="header__nav-item header__nav-item--active" data-type="all">All</div>
                     <div class="header__nav-item" data-type="movie">Films</div>
                     <div class="header__nav-item" data-type="tv">TV Series</div>
+
+                    <div class="sort-container">
+                        <select id="sortBy" class="sort-select" aria-label="Sort by">
+                            <option value="date_added">Date Added</option>
+                            <option value="alphabetical">Alphabetical</option>
+                            <option value="rating">Rating</option>
+                            <option value="release_date">Release Date</option>
+                            <option value="country">Country</option>
+                            <option value="genre">Genre</option>
+                        </select>
+                        <button id="sortOrder" class="sort-order" aria-label="Sort order">
+                            <i class="fa-solid fa-angle-down"></i>
+                        </button>
+                    </div>
+
                     <input type="text" class="search-bar" id="searchInput" placeholder="Search Films & TV Series" aria-label="Search titles">
                 </nav>
             </div>
@@ -470,12 +495,13 @@
     <div id="fullScreenPlayer" class="full-screen-player">
         <iframe id="playerIframe" src="" frameborder="0" allowfullscreen=""></iframe>
         <div class="player-controls">
-            <button id="prevEpisode" class="player-control-btn"><i class="fas fa-step-backward"></i></button>
-            <button id="nextEpisode" class="player-control-btn"><i class="fas fa-step-forward"></i></button>
+            <button id="prevEpisode" class="player-control-btn"><i class="fa-solid fa-caret-left"></i></button>
             <button id="fullscreenBtn" class="player-control-btn"><i class="fas fa-expand"></i></button>
+            <button id="nextEpisode" class="player-control-btn"><i class="fa-solid fa-caret-right"></i></button>
         </div>
     </div>
     <div id="messagePopup" class="message-popup"></div>
+
     <script>
         const API_READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzMjlmODk4ZTU2NDJjOTA3MTVmZDJiNGE4MWYwZTJkNiIsIm5iZiI6MTcyODkxNTY1OS42NTAyMTksInN1YiI6IjYzYTRkNWQ3MzM0NGM2MDA3ZGMwYzRlOSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.7JRz28RfwmrRWR058vIiUztw_4L-FbBfL8BICq73-vc';
         let combinedWatchlist = [];
@@ -600,7 +626,7 @@
 
         document.getElementById('sortOrder').addEventListener('click', () => {
             sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-            document.querySelector('#sortOrder i').className = `fa-solid fa-sort-${sortOrder === 'asc' ? 'up' : 'down'}`;
+            document.querySelector('#sortOrder i').className = `fa-solid fa-angle-${sortOrder === 'asc' ? 'up' : 'down'}`;
             filterWatchlist();
         });
 
@@ -671,7 +697,7 @@
                             <div><i class="fa-solid fa-clapperboard"></i> <span class="sr-only">Genres:</span> ${genres}</div>
                             <div><i class="fa-regular fa-clock" aria-hidden="true"></i> <span class="sr-only">Runtime:</span> ${runtime}</div>
                             <div><i class="fa-regular fa-star" aria-hidden="true"></i> <span class="sr-only">Rating:</span> ${rating}</div>
-                            <div><i class="fa-solid fa-plus" aria-hidden="true"></i> <span class="sr-only">Added on:</span> ${addedDate}</div>
+                            <div class="hidden-text"><i class="fa-solid fa-plus" aria-hidden="true"></i> <span class="sr-only">Added on:</span> ${addedDate}</div>
                         </div>
                         <div class="watchlist__item-type">
                             <i class="fas ${type === 'TV Series' ? 'fa-tv' : 'fa-film'}" aria-hidden="true"></i>
@@ -880,4 +906,6 @@
             }, 5000);
         }
     </script>
-</body></html>
+
+</body>
+</html>
