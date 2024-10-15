@@ -323,14 +323,6 @@
             margin: 0 5px;
         }
 
-        .close-player {
-            background-color: #ff6666;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-        }
-
         .full-screen-player iframe {
             flex-grow: 1;
             border: none;
@@ -464,9 +456,9 @@
     </button>
     <div id="fullScreenPlayer" class="full-screen-player">
         <div class="player-controls">
-            <button id="prevEpisode" class="episode-control">Previous Episode</button>
-            <button id="closePlayer" class="close-player"><i class="fas fa-times"></i></button>
-            <button id="nextEpisode" class="episode-control">Next Episode</button>
+            <button id="prevEpisode" class="episode-control"><i class="fas fa-step-backward"></i></button>
+            <button id="fullscreenToggle" class="episode-control"><i class="fas fa-expand"></i></button>
+            <button id="nextEpisode" class="episode-control"><i class="fas fa-step-forward"></i></button>
         </div>
         <iframe id="playerIframe" src="" frameborder="0" allowfullscreen=""></iframe>
     </div>
@@ -721,11 +713,6 @@
             }
         }
 
-        function closePlayer() {
-            document.getElementById('fullScreenPlayer').style.display = 'none';
-            document.getElementById('playerIframe').src = '';
-        }
-
         function previousEpisode() {
             if (currentEpisode > 1) {
                 currentEpisode--;
@@ -741,9 +728,38 @@
             updatePlayerSource();
         }
 
-        document.getElementById('closePlayer').addEventListener('click', closePlayer);
+        function toggleFullscreen() {
+            const elem = document.getElementById('playerIframe');
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) { /* Safari */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE11 */
+                    elem.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
         document.getElementById('prevEpisode').addEventListener('click', previousEpisode);
         document.getElementById('nextEpisode').addEventListener('click', nextEpisode);
+        document.getElementById('fullscreenToggle').addEventListener('click', toggleFullscreen);
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            }
+        });
 
         async function displayWatchlist() {
             const watchlistContainer = document.getElementById('watchlist');
