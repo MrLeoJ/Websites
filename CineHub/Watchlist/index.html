@@ -1,10 +1,4 @@
-<html><head>
-    <title>CineHub | Watchlist</title>
-    <link rel="icon" type="image/x-icon" href="../favicon.png">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&amp;display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+<html><head><base href="https://mrleoj.github.io/Websites/CineHub/"><title>CineHub | Watchlist</title><link rel="icon" type="image/x-icon" href="../favicon.png"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&amp;display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>
         :root {
             --primary-color: #3B8EA5;
             --secondary-color: #01b4e4;
@@ -54,6 +48,40 @@
         .header__title {
             font-size: 1.5em;
             font-weight: 600;
+        }
+
+        .header__controls {
+            display: flex;
+            align-items: center;
+        }
+
+        .sort-container {
+            display: flex;
+            align-items: center;
+            margin-right: 1em;
+        }
+
+        .sort-select {
+            background-color: transparent;
+            color: white;
+            border: none;
+            padding: 0.5em;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9em;
+        }
+
+        .sort-select option {
+            background-color: #3a3f4b;
+            color: white;
+        }
+
+        .sort-order {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: white;
+            font-size: 1em;
+            padding: 0.5em;
         }
 
         .header__nav {
@@ -124,10 +152,17 @@
         }
 
         .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             text-align: center;
             font-size: 1.5em;
-            margin-top: 2em;
             color: #949494;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1000;
         }
 
         .main {
@@ -150,7 +185,6 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        /* Watchlist Items - hover effect */
         .watchlist__item:hover {
             transform: scale(1.025);
         }
@@ -167,10 +201,9 @@
 
         .watchlist__item-title {
             font-weight: 600;
-            font-size: 0.01px; /* Makes the title of the Film/Series disappear*/
-            color: transparent; /* Makes the title of the Film/Series disappear*/
+            font-size: 0.01px;
+            color: transparent;
             margin-bottom: 0.5em;
-            
         }
 
         .watchlist__item-type {
@@ -235,31 +268,6 @@
             transition: color 0.3s ease;
         }
 
-        @media (max-width: 768px) {
-            .watchlist {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            }
-
-            .header__top {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .header__nav {
-                margin-top: 1em;
-            }
-
-            .filters {
-                flex-direction: column;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .watchlist {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            }
-        }
-/*xx*/
         .watchlist__item-controls {
             background-color: #01b4e4;
             padding: 0;
@@ -296,11 +304,35 @@
             height: 100%;
             background-color: rgba(0, 0, 0, 0.9);
             z-index: 1000;
+            flex-direction: column;
+        }
+
+        .player-controls {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+        }
+
+        .episode-control {
+            background-color: #01b4e4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            flex-grow: 1;
+            margin: 0 5px;
+        }
+
+        .close-player {
+            background-color: #ff6666;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
         }
 
         .full-screen-player iframe {
-            width: 100%;
-            height: 100%;
+            flex-grow: 1;
             border: none;
         }
 
@@ -339,9 +371,31 @@
             z-index: 1002;
         }
 
-        /* Lx */
-        
+        @media (max-width: 768px) {
+            .watchlist {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
 
+            .header__top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header__controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .watchlist {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
     </style>
 </head>
 <body>
@@ -350,12 +404,27 @@
             <h1 class="header__title">
                 <a href="https://mrleoj.github.io/Websites/CineHub/index.html" target="_blank"><img src="CineHub-Watchlist.png" alt="CineHub" width="150" height="50"></a>
             </h1>
-            <nav class="header__nav">
-                <div class="header__nav-item header__nav-item--active" data-type="all">All</div>
-                <div class="header__nav-item" data-type="movie">Films</div>
-                <div class="header__nav-item" data-type="tv">TV Series</div>
-                <input type="text" class="search-bar" id="searchInput" placeholder="Search Films & TV Series" aria-label="Search titles">
-            </nav>
+            <div class="header__controls">
+                <div class="sort-container">
+                    <select id="sortBy" class="sort-select" aria-label="Sort by">
+                        <option value="date_added">Date Added</option>
+                        <option value="alphabetical">Alphabetical</option>
+                        <option value="rating">Rating</option>
+                        <option value="release_date">Release Date</option>
+                        <option value="country">Country</option>
+                        <option value="genre">Genre</option>
+                    </select>
+                    <button id="sortOrder" class="sort-order" aria-label="Sort order">
+                        <i class="fa-solid fa-sort-down"></i>
+                    </button>
+                </div>
+                <nav class="header__nav">
+                    <div class="header__nav-item header__nav-item--active" data-type="all">All</div>
+                    <div class="header__nav-item" data-type="movie">Films</div>
+                    <div class="header__nav-item" data-type="tv">TV Series</div>
+                    <input type="text" class="search-bar" id="searchInput" placeholder="Search Films & TV Series" aria-label="Search titles">
+                </nav>
+            </div>
         </div>
     </header>
     <div class="filters-container">
@@ -394,7 +463,11 @@
         <i class="fa-solid fa-angle-up"></i>
     </button>
     <div id="fullScreenPlayer" class="full-screen-player">
-        <button id="closePlayer" class="close-player"><i class="fas fa-times"></i></button>
+        <div class="player-controls">
+            <button id="prevEpisode" class="episode-control">Previous Episode</button>
+            <button id="closePlayer" class="close-player"><i class="fas fa-times"></i></button>
+            <button id="nextEpisode" class="episode-control">Next Episode</button>
+        </div>
         <iframe id="playerIframe" src="" frameborder="0" allowfullscreen=""></iframe>
     </div>
     <div id="messagePopup" class="message-popup"></div>
@@ -402,6 +475,11 @@
         const API_READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzMjlmODk4ZTU2NDJjOTA3MTVmZDJiNGE4MWYwZTJkNiIsIm5iZiI6MTcyODkxNTY1OS42NTAyMTksInN1YiI6IjYzYTRkNWQ3MzM0NGM2MDA3ZGMwYzRlOSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.7JRz28RfwmrRWR058vIiUztw_4L-FbBfL8BICq73-vc';
         let combinedWatchlist = [];
         let currentType = 'all';
+        let sortBy = 'date_added';
+        let sortOrder = 'desc';
+        let currentSeason = 1;
+        let currentEpisode = 1;
+        let currentTMDBId = null;
 
         async function getWatchlist(type) {
             const response = await fetch(`https://api.themoviedb.org/3/account/AgentKan3/watchlist/${type}`, {
@@ -434,6 +512,40 @@
             const remainingMinutes = minutes % 60;
             if (hours === 0) return `${remainingMinutes}m`;
             return `${hours}h ${remainingMinutes}m`;
+        }
+
+        function sortWatchlist(list) {
+            return list.sort((a, b) => {
+                let valueA, valueB;
+                switch (sortBy) {
+                    case 'alphabetical':
+                        valueA = a.title || a.name;
+                        valueB = b.title || b.name;
+                        break;
+                    case 'rating':
+                        valueA = a.vote_average || 0;
+                        valueB = b.vote_average || 0;
+                        break;
+                    case 'release_date':
+                        valueA = a.release_date || a.first_air_date || '';
+                        valueB = b.release_date || b.first_air_date || '';
+                        break;
+                    case 'country':
+                        valueA = (a.production_countries && a.production_countries[0] && a.production_countries[0].iso_3166_1) || '';
+                        valueB = (b.production_countries && b.production_countries[0] && b.production_countries[0].iso_3166_1) || '';
+                        break;
+                    case 'genre':
+                        valueA = (a.genres && a.genres[0] && a.genres[0].name) || '';
+                        valueB = (b.genres && b.genres[0] && b.genres[0].name) || '';
+                        break;
+                    default: // date_added
+                        return 0; // Assume the list is already sorted by date added
+                }
+                
+                if (valueA < valueB) return sortOrder === 'asc' ? -1 : 1;
+                if (valueA > valueB) return sortOrder === 'asc' ? 1 : -1;
+                return 0;
+            });
         }
 
         async function fetchAndPopulateFilters() {
@@ -475,6 +587,17 @@
             });
         }
 
+        document.getElementById('sortBy').addEventListener('change', (e) => {
+            sortBy = e.target.value;
+            filterWatchlist();
+        });
+
+        document.getElementById('sortOrder').addEventListener('click', () => {
+            sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            document.querySelector('#sortOrder i').className = `fa-solid fa-sort-${sortOrder === 'asc' ? 'up' : 'down'}`;
+            filterWatchlist();
+        });
+
         function filterWatchlist() {
             const genre = document.getElementById('genreFilter').value;
             const year = document.getElementById('yearFilter').value;
@@ -493,7 +616,8 @@
                 return matchesType && matchesGenre && matchesYear && matchesCountry && matchesLanguage && matchesSearch;
             });
 
-            displayFilteredWatchlist(filteredList);
+            const sortedList = sortWatchlist(filteredList);
+            displayFilteredWatchlist(sortedList);
         }
 
         function displayFilteredWatchlist(filteredList) {
@@ -550,7 +674,7 @@
                 `;
 
                 const playButton = itemElement.querySelector('.play-button');
-                playButton.addEventListener('click', () => openFullScreenPlayer(item));
+                playButton.addEventListener('click', () => openFullScreenPlayer(item, itemElement));
 
                 if (type === 'TV Series') {
                     const seasonSelect = itemElement.querySelector('.season-select');
@@ -575,23 +699,51 @@
             return Array.from({ length: episodeCount }, (_, i) => `<option value="${i + 1}">Ep ${i + 1}</option>`).join('');
         }
 
-        async function openFullScreenPlayer(item) {
+        async function openFullScreenPlayer(item, itemElement) {
             const isTVSeries = item.first_air_date !== undefined;
-            const tmdbId = item.id;
+            currentTMDBId = item.id;
 
-            let src;
             if (isTVSeries) {
-                const seasonSelect = document.querySelector('.season-select');
-                const episodeSelect = document.querySelector('.episode-select');
-                const season = seasonSelect ? seasonSelect.value : '1';
-                const episode = episodeSelect ? episodeSelect.value : '1';
-                src = `https://vidsrc.xyz/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}`;
-            } else {
-                src = `https://vidsrc.xyz/embed/movie?tmdb=${tmdbId}`;
+                const seasonSelect = itemElement.querySelector('.season-select');
+                const episodeSelect = itemElement.querySelector('.episode-select');
+                currentSeason = seasonSelect ? parseInt(seasonSelect.value) : 1;
+                currentEpisode = episodeSelect ? parseInt(episodeSelect.value) : 1;
             }
 
-            window.open(src, '_blank');
+            updatePlayerSource();
+            document.getElementById('fullScreenPlayer').style.display = 'flex';
         }
+
+        function updatePlayerSource() {
+            const playerIframe = document.getElementById('playerIframe');
+            if (currentTMDBId) {
+                playerIframe.src = `https://vidsrc.xyz/embed/tv?tmdb=${currentTMDBId}&season=${currentSeason}&episode=${currentEpisode}`;
+            }
+        }
+
+        function closePlayer() {
+            document.getElementById('fullScreenPlayer').style.display = 'none';
+            document.getElementById('playerIframe').src = '';
+        }
+
+        function previousEpisode() {
+            if (currentEpisode > 1) {
+                currentEpisode--;
+            } else if (currentSeason > 1) {
+                currentSeason--;
+                currentEpisode = 10; // Assuming the last episode of the previous season is 10
+            }
+            updatePlayerSource();
+        }
+
+        function nextEpisode() {
+            currentEpisode++;
+            updatePlayerSource();
+        }
+
+        document.getElementById('closePlayer').addEventListener('click', closePlayer);
+        document.getElementById('prevEpisode').addEventListener('click', previousEpisode);
+        document.getElementById('nextEpisode').addEventListener('click', nextEpisode);
 
         async function displayWatchlist() {
             const watchlistContainer = document.getElementById('watchlist');
