@@ -1,6 +1,6 @@
-<html><head><base href="https://mrleoj.github.io/Websites/CineHub/">
+<html><head>
     <title>CineHub | Watchlist</title>
-    <link rel="icon" type="image/x-icon" href="icon.png">
+    <link rel="icon" type="image/x-icon" href="https://is.gd/1fgaRn">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>
@@ -193,6 +193,7 @@
             overflow: hidden;
             transition: transform 0.3s ease;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
 
         .watchlist__item:hover {
@@ -239,6 +240,33 @@
             margin-right: 0.3em;
         }
 
+        .remove-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .remove-button i {
+            color: white;
+            opacity: 0.5;
+            font-size: 1.2em;
+        }
+
+        .remove-button:hover {
+            background-color: #FFF;
+            border-radius: 50%;
+        }
+
+        .remove-button:hover i {
+            opacity: 1;
+            color: #ff6666;
+        }
+
         .play-button {
             padding: 0.25em;
             color: white;
@@ -256,7 +284,7 @@
 
         .play-button--movie {
             background-color: #01b4e4;
-            width: 50%;
+            width: 100%;
             padding: 1em 0;
             transition: color 0.3s ease;
         }
@@ -276,24 +304,6 @@
         .play-button--tv:hover {
             color: #3B8EA5;
             transition: color 0.3s ease;
-        }
-
-        .remove-button {
-            background-color: #ff6666;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-family: 'Poppins', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 50%;
-            padding: 1em 0;
-            transition: background-color 0.3s ease;
-        }
-
-        .remove-button:hover {
-            background-color: #ff4444;
         }
 
         .watchlist__item-controls {
@@ -444,7 +454,7 @@
     <header class="header" style="background-color: #3a3f4b;">
         <div class="header__top">
             <h1 class="header__title">
-                <a href="https://mrleoj.github.io/Websites/CineHub/index.html" target="_blank"><img src="logo.png" alt="CineHub" width="150" height="50"></a>
+                <a href="https://mrleoj.github.io/Websites/CineHub/index.html" target="_blank"><img src="https://is.gd/nwcsfr" alt="CineHub" width="150" height="50"></a>
             </h1>
             <div class="header__controls">
                 <nav class="header__nav">
@@ -690,6 +700,9 @@
                 itemElement.className = 'watchlist__item';
                 itemElement.innerHTML = `
                     <img class="watchlist__item-image" src="${posterPath}" alt="${title} poster" width="200" height="300">
+                    <button class="remove-button" aria-label="Remove ${title} from watchlist">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
                     <div class="watchlist__item-controls">
                         ${type === 'TV Series' ? `
                             <select class="season-select" aria-label="Select season">
@@ -701,9 +714,6 @@
                         ` : ''}
                         <button class="play-button ${type === 'TV Series' ? 'play-button--tv' : 'play-button--movie'}" aria-label="Play ${title}">
                             <i class="fas fa-play"></i>
-                        </button>
-                        <button class="remove-button" aria-label="Remove ${title} from watchlist">
-                            <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
                     <div class="watchlist__item-info">
@@ -728,7 +738,10 @@
                 playButton.addEventListener('click', () => openFullScreenPlayer(item, itemElement));
 
                 const removeButton = itemElement.querySelector('.remove-button');
-                removeButton.addEventListener('click', () => removeFromWatchlist(item));
+                removeButton.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent triggering other click events
+                    removeFromWatchlist(item);
+                });
 
                 if (type === 'TV Series') {
                     const seasonSelect = itemElement.querySelector('.season-select');
