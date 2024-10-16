@@ -1,5 +1,4 @@
-<html>
-    <head>
+<html><head><base href="https://mrleoj.github.io/Websites/CineHub/">
     <title>CineHub | Watchlist</title>
     <link rel="icon" type="image/x-icon" href="icon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,7 +75,6 @@
             font-family: 'Poppins', sans-serif;
             font-size: 1em;
             outline: none;
-            /* This removes the down arrow from the dropdown menu */
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
@@ -172,7 +170,6 @@
             text-align: center;
             font-size: 1.5em;
             color: #949494;
-            /*background-color: rgba(255, 255, 255, 0.8);*/
             padding: 20px;
             border-radius: 10px;
             z-index: 1000;
@@ -259,8 +256,8 @@
 
         .play-button--movie {
             background-color: #01b4e4;
-            width: 100%;
-            padding: 1em 5em;
+            width: 50%;
+            padding: 1em 0;
             transition: color 0.3s ease;
         }
 
@@ -272,13 +269,31 @@
         .play-button--tv {
             background-color: #01b4e4;
             padding: 1em 0.25em;
-            width: 33.5%;
+            width: 50%;
             transition: color 0.3s ease;
         }
 
         .play-button--tv:hover {
             color: #3B8EA5;
             transition: color 0.3s ease;
+        }
+
+        .remove-button {
+            background-color: #ff6666;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 50%;
+            padding: 1em 0;
+            transition: background-color 0.3s ease;
+        }
+
+        .remove-button:hover {
+            background-color: #ff4444;
         }
 
         .watchlist__item-controls {
@@ -418,7 +433,6 @@
             }
         }
 
-        /* Lx */
         .hidden-text{
             color: transparent;
             font-size: 0.01px;
@@ -452,7 +466,7 @@
                         </button>
                     </div>
 
-                    <input type="text" class="search-bar" id="searchInput" placeholder="Search Films & TV Series" aria-label="Search titles">
+                    <input type="text" class="search-bar" id="searchInput" placeholder="Search Films &amp; TV Series" aria-label="Search titles">
                 </nav>
             </div>
         </div>
@@ -688,6 +702,9 @@
                         <button class="play-button ${type === 'TV Series' ? 'play-button--tv' : 'play-button--movie'}" aria-label="Play ${title}">
                             <i class="fas fa-play"></i>
                         </button>
+                        <button class="remove-button" aria-label="Remove ${title} from watchlist">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </div>
                     <div class="watchlist__item-info">
                         <div class="watchlist__item-title">${title}</div>
@@ -709,6 +726,9 @@
 
                 const playButton = itemElement.querySelector('.play-button');
                 playButton.addEventListener('click', () => openFullScreenPlayer(item, itemElement));
+
+                const removeButton = itemElement.querySelector('.remove-button');
+                removeButton.addEventListener('click', () => removeFromWatchlist(item));
 
                 if (type === 'TV Series') {
                     const seasonSelect = itemElement.querySelector('.season-select');
@@ -825,6 +845,37 @@
             document.removeEventListener('keydown', handleKeyPress);
         }
 
+        async function removeFromWatchlist(item) {
+            const type = item.first_air_date ? 'tv' : 'movie';
+            const options = {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'content-type': 'application/json',
+                    'Authorization': `Bearer ${API_READ_ACCESS_TOKEN}`
+                },
+                body: JSON.stringify({
+                    media_type: type,
+                    media_id: item.id,
+                    watchlist: false
+                })
+            };
+
+            try {
+                const response = await fetch('https://api.themoviedb.org/3/account/16613298/watchlist', options);
+                if (response.ok) {
+                    combinedWatchlist = combinedWatchlist.filter(watchlistItem => watchlistItem.id !== item.id);
+                    filterWatchlist();
+                    showMessage(`${item.title || item.name} has been removed from your watchlist.`);
+                } else {
+                    throw new Error('Failed to remove item from watchlist');
+                }
+            } catch (error) {
+                console.error('Error removing item from watchlist:', error);
+                showMessage('Failed to remove item from watchlist. Please try again.');
+            }
+        }
+
         async function displayWatchlist() {
             const watchlistContainer = document.getElementById('watchlist');
             watchlistContainer.innerHTML = '<div class="loading" role="status" aria-label="Loading watchlist"><i class="fas fa-spinner fa-spin"></i> Loading</div>';
@@ -906,6 +957,5 @@
             }, 5000);
         }
     </script>
-
 </body>
 </html>
