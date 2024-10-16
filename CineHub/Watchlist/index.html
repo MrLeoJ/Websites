@@ -1,4 +1,4 @@
-<html><head>
+<html><head><base href="https://mrleoj.github.io/Websites/CineHub/">
     <title>CineHub | Watchlist</title>
     <link rel="icon" type="image/x-icon" href="https://is.gd/1fgaRn">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -534,16 +534,26 @@
         let sortOrder = 'desc';
 
         async function getWatchlist(type) {
-            const response = await fetch(`https://api.themoviedb.org/3/account/AgentKan3/watchlist/${type}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${API_READ_ACCESS_TOKEN}`,
-                    'Content-Type': 'application/json;charset=utf-8'
-                }
-            });
-            const data = await response.json();
-            
-            const detailedResults = await Promise.all(data.results.map(async (item) => {
+            let allResults = [];
+            let page = 1;
+            let totalPages = 1;
+
+            do {
+                const response = await fetch(`https://api.themoviedb.org/3/account/AgentKan3/watchlist/${type}?page=${page}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${API_READ_ACCESS_TOKEN}`,
+                        'Content-Type': 'application/json;charset=utf-8'
+                    }
+                });
+                const data = await response.json();
+                
+                allResults = allResults.concat(data.results);
+                totalPages = data.total_pages;
+                page++;
+            } while (page <= totalPages);
+
+            const detailedResults = await Promise.all(allResults.map(async (item) => {
                 const detailsResponse = await fetch(`https://api.themoviedb.org/3/${type === 'movies' ? 'movie' : 'tv'}/${item.id}`, {
                     method: 'GET',
                     headers: {
@@ -903,6 +913,7 @@
                     return;
                 }
 
+                await fetchAndPopulateFilters();
                 filterWatchlist();
             } catch (error) {
                 console.error('Error fetching watchlist:', error);
@@ -937,7 +948,6 @@
 
         window.onload = async () => {
             await displayWatchlist();
-            await fetchAndPopulateFilters();
         };
 
         window.onscroll = function() {
