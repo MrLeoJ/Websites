@@ -1,4 +1,4 @@
-<html><head>
+<html><head><base href="https://mrleoj.github.io/Websites/CineHub/discover.html">
     <title>CineHub | Discover</title>
     <link rel="icon" type="image/x-icon" href="https://is.gd/1fgaRn">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -322,6 +322,7 @@
         .cast-member img {
             width: 100%;
             height: auto;
+            cursor: pointer;
         }
 
         .cast-tooltip {
@@ -329,11 +330,63 @@
             position: absolute;
             background-color: #333;
             color: #fff;
-            padding: 5px;
-            border-radius: 3px;
+            padding: 10px;
+            border-radius: 5px;
             z-index: 1;
-            width: 150px;
+            min-width: 250px;
+            max-width: 350px;
+            text-align: left;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 14px;
+        }
+
+        .cast-tooltip p {
+            margin: 5px 0;
+        }
+
+        .cast-tooltip i {
+            width: 20px;
             text-align: center;
+            margin-right: 5px;
+        }
+
+        .message-popup {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1001;
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .filmography-popup {
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .filmography-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .filmography-grid img {
+            width: 100%;
+            height: auto;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .filmography-grid img:hover {
+            transform: scale(1.05);
         }
 
         @media (max-width: 768px) {
@@ -360,7 +413,7 @@
     <header class="header" style="background-color: #3a3f4b;">
         <div class="header__top">
             <h1 class="header__title">
-                <a href="https://mrleoj.github.io/Websites/CineHub/Watchlist/index.html"><img src="https://is.gd/Djdhrj" alt="CineHub" width="150" height="50"></a>
+                <a href="https://mrleoj.github.io/Websites/CineHub/Watchlist/index.html"><img src="https://is.gd/70eNnT" alt="CineHub" width="150" height="50"></a>
             </h1>
             <div class="header__controls">
                 <nav class="header__nav">
@@ -462,6 +515,23 @@
                 const content = await discoverContent(currentType);
                 displayContent(content);
             });
+        }
+        
+        async function fetchActorFilmography(personId) {
+            const url = `https://api.themoviedb.org/3/person/${personId}/combined_credits?language=en-US`;
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${API_READ_ACCESS_TOKEN}`
+                }
+            });
+            const data = await response.json();
+            return data.cast.filter(item => 
+                item.media_type === 'movie' || item.media_type === 'tv'
+            ).filter(item => 
+                !item.genre_ids.some(id => 
+                    [10764, 10767, 10763].includes(id) // Exclude Reality, Talk, and News genres
+                )
+            );
         }
 
         async function discoverContent(type, page = 1) {
@@ -626,6 +696,29 @@
             );
         }
 
+        function showMessage(message) {
+            const existingPopup = document.querySelector('.message-popup');
+            if (existingPopup) {
+                existingPopup.remove();
+            }
+
+            const popup = document.createElement('div');
+            popup.className = 'message-popup';
+            popup.textContent = message;
+            document.body.appendChild(popup);
+
+            setTimeout(() => {
+                popup.style.opacity = '1';
+            }, 10);
+
+            setTimeout(() => {
+                popup.style.opacity = '0';
+                setTimeout(() => {
+                    popup.remove();
+                }, 300);
+            }, 3000);
+        }
+
         async function displayContent(content, append = false) {
             const contentContainer = document.getElementById('discoverContent');
             if (!contentContainer) return;
@@ -645,7 +738,7 @@
                 if (itemType !== currentType) continue;
 
                 const title = item.title || item.name || 'Unknown Title';
-                const posterPath = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750.png?text=No+Poster+Available';
+                const posterPath = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://is.gd/zEC8Rb';
                 const releaseYear = (item.release_date || item.first_air_date || '').split('-')[0] || 'N/A';
                 const rating = item.vote_average ? `${item.vote_average.toFixed(1)} / 10` : 'N/A';
 
@@ -835,7 +928,29 @@
                 }
             });
             const data = await response.json();
-            return data.cast.slice(0, 10);  // Return top 10 cast members
+            const castPromises = data.cast.slice(0, 10).map(async (member) => {
+                const personUrl = `https://api.themoviedb.org/3/person/${member.id}?language=en-US`;
+                const personResponse = await fetch(personUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${API_READ_ACCESS_TOKEN}`
+                    }
+                });
+                const personData = await personResponse.json();
+                const age = personData.birthday ? calculateAge(personData.birthday) : 'N/A';
+                return {
+                    ...member,
+                    age,
+                    birthplace: personData.place_of_birth || 'N/A',
+                    person_id: member.id // Add this line
+                };
+            });
+            return Promise.all(castPromises);
+        }
+
+        function calculateAge(birthday) {
+            const ageDifMs = Date.now() - new Date(birthday).getTime();
+            const ageDate = new Date(ageDifMs);
+            return Math.abs(ageDate.getUTCFullYear() - 1970);
         }
 
         async function toggleWatchlist(id, add = true) {
@@ -865,7 +980,7 @@
                 if (trailerUrl) {
                     openModal(`<iframe width="560" height="315" src="${trailerUrl}" frameborder="0" allowfullscreen></iframe>`);
                 } else {
-                    alert('Trailer not available');
+                    showMessage('Trailer not available');
                 }
             } else if (event.target.closest('.synopsis-button')) {
                 const id = event.target.closest('.synopsis-button').dataset.id;
@@ -878,35 +993,69 @@
                 cast.forEach(member => {
                     castHtml += `
                         <div class="cast-member">
-                            <img src="https://image.tmdb.org/t/p/w200${member.profile_path}" alt="${member.name}">
+                            <img src="${member.profile_path ? `https://image.tmdb.org/t/p/w200${member.profile_path}` : 'https://is.gd/zEC8Rb'}" alt="${member.name}" data-person-id="${member.person_id}">
                             <div class="cast-tooltip">
-                                <p>${member.name}</p>
-                                <p>${member.character}</p>
+                                <p style="font-size: 16px; font-weight: Bolder; color: #01b4e4; margin-bottom: 15px;">${member.name}</p>
+                                <p><i class="fa-solid fa-masks-theater"></i> ${member.character}</p>
+                                <p><i class="fa-solid fa-cake-candles"></i> ${member.age}</p>
+                                <p><i class="fa-solid fa-location-dot"></i> ${member.birthplace}</p>
                             </div>
                         </div>
                     `;
                 });
                 castHtml += '</div>';
                 openModal(castHtml);
+            } else if (event.target.closest('.cast-member img')) {
+                const personId = event.target.dataset.personId;
+                const filmography = await fetchActorFilmography(personId);
+                openFilmographyPopup(filmography);
             } else if (event.target.closest('.add-button')) {
                 const id = event.target.closest('.add-button').dataset.id;
+                const title = event.target.closest('.discover__item').querySelector('.discover__item-title').textContent;
                 const success = await toggleWatchlist(id, true);
                 if (success) {
-                    alert('Added to watchlist');
+                    showMessage(`${title} was added to the Watchlist`);
                 } else {
-                    alert('Failed to add to watchlist');
+                    showMessage('Failed to add to watchlist');
                 }
             } else if (event.target.closest('.remove-button')) {
                 const id = event.target.closest('.remove-button').dataset.id;
+                const title = event.target.closest('.discover__item').querySelector('.discover__item-title').textContent;
                 const success = await toggleWatchlist(id, false);
                 if (success) {
-                    alert('Removed from watchlist');
+                    showMessage(`${title} was removed from the Watchlist`);
                 } else {
-                    alert('Failed to remove from watchlist');
+                    showMessage('Failed to remove from watchlist');
                 }
             }
         });
 
+        function openFilmographyPopup(filmography) {
+            const popupContent = document.createElement('div');
+            popupContent.className = 'filmography-popup';
+            
+            const grid = document.createElement('div');
+            grid.className = 'filmography-grid';
+            
+            filmography.forEach(item => {
+                const poster = document.createElement('img');
+                poster.src = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : 'https://is.gd/zEC8Rb';
+                poster.alt = item.title || item.name;
+                poster.dataset.title = item.title || item.name;
+                poster.addEventListener('click', () => {
+                    if (searchInputElement) {
+                        searchInputElement.value = poster.dataset.title;
+                        searchInputElement.dispatchEvent(new Event('input'));
+                    }
+                    closeModal(popupContent.closest('.modal'));
+                });
+                grid.appendChild(poster);
+            });
+            
+            popupContent.appendChild(grid);
+            openModal(popupContent.outerHTML);
+        }
+       
         document.addEventListener('mouseover', function(event) {
             const castMember = event.target.closest('.cast-member');
             if (castMember) {
