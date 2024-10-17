@@ -978,7 +978,7 @@
                 const id = event.target.closest('.trailer-button').dataset.id;
                 const trailerUrl = await fetchTrailer(id);
                 if (trailerUrl) {
-                    openModal(`<iframe width="560" height="315" src="${trailerUrl}" frameborder="0" allowfullscreen></iframe>`);
+                    openModal(`<iframe width="600" height="330" src="${trailerUrl}" frameborder="0" allowfullscreen></iframe>`);
                 } else {
                     showMessage('Trailer not available');
                 }
