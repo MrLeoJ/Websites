@@ -1,1 +1,389 @@
+<html><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Comparison</title>
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
 
+        body {
+            background-color: #282c34;
+            color: #FFF;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .best-price-banner {
+            background-color: #66cde9;
+            color: #282c34;
+            width: 100%;
+            padding: 1rem;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            transform: translateY(0);
+        }
+
+        .container {
+            background-color: #3a3f4b;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 1200px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 60px;
+        }
+
+        .title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .title-input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #61dafb;
+            color: #FFF;
+            font-size: 1.5rem;
+            text-align: center;
+            padding: 0.5rem;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .title-input:focus {
+            outline: none;
+            border-bottom-color: #4fa8c7;
+        }
+
+        .comparison-row {
+            display: grid;
+            grid-template-columns: 30px 2fr 2fr 1fr 1fr 40px;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+
+        .best-value-tick {
+            color: #2ed573;
+            font-size: 1.2rem;
+            visibility: hidden;
+        }
+
+        .best-value .best-value-tick {
+            visibility: visible;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .price-input-group {
+            position: relative;
+        }
+
+        .price-input-group::before {
+            content: '£';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1;
+            color: #fff;
+        }
+
+        .price-input-group input {
+            padding-left: 25px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #2a2e38;
+            border: 1px solid #4a4f5c;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #61dafb;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .btn {
+            background-color: #61dafb;
+            color: #282c34;
+            border: none;
+            border-radius: 6px;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #4fa8c7;
+        }
+
+        .btn-remove {
+            background-color: #ff4757;
+        }
+
+        .btn-remove:hover {
+            background-color: #ff6b81;
+        }
+
+        @media (max-width: 800px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .comparison-row {
+                grid-template-columns: 30px 1fr 1fr;
+                gap: 0.5rem;
+            }
+        }
+
+        [data-tooltip] {
+            position: relative;
+        }
+
+        [data-tooltip]:before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem;
+            background-color: #282c34;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        [data-tooltip]:hover:before {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .input-group:has(input[required])::after {
+            content: '*';
+            color: #ff4757;
+            position: absolute;
+            top: -5px;
+            right: -10px;
+        }
+
+        .input-field[required]:invalid {
+            border-color: #4a4f5c; /* Change to default border color */
+        }
+
+        .input-field[required]:valid {
+            border-color: #2ed573;
+        }
+
+        .input-field[required]:focus {
+            border-color: #61dafb;
+        }
+
+
+        /* Lx */
+        .btn-new-product{
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="best-price-banner" id="best-price-banner">
+        Best value: Calculating...
+    </div>
+    <div class="container">
+        <div class="title-container">
+            <input type="text" class="title-input" placeholder="Product Name" id="product-title">
+        </div>
+
+        <div id="comparison-container">
+            <!-- Rows will be added dynamically -->
+        </div>
+
+        <div class="btn-new-product">
+            <button class="btn" id="add-row" data-tooltip="Add new product">
+                <i class="fas fa-plus"></i> &nbsp;New Product
+            </button>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script>
+        class PriceComparison {
+            constructor() {
+                this.container = document.getElementById('comparison-container');
+                this.addRowBtn = document.getElementById('add-row');
+                this.bestPriceBanner = document.getElementById('best-price-banner');
+                this.productTitle = document.getElementById('product-title');
+                this.rows = [];
+                
+                this.init();
+            }
+
+            init() {
+                this.addRowBtn.addEventListener('click', () => this.addRow());
+                this.productTitle.addEventListener('input', (e) => {
+                    document.title = e.target.value ? `${e.target.value} - Price Comparison` : 'Price Comparison Calculator';
+                });
+                
+                this.addRow();
+                this.addRow();
+            }
+
+            addRow() {
+                const row = document.createElement('div');
+                row.className = 'comparison-row';
+                
+                const tickIcon = document.createElement('i');
+                tickIcon.className = 'fas fa-check best-value-tick';
+                
+                const shopInput = this.createInput('text', 'Shop Name', 'Shop');
+                const urlInput = this.createInput('url', 'Product URL', 'URL');
+                const priceInput = this.createInput('number', 'Price', 'Price', true);
+                const weightInput = this.createInput('number', 'Weight (g)', 'Weight (g)');
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'btn btn-remove';
+                removeBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                removeBtn.dataset.tooltip = 'Remove product';
+                
+                removeBtn.addEventListener('click', () => {
+                    if (this.rows.length > 1) {
+                        this.container.removeChild(row);
+                        this.rows = this.rows.filter(r => r !== row);
+                        this.calculateBestValue();
+                    } else {
+                        this.showToast('Cannot remove the last row!', 'error');
+                    }
+                });
+
+                row.appendChild(tickIcon);
+                row.appendChild(shopInput);
+                row.appendChild(urlInput);
+                row.appendChild(priceInput);
+                row.appendChild(weightInput);
+                row.appendChild(removeBtn);
+
+                this.container.appendChild(row);
+                this.rows.push(row);
+
+                [priceInput, weightInput].forEach(input => {
+                    input.querySelector('input').addEventListener('input', () => this.calculateBestValue());
+                });
+            }
+
+            createInput(type, placeholder, tooltip, isPrice = false) {
+                const group = document.createElement('div');
+                group.className = isPrice ? 'input-group price-input-group' : 'input-group';
+                
+                const input = document.createElement('input');
+                input.type = type;
+                input.className = 'input-field';
+                input.placeholder = placeholder;
+                input.dataset.tooltip = tooltip;
+                
+                // Add required attribute for shop input
+                if (tooltip === 'Shop') {
+                    input.required = true;
+                }
+                
+                group.appendChild(input);
+                return group;
+            }
+
+            calculateBestValue() {
+                let bestValue = Infinity;
+                let bestRow = null;
+                let hasValidComparison = false;
+
+                this.rows.forEach(row => {
+                    row.classList.remove('best-value');
+                    const tick = row.querySelector('.best-value-tick');
+                    tick.style.visibility = 'hidden'; // Hide all ticks initially
+                    
+                    const inputs = row.querySelectorAll('input');
+                    const shopName = inputs[0].value.trim();
+                    const price = parseFloat(inputs[2].value);
+                    const weight = parseFloat(inputs[3].value);
+
+                    // Check if shop name is empty
+                    if (!shopName) {
+                        this.showToast('Please enter a shop name for all items', 'error');
+                        return;
+                    }
+
+                    if (price && weight) {
+                        hasValidComparison = true;
+                        const value = (price / weight) * 100;
+                        if (value < bestValue) {
+                            bestValue = value;
+                            bestRow = row;
+                        }
+                    }
+                });
+
+                if (bestRow && hasValidComparison) {
+                    bestRow.classList.add('best-value');
+                    const tick = bestRow.querySelector('.best-value-tick');
+                    tick.style.visibility = 'visible';
+                    const inputs = bestRow.querySelectorAll('input');
+                    const shopName = inputs[0].value;
+                    this.bestPriceBanner.textContent = `Best value: ${shopName} - £${bestValue.toFixed(2)} per 100g`;
+                } else {
+                    this.bestPriceBanner.textContent = 'Best value: Calculating...';
+                }
+            }
+
+            showToast(message, type) {
+                Toastify({
+                    text: message,
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: type === 'error' ? "#ff4757" : "#2ed573",
+                }).showToast();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new PriceComparison();
+        });
+    </script>
+</body></html>
