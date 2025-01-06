@@ -1,0 +1,629 @@
+<html><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping List</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding-top: 20px;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 95%;
+            max-width: 600px;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: #eee;
+        }
+
+        .tab {
+            padding: 15px 0;
+            text-align: center;
+            flex-grow: 1;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #777;
+            font-weight: 500;
+            transition: border-color 0.3s ease, color 0.3s ease;
+        }
+
+        .tab.active {
+            border-bottom-color: #007aff;
+            color: #007aff;
+        }
+
+        .tab-content {
+            padding: 20px;
+        }
+
+        .search-bar {
+            margin-bottom: 15px;
+            display: flex;
+        }
+
+        .search-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px 0 0 8px;
+            outline: none;
+            font-size: 16px;
+        }
+
+        .search-button {
+            background-color: #007aff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .search-button:hover {
+            background-color: #0056b3;
+        }
+
+        .category-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .item-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .pantry-item {
+            background-color: #f9f9f9;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .shopping-item {
+            background-color: #f9f9f9;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remove-button {
+            background-color: black;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .remove-button:hover {
+            background-color: #333;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 50px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            border-radius: 10px;
+            max-width: 400px;
+        }
+
+        .store-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .store-button {
+            background-color: black;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .store-button:hover {
+            background-color: #0056b3;
+        }
+
+        .store-button[data-store="Aldi"] {
+            background-color: #f7c201;
+            color: black;
+        }
+
+        .store-button[data-store="Sainsbury's"] {
+            background-color: #e68701;
+            color: white;
+        }
+
+        .store-button[data-store="Iceland"] {
+            background-color: #cb202d;
+            color: white;
+        }
+
+        .store-button[data-store="Poundland"] {
+            background-color: #018f9f;
+            color: white;
+        }
+
+        .store-button[data-store="SuperDrugs"] {
+            background-color: #e4048a;
+            color: white;
+        }
+
+        .store-button[data-store="Boots"] {
+            background-color: #050549;
+            color: white;
+        }
+
+        .store-button[data-store="Tesco"] {
+            background-color: #00509a;
+            color: white;
+        }
+
+        .store-button[data-store="ASDA"] {
+            background-color: #74b820;
+            color: black;
+        }
+
+        .store-button[data-store="Online"] {
+            background-color: #000000;
+            color: white;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .removed-item-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            width: 95%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .removed-item {
+            background-color: #ddd;
+            color: #888;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bring-back-button {
+            background-color: #000;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .bring-back-button:hover {
+            background-color: #0056b3;
+        }
+
+        @media (max-width: 480px) {
+            .tab {
+                font-size: 14px;
+            }
+
+            .search-input, .search-button {
+                font-size: 14px;
+            }
+
+            .store-button {
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" data-tab="pantry">Pantry</div>
+            <div class="tab" data-tab="shopping">Shopping</div>
+        </div>
+
+        <div class="tab-content" id="pantry-content">
+            <div class="search-bar">
+                <input type="text" id="pantry-search" class="search-input" placeholder="Search Pantry Items">
+            </div>
+            <div id="pantry-categories">
+                <div class="category">
+                    <h3 class="category-title">Breakfast</h3>
+                    <ul class="item-list" data-category="breakfast">
+                        <li class="pantry-item" data-item="Cereal">Cereal</li>
+                        <li class="pantry-item" data-item="Oats">Oats</li>
+                        <li class="pantry-item" data-item="Bread">Bread</li>
+                        <li class="pantry-item" data-item="Eggs">Eggs</li>
+                    </ul>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Snacks</h3>
+                    <ul class="item-list" data-category="snacks">
+                        <li class="pantry-item" data-item="Biscuits">Biscuits</li>
+                        <li class="pantry-item" data-item="Crisps">Crisps</li>
+                        <li class="pantry-item" data-item="Chocolate">Chocolate</li>
+                    </ul>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Lunch & Dinner</h3>
+                    <ul class="item-list" data-category="lunch-dinner">
+                        <li class="pantry-item" data-item="Pasta">Pasta</li>
+                        <li class="pantry-item" data-item="Rice">Rice</li>
+                        <li class="pantry-item" data-item="Tinned Tomatoes">Tinned Tomatoes</li>
+                        <li class="pantry-item" data-item="Lentils">Lentils</li>
+                    </ul>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Meat & Fish</h3>
+                    <ul class="item-list" data-category="meat-fish">
+                        <li class="pantry-item" data-item="Chicken Breast">Chicken Breast</li>
+                        <li class="pantry-item" data-item="Salmon">Salmon</li>
+                        <li class="pantry-item" data-item="Beef Mince">Beef Mince</li>
+                    </ul>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Seasoning</h3>
+                    <ul class="item-list" data-category="seasoning">
+                        <li class="pantry-item" data-item="Salt">Salt</li>
+                        <li class="pantry-item" data-item="Pepper">Pepper</li>
+                        <li class="pantry-item" data-item="Herbs">Herbs</li>
+                        <li class="pantry-item" data-item="Spices">Spices</li>
+                    </ul>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Fresh Fruit</h3>
+                    <ul class="item-list" data-category="fresh-fruit">
+                        <li class="pantry-item" data-item="Apples">Apples</li>
+                        <li class="pantry-item" data-item="Bananas">Bananas</li>
+                        <li class="pantry-item" data-item="Oranges">Oranges</li>
+                    </ul>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Dried Fruit</h3>
+                    <ul class="item-list" data-category="dried-fruit">
+                        <li class="pantry-item" data-item="Raisins">Raisins</li>
+                        <li class="pantry-item" data-item="Apricots">Apricots</li>
+                    </ul>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Frozen Veggies</h3>
+                    <ul class="item-list" data-category="frozen-veggies">
+                        <li class="pantry-item" data-item="Peas">Peas</li>
+                        <li class="pantry-item" data-item="Sweetcorn">Sweetcorn</li>
+                    </ul>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Toiletries</h3>
+                    <ul class="item-list" data-category="toiletries">
+                        <li class="pantry-item" data-item="Shampoo">Shampoo</li>
+                        <li class="pantry-item" data-item="Soap">Soap</li>
+                        <li class="pantry-item" data-item="Toothpaste">Toothpaste</li>
+                    </ul>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Cleaning Products</h3>
+                    <ul class="item-list" data-category="cleaning-products">
+                        <li class="pantry-item" data-item="Dish Soap">Dish Soap</li>
+                        <li class="pantry-item" data-item="Laundry Detergent">Laundry Detergent</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="shopping-content" style="display: none;">
+            <div class="search-bar">
+                <input type="text" id="shopping-search" class="search-input" placeholder="Search Shopping List">
+            </div>
+            <div id="shopping-list">
+                <!-- Shopping list items will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="removed-items-container" class="removed-item-container" style="display: none;">
+        <h3 class="category-title">Removed Items</h3>
+        <ul id="removed-items-list" class="item-list">
+            <!-- Removed items will be added here -->
+        </ul>
+        <button id="remove-all-removed" class="remove-button" style="background-color: #dc3545;">
+            <i class="fa-solid fa-trash"></i>
+        </button>
+    </div>
+
+    <div id="store-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3>Select Store</h3>
+            <div class="store-options">
+                <button class="store-button" data-store="Aldi">Aldi</button>
+                <button class="store-button" data-store="Sainsbury's">Sainsbury's</button>
+                <button class="store-button" data-store="Iceland">Iceland</button>
+                <button class="store-button" data-store="Poundland">Poundland</button>
+                <button class="store-button" data-store="SuperDrugs">SuperDrugs</button>
+                <button class="store-button" data-store="Boots">Boots</button>
+                <button class="store-button" data-store="Tesco">Tesco</button>
+                <button class="store-button" data-store="ASDA">ASDA</button>
+                <button class="store-button" data-store="Online">Online</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const pantryTab = document.querySelector('.tab[data-tab="pantry"]');
+        const shoppingTab = document.querySelector('.tab[data-tab="shopping"]');
+        const pantryContent = document.getElementById('pantry-content');
+        const shoppingContent = document.getElementById('shopping-content');
+        const pantrySearchInput = document.getElementById('pantry-search');
+        const shoppingSearchInput = document.getElementById('shopping-search');
+        const pantryItems = document.querySelectorAll('#pantry-categories .pantry-item');
+        const shoppingListContainer = document.getElementById('shopping-list');
+        const storeModal = document.getElementById('store-modal');
+        const closeButton = document.querySelector('.close-button');
+        let selectedPantryItem = null;
+
+        let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || {};
+        let removedItems = JSON.parse(localStorage.getItem('removedItems')) || [];
+
+        function updateShoppingListDisplay() {
+            shoppingListContainer.innerHTML = '';
+            const sortedStores = Object.keys(shoppingList).sort();
+            sortedStores.forEach(store => {
+                if (shoppingList[store].length > 0) {
+                    const storeHeader = document.createElement('h3');
+                    storeHeader.textContent = store;
+                    storeHeader.classList.add('category-title');
+                    shoppingListContainer.appendChild(storeHeader);
+
+                    const itemList = document.createElement('ul');
+                    itemList.classList.add('item-list');
+                    shoppingList[store].sort().forEach(itemText => {
+                        const listItem = document.createElement('li');
+                        listItem.classList.add('shopping-item');
+                        listItem.textContent = itemText;
+
+                        listItem.addEventListener('click', (e) => {
+                            if (e.target !== e.currentTarget) return;
+                            selectedPantryItem = itemText;
+                            storeModal.style.display = "block";
+                        });
+
+                        const removeButton = document.createElement('button');
+                        removeButton.innerHTML = '<i class="fa-solid fa-check"></i>';
+                        removeButton.classList.add('remove-button');
+                        removeButton.style.backgroundColor = 'black';
+                        removeButton.style.color = 'white';
+                        removeButton.addEventListener('click', () => {
+                            removeItemFromShoppingList(store, itemText);
+                        });
+
+                        listItem.appendChild(removeButton);
+                        itemList.appendChild(listItem);
+                    });
+                    shoppingListContainer.appendChild(itemList);
+                }
+            });
+        }
+
+        function addItemToShoppingList(itemText, store) {
+            if (shoppingList[store] && shoppingList[store].includes(itemText)) {
+                return; // Item already in this store
+            }
+
+            // Check if the item exists in another store and move it
+            for (const existingStore in shoppingList) {
+                if (shoppingList[existingStore].includes(itemText)) {
+                    shoppingList[existingStore] = shoppingList[existingStore].filter(item => item !== itemText);
+                    if (shoppingList[existingStore].length === 0) {
+                        delete shoppingList[existingStore];
+                    }
+                    break;
+                }
+            }
+
+            if (!shoppingList[store]) {
+                shoppingList[store] = [];
+            }
+            shoppingList[store].push(itemText);
+            localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
+            updateShoppingListDisplay();
+        }
+
+        function removeItemFromShoppingList(store, itemText) {
+            if (shoppingList[store]) {
+                shoppingList[store] = shoppingList[store].filter(item => item !== itemText);
+                if (shoppingList[store].length === 0) {
+                    delete shoppingList[store];
+                }
+                localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
+                updateShoppingListDisplay();
+
+                removedItems.push({ item: itemText, store: store });
+                localStorage.setItem('removedItems', JSON.stringify(removedItems));
+                updateRemovedItemsDisplay();
+            }
+        }
+
+        function filterItems(searchText, items) {
+            const searchTerm = searchText.toLowerCase();
+            items.forEach(item => {
+                const itemText = item.textContent.toLowerCase();
+                item.style.display = itemText.includes(searchTerm) ? 'flex' : 'none';
+            });
+        }
+
+        pantrySearchInput.addEventListener('input', (e) => {
+            filterItems(e.target.value, document.querySelectorAll('#pantry-categories .pantry-item'));
+        });
+
+        shoppingSearchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const shoppingItems = document.querySelectorAll('.shopping-item');
+            shoppingItems.forEach(item => {
+                const itemText = item.textContent.toLowerCase();
+                item.style.display = itemText.includes(searchTerm) ? 'flex' : 'none';
+            });
+        });
+
+        pantryTab.addEventListener('click', () => {
+            pantryTab.classList.add('active');
+            shoppingTab.classList.remove('active');
+            pantryContent.style.display = 'block';
+            shoppingContent.style.display = 'none';
+        });
+
+        shoppingTab.addEventListener('click', () => {
+            shoppingTab.classList.add('active');
+            pantryTab.classList.remove('active');
+            shoppingContent.style.display = 'block';
+            pantryContent.style.display = 'none';
+            updateShoppingListDisplay();
+            updateRemovedItemsDisplay();
+        });
+
+        pantryItems.forEach(item => {
+            item.addEventListener('click', () => {
+                selectedPantryItem = item.textContent;
+                storeModal.style.display = "block";
+            });
+        });
+
+        closeButton.addEventListener('click', () => {
+            storeModal.style.display = "none";
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target == storeModal) {
+                storeModal.style.display = "none";
+            }
+        });
+
+        const storeButtons = document.querySelectorAll('.store-button');
+        storeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const store = button.getAttribute('data-store');
+                addItemToShoppingList(selectedPantryItem, store);
+                storeModal.style.display = "none";
+            });
+        });
+
+        const removedItemsContainer = document.getElementById('removed-items-container');
+        const removedItemsList = document.getElementById('removed-items-list');
+        const removeAllRemovedButton = document.getElementById('remove-all-removed');
+
+        function updateRemovedItemsDisplay() {
+            removedItemsList.innerHTML = '';
+            removedItems.forEach(removedItem => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('removed-item');
+                listItem.textContent = removedItem.item;
+
+                const bringBackButton = document.createElement('button');
+                bringBackButton.innerHTML = '<i class="fas fa-undo"></i>';
+                bringBackButton.classList.add('bring-back-button');
+                bringBackButton.addEventListener('click', () => {
+                    bringBackItem(removedItem.item, removedItem.store);
+                });
+
+                listItem.appendChild(bringBackButton);
+                removedItemsList.appendChild(listItem);
+            });
+            removedItemsContainer.style.display = removedItems.length > 0 ? 'block' : 'none';
+        }
+
+        function bringBackItem(itemText, originalStore) {
+            removedItems = removedItems.filter(item => item.item !== itemText);
+            localStorage.setItem('removedItems', JSON.stringify(removedItems));
+            updateRemovedItemsDisplay();
+            addItemToShoppingList(itemText, originalStore);
+        }
+
+        // Initialize active tab based on initial load or last selection
+        if (shoppingTab.classList.contains('active')) {
+            updateShoppingListDisplay();
+        }
+        updateRemovedItemsDisplay();
+
+        removeAllRemovedButton.addEventListener('click', () => {
+            removedItems = [];
+            localStorage.setItem('removedItems', JSON.stringify(removedItems));
+            updateRemovedItemsDisplay();
+        });
+    </script>
+</body>
+</html>
