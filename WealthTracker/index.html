@@ -1,0 +1,112 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wealth Tracker</title>
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="light-mode">
+    <header>
+        <div class="header-left">
+            <button id="categories-btn" class="icon-btn" title="Manage Categories">
+                <i class="fa-solid fa-bookmark"></i>
+            </button>
+        </div>
+        <div class="month-nav">
+            <button id="prev-month-btn" class="icon-btn" title="Previous Month">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div id="current-month-display">
+                <span id="month-year-display">MAY 2023</span>
+                <i class="fa-regular fa-calendar"></i>
+            </div>
+            <button id="next-month-btn" class="icon-btn" title="Next Month">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        <div class="header-right">
+            <button id="upload-json-btn" class="icon-btn" title="Upload Data">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+            </button>
+            <button id="download-json-btn" class="icon-btn" title="Download Data">
+                <i class="fa-solid fa-cloud-arrow-down"></i>
+            </button>
+            <button id="filter-btn" class="icon-btn" title="Filter Categories">
+                <i class="fas fa-filter"></i>
+            </button>
+            <button id="theme-toggle" class="icon-btn" title="Toggle Theme">
+                <i class="fa-solid fa-lightbulb"></i>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <div id="filters-panel" class="hidden">
+            <h3>Filter by Categories</h3>
+            <div id="filter-categories-list">
+                <!-- Filter checkboxes will be added here dynamically -->
+            </div>
+        </div>
+
+        <div class="net-worth-container">
+            <div class="net-worth-header">
+                <h1>Net Worth</h1>
+                <div class="net-worth-amount">
+                    <span id="total-net-worth">£0.00</span>
+                    <div class="variance" id="total-variance">
+                        <span class="amount">£0.00</span>
+                        <span class="percentage">(0.00%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="categories-container">
+            <!-- Categories and accounts will be added here dynamically -->
+        </div>
+    </main>
+
+    <button id="add-account-btn" class="add-btn" title="Add Account">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- Sidebar trigger for hover activation -->
+    <div id="sidebar-trigger" class="sidebar-trigger"></div>
+
+    <!-- Modal Container -->
+    <div id="modal-container" class="hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <!-- Modal content will be added here dynamically -->
+        </div>
+    </div>
+
+    <!-- Categories Sidebar -->
+    <div id="categories-sidebar" class="hidden">
+        <div class="sidebar-backdrop"></div>
+        <div class="sidebar-content">
+            <div class="sidebar-header">
+                <h2>Manage Categories</h2>
+                <button class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="sidebar-body">
+                <div id="categories-list" class="sortable">
+                    <!-- Categories will be added here dynamically -->
+                </div>
+                <button id="add-category-btn" class="btn primary-btn">
+                    <i class="fas fa-plus"></i> Add Category
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input for JSON upload -->
+    <input type="file" id="json-file-input" accept=".json" style="display: none;">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
