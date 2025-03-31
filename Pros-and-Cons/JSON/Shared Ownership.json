@@ -1,0 +1,53 @@
+{
+  "title": "Shared Ownership",
+  "arguments": [
+    {
+      "id": "1743408083561",
+      "text": "I'm not dependent on Landlord's decisions (can't be kicked out)",
+      "type": "pro",
+      "importance": 10
+    },
+    {
+      "id": "1743411077874",
+      "text": "It's an asset (something that I — partially — own)",
+      "type": "pro",
+      "importance": 8
+    },
+    {
+      "id": "1743410835751",
+      "text": "The combined amount of Monthly Rent, Monthly Service Charge and Mortgage is usually lower than simply renting",
+      "type": "pro",
+      "importance": 6
+    },
+    {
+      "id": "1743409210057",
+      "text": "It will force me to be more proactive and earn more money",
+      "type": "pro",
+      "importance": 1
+    },
+    {
+      "id": "1743411631662",
+      "text": "I'll be paying much more than I'm at the moment (in rent)",
+      "type": "con",
+      "importance": 8
+    },
+    {
+      "id": "1743411229862",
+      "text": "Lower mobility. It will be more difficult to move towns and I'll have to try and find jobs near a specific area",
+      "type": "con",
+      "importance": 4
+    },
+    {
+      "id": "1743411367794",
+      "text": "It's not guaranteed I can get a mortgage",
+      "type": "con",
+      "importance": 5
+    },
+    {
+      "id": "1743409079057",
+      "text": "It's a lengthy process",
+      "type": "con",
+      "importance": 3
+    }
+  ]
+}
