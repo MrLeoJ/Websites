@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pros/Cons Decision Maker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 id="page-title" class="editable-title">Pros & Cons</h1>
+      <div class="header-buttons">
+        <!-- New Add Argument Button -->
+        <button id="add-argument-btn" class="icon-btn" title="Add Argument">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+        <button id="import-btn" class="icon-btn" title="Upload JSON">
+          <i class="fas fa-cloud-arrow-up"></i>
+        </button>
+        <button id="export-btn" class="icon-btn" title="Dowload JSON">
+          <i class="fas fa-cloud-arrow-down"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="verdict-card">
+      <div id="verdict" class="verdict-result">NO</div>
+      <!-- Added verdict details paragraph -->
+      <p id="verdict-details" class="verdict-details">Pros: 0 | Cons: 0 | Gap: 0</p>
+    </div>
+
+    <!-- Removed the old action-buttons div -->
+
+    <div id="arguments-container" class="arguments-container"></div>
+
+    <div id="empty-state" class="empty-state">
+      <p>No arguments yet. Add some pros and cons to get started.</p>
+    </div>
+  </div>
+
+  <!-- Import Dialog -->
+  <div id="import-dialog" class="dialog-overlay">
+    <div class="dialog">
+      <div class="dialog-header">
+        <h3>Import JSON Data</h3>
+        <button id="close-import-dialog" class="close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="dialog-content">
+        <p>Upload a JSON file or paste JSON content below.</p>
+        <button id="choose-file-btn" class="btn btn-outline full-width">
+          <i class="fas fa-upload"></i> Choose File
+        </button>
+        <input type="file" id="file-input" accept=".json" style="display: none;">
+        <textarea id="json-input" placeholder='{"title": "My Decision", "arguments": [{"id":"1","text":"Pro 1","type":"pro","importance":5}, {"id":"2","text":"Con 1","type":"con","importance":3}]}'></textarea>
+      </div>
+      <div class="dialog-footer">
+        <button id="cancel-import" class="btn btn-outline">Cancel</button>
+        <button id="confirm-import" class="btn btn-primary">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Dialog -->
+  <div id="edit-dialog" class="dialog-overlay">
+    <div class="dialog">
+      <div class="dialog-header">
+        <h3>Edit Argument</h3>
+        <button id="close-edit-dialog" class="close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="dialog-content">
+        <input type="text" id="edit-text-input" placeholder="Argument text">
+      </div>
+      <div class="dialog-footer">
+        <button id="cancel-edit" class="btn btn-outline">Cancel</button>
+        <button id="confirm-edit" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">
+    <div class="toast-content">
+      <div class="toast-title">Notification</div>
+      <div class="toast-message">This is a notification message</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
