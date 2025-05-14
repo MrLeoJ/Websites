@@ -3,23 +3,606 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time Left</title>
-    <link rel="icon" type="image/x-icon" href="icon.png">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <title>Date Duration Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Styles & Variables */
+        :root {
+            --font-family: 'Poppins', sans-serif;
+            
+            /* Dark Theme (Default - based on provided Colours.css) */
+            --bg-color: #282c34; /* website-bg */
+            --text-color: #FFFFFF; /* font-color */
+            --modal-bg: #3a3f4b; /* container-bg */
+            --input-bg: #444a57; /* derived */
+            --input-border: #555c68; /* derived */
+            --input-text-color: #FFFFFF;
+            --button-bg: #61dafb; /* button-bg */
+            --button-text: #282c34; /* text on main buttons */
+            --button-hover-bg: #4fa8c7; /* button-hover-bg */
+            
+            --primary-color: #61dafb; /* using button color as primary */
+            
+            --secondary-button-bg: #50c878; /* A green for "Set Today" */
+            --secondary-button-text: #FFFFFF;
+            --secondary-button-hover-bg: #40b060;
+
+            --icon-color: #b0b8c4;
+            --icon-hover-color: var(--primary-color);
+            --card-bg: #3a3f4b; /* same as modal-bg */
+            --border-color: #4a505c; /* for separators */
+            --error-color: #ff8a80; /* A lighter red for dark bg */
+            --tooltip-bg: #222;
+            --tooltip-text: #FFF;
+
+            --result-label-color: #878c98; /* from ALTERATIONS */
+            --result-value-color: var(--primary-color);
+            --date-picker-filter: invert(1);
+        }
+
+        html.light-mode {
+            --bg-color: #f4f7f9;
+            --text-color: #282c34;
+            --modal-bg: #ffffff;
+            --input-bg: #f0f2f5;
+            --input-border: #ced4da;
+            --input-text-color: #282c34;
+            --button-bg: #007bff;
+            --button-text: #ffffff;
+            --button-hover-bg: #0056b3;
+
+            --primary-color: #007bff;
+
+            --secondary-button-bg: #28a745;
+            --secondary-button-text: #FFFFFF;
+            --secondary-button-hover-bg: #1e7e34;
+            
+            --icon-color: #6c757d;
+            --icon-hover-color: var(--primary-color);
+            --card-bg: #ffffff;
+            --border-color: #dee2e6;
+            --error-color: #dc3545;
+            --tooltip-bg: #333;
+            --tooltip-text: #fff;
+
+            --result-label-color: #555e68;
+            --result-value-color: var(--primary-color);
+            --date-picker-filter: invert(0);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--modal-bg);
+            border: 1px solid var(--border-color);
+            color: var(--icon-color);
+            padding: 10px 15px; /* Updated padding */
+            border-radius: 8px; /* Adjusted for new padding */
+            cursor: pointer;
+            font-size: 1.2em;
+            z-index: 1001;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .theme-toggle:hover {
+            color: var(--icon-hover-color);
+            background: var(--input-bg);
+        }
+
+        /* Open Modal Button */
+        .open-modal-btn-container {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .open-modal-btn {
+            background-color: var(--secondary-button-bg); /* Use secondary for this distinct button */
+            color: var(--secondary-button-text);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .open-modal-btn:hover {
+            background-color: var(--secondary-button-hover-bg);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7); /* Slightly darker backdrop */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--modal-bg);
+            margin: auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            animation: fadeInModal 0.3s ease-out;
+        }
+        
+        @keyframes fadeInModal {
+            from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h2 {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .close-modal-btn {
+            background: none;
+            border: none;
+            color: var(--icon-color);
+            font-size: 1.8em;
+            cursor: pointer;
+            padding: 5px;
+            line-height: 1;
+        }
+        .close-modal-btn:hover {
+            color: var(--error-color); /* Use error color for close hover */
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .form-group input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            background-color: var(--input-bg);
+            color: var(--input-text-color);
+            font-family: var(--font-family);
+            font-size: 1em;
+        }
+        .form-group input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: var(--date-picker-filter);
+            cursor: pointer;
+        }
+
+
+        .modal-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+
+        .modal-buttons .btn {
+            padding: 12px 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-weight: 600; /* Bolder buttons */
+            cursor: pointer;
+            transition: background-color 0.3s, opacity 0.3s, transform 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-buttons .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-today {
+            background-color: var(--secondary-button-bg);
+            color: var(--secondary-button-text);
+        }
+        .btn-today:hover {
+            background-color: var(--secondary-button-hover-bg);
+        }
+        
+        .btn-calculate {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            flex-grow: 1; 
+        }
+        .btn-calculate:hover {
+            background-color: var(--button-hover-bg);
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.9em;
+            margin-top: 10px;
+            text-align: center;
+            min-height: 1.2em; 
+            font-weight: 500;
+        }
+
+        /* Results Area */
+        .results-container {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+            display: none; 
+            animation: fadeInResults 0.5s ease-out;
+        }
+
+        @keyframes fadeInResults {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-container h3 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .result-item {
+            background-color: var(--modal-bg); 
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: larger; /* From ALTERATIONS */
+        }
+        .result-item strong { /* Applying style from ALTERATIONS */
+            font-weight: 500;
+            color: var(--result-label-color);
+        }
+        .result-item span:last-child {
+            font-weight: 600;
+            color: var(--result-value-color);
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+            .modal-buttons {
+                flex-direction: column;
+            }
+            .modal-buttons .btn {
+                width: 100%;
+            }
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 8px 12px; /* Adjusted for mobile */
+                font-size: 1em;
+            }
+            .results-container {
+                padding: 20px;
+            }
+            .result-item{
+                font-size: 1em; /* Adjust for smaller screens */
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Time Left</h1>
-        <div class="input-group tooltip">
-            <input type="date" id="targetDate" required>
-            <span class="tooltiptext">Select target date</span>
-        </div>
-        <button class="btn" id="calculateBtn">Calculate</button>
-        <div class="result" id="result"></div>
+
+    <button id="themeToggleBtn" class="theme-toggle">
+        <!-- Icon will be set by JS -->
+    </button>
+
+    <div class="open-modal-btn-container">
+        <button id="openModalBtn" class="open-modal-btn" title="Select Dates">
+            <i class="fa-regular fa-calendar-plus"></i> Select Dates & Calculate
+        </button>
     </div>
-    <div class="toast" id="toast"></div>
-    <script src="script.js"></script>
+
+    <div id="resultsContainer" class="results-container">
+        <div class="result-item">
+            <strong>Days:</strong>
+            <span id="totalDaysResult">-</span>
+        </div>
+        <div class="result-item">
+            <strong>Weeks:</strong>
+            <span id="weeksDaysResult">-</span>
+        </div>
+        <div class="result-item">
+            <strong>Months:</strong>
+            <span id="monthsWeeksDaysResult">-</span>
+        </div>
+        <div class="result-item">
+            <strong>Years:</strong>
+            <span id="yearsMonthsWeeksDaysResult">-</span>
+        </div>
+    </div>
+
+    <div id="dateModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Select Dates</h2>
+                <button id="closeModal" class="close-modal-btn" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <label for="startDate">Start Date:</label>
+                <input type="date" id="startDate" name="startDate">
+            </div>
+
+            <div class="form-group">
+                <label for="endDate">End Date:</label>
+                <input type="date" id="endDate" name="endDate">
+            </div>
+
+            <div id="errorMessage" class="error-message"></div>
+
+            <div class="modal-buttons">
+                <button id="setTodayBtn" class="btn btn-today" title="Set start date to today's date">
+                    <i class="fas fa-calendar-day"></i> Start Today
+                </button>
+                <button id="calculateBtn" class="btn btn-calculate" title="Calculate the duration">
+                    <i class="fas fa-calculator"></i> Calculate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const openModalBtn = document.getElementById('openModalBtn');
+            const dateModal = document.getElementById('dateModal');
+            const closeModalBtn = document.getElementById('closeModal');
+            const setTodayBtn = document.getElementById('setTodayBtn');
+            const calculateBtn = document.getElementById('calculateBtn');
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            const errorMessageEl = document.getElementById('errorMessage');
+            
+            const resultsContainer = document.getElementById('resultsContainer');
+            const totalDaysResultEl = document.getElementById('totalDaysResult');
+            const weeksDaysResultEl = document.getElementById('weeksDaysResult');
+            const monthsWeeksDaysResultEl = document.getElementById('monthsWeeksDaysResult');
+            const yearsMonthsWeeksDaysResultEl = document.getElementById('yearsMonthsWeeksDaysResult');
+
+            const lightBulbOnIcon = '<i class="fas fa-lightbulb"></i>'; // Solid bulb for Light mode
+            const lightBulbOffIcon = '<i class="far fa-lightbulb"></i>'; // Regular bulb for Dark mode
+
+            // Theme Management
+            function applyTheme(theme) {
+                if (theme === 'light') {
+                    document.documentElement.classList.add('light-mode');
+                    themeToggleBtn.innerHTML = lightBulbOnIcon; // Bulb on
+                    themeToggleBtn.title = "Switch to Dark Mode";
+                } else { // Dark mode
+                    document.documentElement.classList.remove('light-mode');
+                    themeToggleBtn.innerHTML = lightBulbOffIcon; // Bulb off
+                    themeToggleBtn.title = "Switch to Light Mode";
+                }
+            }
+
+            // Load saved theme or default to dark
+            let currentTheme = localStorage.getItem('theme') || 'dark';
+            applyTheme(currentTheme);
+
+
+            themeToggleBtn.addEventListener('click', () => {
+                currentTheme = document.documentElement.classList.contains('light-mode') ? 'dark' : 'light';
+                applyTheme(currentTheme);
+                localStorage.setItem('theme', currentTheme);
+            });
+            
+            // Modal Management
+            function showModal() {
+                dateModal.classList.add('active');
+                errorMessageEl.textContent = ''; 
+                // autofocus first field if appropriate, or manage focus
+                // startDateInput.focus(); 
+            }
+
+            function hideModal() {
+                dateModal.classList.remove('active');
+            }
+
+            openModalBtn.addEventListener('click', showModal);
+            closeModalBtn.addEventListener('click', hideModal);
+            
+            window.addEventListener('click', (event) => { 
+                if (event.target === dateModal) {
+                    hideModal();
+                }
+            });
+
+            // Handle ESC key to close modal
+            window.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && dateModal.classList.contains('active')) {
+                    hideModal();
+                }
+            });
+
+            // Set Start Date to Today
+            setTodayBtn.addEventListener('click', () => {
+                const today = new Date();
+                startDateInput.value = getFormattedDate(today);
+                errorMessageEl.textContent = ''; 
+            });
+
+            function getFormattedDate(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            // Date Calculation Logic
+            function performCalculation() {
+                const startDateStr = startDateInput.value;
+                const endDateStr = endDateInput.value;
+
+                if (!startDateStr || !endDateStr) {
+                    errorMessageEl.textContent = "Please select both start and end dates.";
+                    return;
+                }
+
+                const sDate = new Date(startDateStr + 'T00:00:00');
+                const eDate = new Date(endDateStr + 'T00:00:00');
+
+                if (sDate > eDate) {
+                    errorMessageEl.textContent = "End date cannot be earlier than the start date.";
+                    return;
+                }
+
+                errorMessageEl.textContent = ''; 
+
+                const diffTime = eDate.getTime() - sDate.getTime();
+                const totalAbsDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24))); // Ensure non-negative
+
+                const weeksInTotal = Math.floor(totalAbsDays / 7);
+                const daysInWeeksFormat = totalAbsDays % 7;
+
+                let yearsYMWD = 0;
+                let monthsYMWD = 0;
+                let tempStartDateYMWD = new Date(sDate);
+
+                // Calculate full years passed
+                for (let y = 0; y < 200; y++) { // Max 200 years to prevent infinite loop
+                    let nextYearDate = new Date(tempStartDateYMWD);
+                    nextYearDate.setFullYear(tempStartDateYMWD.getFullYear() + 1);
+                    if (nextYearDate <= eDate) {
+                        yearsYMWD++;
+                        tempStartDateYMWD = nextYearDate;
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Calculate full months passed from the remainder
+                for (let m = 0; m < 12; m++) { // Max 12 months
+                    let nextMonthDate = new Date(tempStartDateYMWD);
+                    nextMonthDate.setMonth(tempStartDateYMWD.getMonth() + 1);
+                    if (nextMonthDate <= eDate) {
+                        monthsYMWD++;
+                        tempStartDateYMWD = nextMonthDate;
+                    } else {
+                        break;
+                    }
+                }
+                
+                const remainingTimeYMWD = eDate.getTime() - tempStartDateYMWD.getTime();
+                const remainingDaysTotalYMWD = Math.max(0,Math.floor(remainingTimeYMWD / (1000 * 60 * 60 * 24)));
+                const weeksYMWD = Math.floor(remainingDaysTotalYMWD / 7);
+                const daysYMWD = remainingDaysTotalYMWD % 7;
+
+                let totalMonthsMWD = 0;
+                let tempStartDateMWD = new Date(sDate);
+                
+                // Calculate total full months passed (alternative month calculation)
+                for (let i = 0; i < (200 * 12); i++) { // Max 200 years in months
+                    let nextMonthDateOnly = new Date(tempStartDateMWD);
+                    nextMonthDateOnly.setMonth(tempStartDateMWD.getMonth() + 1);
+                     if (nextMonthDateOnly <= eDate) {
+                        totalMonthsMWD++;
+                        tempStartDateMWD = nextMonthDateOnly;
+                    } else {
+                        break;
+                    }
+                }
+
+                const remainingTimeMWD = eDate.getTime() - tempStartDateMWD.getTime();
+                const remainingDaysTotalMWD = Math.max(0, Math.floor(remainingTimeMWD / (1000 * 60 * 60 * 24)));
+                const weeksMWD = Math.floor(remainingDaysTotalMWD / 7);
+                const daysMWD = remainingDaysTotalMWD % 7;
+
+                totalDaysResultEl.textContent = `${totalAbsDays} Day${totalAbsDays === 1 ? '' : 's'}`;
+                weeksDaysResultEl.textContent = `${weeksInTotal} Week${weeksInTotal === 1 ? '' : 's'} and ${daysInWeeksFormat} Day${daysInWeeksFormat === 1 ? '' : 's'}`;
+                monthsWeeksDaysResultEl.textContent = `${totalMonthsMWD} Month${totalMonthsMWD === 1 ? '' : 's'}, ${weeksMWD} Week${weeksMWD === 1 ? '' : 's'} and ${daysMWD} Day${daysMWD === 1 ? '' : 's'}`;
+                yearsMonthsWeeksDaysResultEl.textContent = `${yearsYMWD} Year${yearsYMWD === 1 ? '' : 's'}, ${monthsYMWD} Month${monthsYMWD === 1 ? '' : 's'}, ${weeksYMWD} Week${weeksYMWD === 1 ? '' : 's'} and ${daysYMWD} Day${daysYMWD === 1 ? '' : 's'}`;
+
+                resultsContainer.style.display = 'block';
+                hideModal();
+            }
+
+            calculateBtn.addEventListener('click', performCalculation);
+
+            // Handle "Enter" key press in modal input fields
+            function handleEnterKey(event) {
+                if (event.key === 'Enter' && dateModal.classList.contains('active')) {
+                    event.preventDefault(); // Prevent default form submission if it were a form
+                    performCalculation();
+                }
+            }
+            startDateInput.addEventListener('keydown', handleEnterKey);
+            endDateInput.addEventListener('keydown', handleEnterKey);
+
+
+            // Initial state: Show modal on page load
+            showModal();
+        });
+    </script>
 </body>
 </html>
