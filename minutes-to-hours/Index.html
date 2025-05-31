@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minutes to Hours</title> <!-- Changed title -->
+    <link rel="icon" type="image/x-icon" href="https://i.postimg.cc/3RkpGK84/time-converter.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Corrected math.js CDN version for global 'math' object -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/7.0.0/math.min.js"></script>
+    <style>
+        /* Base styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #282c34;
+            color: #FFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #3a3f4b;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            max-width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Removed h1 specific styling as h1 is removed */
+        h2, h3 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            color: #61dafb;
+            color: #4a4f5b;
+        }
+
+        /* Total Result section (moved to top) */
+        .total-result {
+            padding-top: 0.5rem;
+        }
+
+        .result {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #61dafb;
+            margin-top: 0.5rem;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #4a4f5b;
+            margin: 1rem 0;
+        }
+
+        /* Input Group for adding tasks */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-container {
+            position: relative;
+            width: 100%;
+        }
+
+        input {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            padding: 0.8rem 1rem;
+            width: 100%;
+            box-sizing: border-box;
+            border: none;
+            border-radius: 5px;
+            background-color: #4a4f5b;
+            color: #FFF;
+        }
+
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #61dafb;
+        }
+
+        /* Buttons */
+        .add-task-btn, .remove-task-btn {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: #61dafb;
+            color: #FFF;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .add-task-btn:hover {
+            background-color: #4fa8c7;
+        }
+
+        .add-task-btn i {
+            margin-right: 0.5rem;
+        }
+
+        .remove-task-btn {
+            background-color: #f33b6f;
+            width: auto;
+            padding: 0.4rem 0.6rem; /* Adjusted padding for icon */
+            font-size: 1.1rem; /* Larger icon */
+            margin-left: 10px;
+            flex-shrink: 0;
+            display: inline-flex; /* Use inline-flex to center icon */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .remove-task-btn:hover {
+            background-color: #d12e5a;
+        }
+
+        /* Task list display */
+        .task-list {
+            background-color: #3a3f4b;
+            border-radius: 5px;
+            text-align: left;
+            max-height: 250px;
+            overflow-y: auto;
+            /* Scrollbar styling for WebKit browsers */
+            scrollbar-width: thin; /* Firefox */
+            scrollbar-color: #61dafb #3a3f4b; /* Firefox scrollbar color thumb track */
+        }
+
+        .task-list::-webkit-scrollbar {
+            width: 8px; /* Width of the scrollbar */
+        }
+
+        .task-list::-webkit-scrollbar-track {
+            background: #3a3f4b; /* Color of the scrollbar track */
+            border-radius: 10px;
+        }
+
+        .task-list::-webkit-scrollbar-thumb {
+            background-color: #61dafb; /* Color of the scrollbar thumb */
+            border-radius: 10px;
+            border: 2px solid #3a3f4b; /* Border around the thumb to make it appear slimmer/less visible */
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #4a4f5b;
+            padding: 0.7rem 1rem;
+            border-bottom: 1px solid #3a3f4b;
+            transition: background-color 0.2s ease-in-out;
+            cursor: grab;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-item-details {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            word-break: break-word;
+            margin-right: 10px;
+        }
+
+        .task-item-name {
+            font-weight: 600;
+            color: #FFF;
+        }
+
+        .task-item-time {
+            font-size: 0.9em;
+            color: #bbb;
+        }
+
+        .no-tasks-message {
+            padding: 1rem;
+            color: #aaa;
+            font-style: italic;
+            text-align: center;
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 280px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9em;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Message popup */
+        .message-popup {
+            position: fixed;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            animation: fadeInOut 3s forwards;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translate(-50%, -20px); }
+            10% { opacity: 1; transform: translate(-50%, 0); }
+            90% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -20px); }
+        }
+
+        /* Dragging styles */
+        .dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .drag-placeholder {
+            height: 3px;
+            background-color: #61dafb;
+            margin: 5px 0;
+            border-radius: 2px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .container {
+                width: 95%;
+                padding: 1rem;
+            }
+            input {
+                padding: 0.6rem 0.8rem;
+            }
+            .add-task-btn {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+            .result {
+                font-size: 2rem;
+            }
+            .tooltip .tooltiptext {
+                width: 90%;
+                bottom: 105%;
+            }
+            .task-item {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 0.5rem 0.8rem;
+            }
+            .task-item-details {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+            .remove-task-btn {
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Removed h1 "Task Time Tracker" -->
+
+        <!-- Total Result section (moved to top) -->
+        <div class="total-result">
+            <h3>Total Time</h3>
+            <div class="result" id="totalResult" aria-live="polite">0 Hrs 0 min</div>
+        </div>
+
+        <hr>
+
+        <div class="input-group">
+            <input type="text" id="taskNameInput" placeholder="Task Name" aria-label="Enter task name">
+            <div class="input-container tooltip">
+                <input type="text" id="taskDurationInput" placeholder="Duration (e.g., 90, 1.5h, 60+30)" aria-label="Enter duration in minutes or hours">
+            </div>
+            <button class="add-task-btn" onclick="addTask()" aria-label="Add task">
+                <i class="fa-solid fa-plus"></i> Add Task
+            </button>
+        </div>
+
+        <h2>Current Tasks</h2>
+        <!-- Message for when no tasks are added -->
+        <div id="noTasksMessage" class="no-tasks-message">No tasks added yet.</div>
+        <div id="taskList" class="task-list">
+            <!-- Tasks will be dynamically added here -->
+        </div>
+
+    </div>
+
+    <script>
+        let tasks = []; // Array to store task objects
+        let nextTaskId = 0; // Simple ID counter for tasks
+
+        // Helper to convert total minutes into H:M format
+        function convertMinutesToHrsMin(totalMinutes) {
+            if (isNaN(totalMinutes) || totalMinutes < 0) {
+                return 'Invalid Time';
+            }
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = Math.round(totalMinutes % 60); 
+            return `${hours} Hrs ${minutes} min`;
+        }
+
+        // Displays a temporary message popup (success or error)
+        function showMessage(message, type = 'error') {
+            let existingPopup = document.querySelector('.message-popup');
+            if (existingPopup) {
+                existingPopup.remove();
+            }
+
+            const popup = document.createElement('div');
+            popup.textContent = message;
+            popup.classList.add('message-popup');
+            
+            if (type === 'success') {
+                popup.style.backgroundColor = '#4CAF50';
+            } else { 
+                popup.style.backgroundColor = '#f33b6f';
+            }
+
+            document.body.appendChild(popup);
+
+            setTimeout(() => {
+                popup.remove();
+            }, 3000);
+        }
+
+        // Parses duration input, handling 'h' for hours and arithmetic expressions
+        function parseDurationInput(input) {
+            let totalMinutes = 0;
+            const originalInput = input.trim();
+
+            if (!originalInput) {
+                return NaN;
+            }
+
+            try {
+                if (originalInput.toLowerCase().endsWith('h')) {
+                    const hoursStr = originalInput.slice(0, -1);
+                    const hours = math.evaluate(hoursStr);
+                    if (isNaN(hours)) {
+                        throw new Error('Invalid hours expression');
+                    }
+                    totalMinutes = hours * 60;
+                } else {
+                    totalMinutes = math.evaluate(originalInput);
+                }
+
+                if (isNaN(totalMinutes) || totalMinutes < 0) {
+                    throw new Error('Calculated value is not a valid positive number');
+                }
+                return totalMinutes;
+            } catch (error) {
+                console.error("Error parsing duration:", error);
+                return NaN;
+            }
+        }
+
+        // Adds a new task to the list
+        function addTask() {
+            const taskNameInput = document.getElementById('taskNameInput');
+            const taskDurationInput = document.getElementById('taskDurationInput');
+
+            const name = taskNameInput.value.trim();
+            const durationStr = taskDurationInput.value.trim();
+
+            if (!name) {
+                showMessage('Please enter a task name.');
+                return;
+            }
+
+            const parsedMinutes = parseDurationInput(durationStr);
+
+            if (isNaN(parsedMinutes)) {
+                showMessage('Please enter a valid duration (e.g., 90, 1.5h, 60+30).');
+                return;
+            }
+
+            const newTask = {
+                id: nextTaskId++,
+                name: name,
+                totalMinutes: parsedMinutes
+            };
+
+            tasks.push(newTask);
+            renderTasks();
+            updateTotalTime();
+
+            taskNameInput.value = '';
+            taskDurationInput.value = '';
+            taskNameInput.focus(); 
+
+            // Removed: showMessage('Task added successfully!', 'success');
+        }
+
+        // Removes a task by its unique ID
+        function removeTask(id) {
+            const initialTaskCount = tasks.length;
+            tasks = tasks.filter(task => task.id !== id);
+
+            if (tasks.length < initialTaskCount) {
+                renderTasks();
+                updateTotalTime();
+                showMessage('Task removed.', 'success');
+            }
+        }
+
+        // DRAG AND DROP LOGIC
+        let draggedElement = null; // Stores the DOM element being dragged
+
+        // Helper function to find the element before which the dragged element should be inserted
+        // Returns the element (or null if dragged to the end)
+        function getDragAfterElement(container, y) {
+            // Filter out the element being dragged itself from the list of possible drop targets
+            const draggableElements = [...container.querySelectorAll('.task-item:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                // Calculate distance from the center of the child element.
+                // If offset < 0, mouse is above the center of `child`.
+                // We want the `child` that has the largest negative offset (i.e., closest to 0 from above).
+                const offset = y - box.top - box.height / 2; 
+                if (offset < 0 && offset > closest.offset) { 
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: -Infinity, element: null }).element; // Initialize with -Infinity to correctly find the largest negative offset
+        }
+
+        // Event handler for dragstart
+        function handleDragStart(e) {
+            draggedElement = e.target; // Store the DOM element being dragged
+            // Set the data that is being dragged (the task's unique ID)
+            e.dataTransfer.setData('text/plain', e.target.dataset.taskId); 
+            e.dataTransfer.effectAllowed = 'move';
+
+            // Add 'dragging' class for visual feedback. Using setTimeout ensures the browser captures the original drag image first.
+            setTimeout(() => {
+                if (draggedElement) {
+                    draggedElement.classList.add('dragging');
+                }
+            }, 0); 
+        }
+
+        // Event handler for dragover (allows dropping and shows placeholder)
+        function handleDragOver(e) {
+            e.preventDefault(); // Crucial: allows dropping onto this element
+            e.dataTransfer.dropEffect = 'move';
+            
+            const taskListElement = document.getElementById('taskList');
+            
+            // Remove any existing placeholder lines
+            const existingPlaceholder = taskListElement.querySelector('.drag-placeholder');
+            if (existingPlaceholder) {
+                existingPlaceholder.remove();
+            }
+
+            // Determine where the dragged item should be inserted
+            const afterElement = getDragAfterElement(taskListElement, e.clientY);
+            
+            // Create and append/insert the placeholder
+            const placeholder = document.createElement('div');
+            placeholder.classList.add('drag-placeholder');
+
+            if (afterElement == null) { 
+                // If afterElement is null, it means the item is dragged to the very end of the list
+                taskListElement.appendChild(placeholder);
+            } else { 
+                // Insert the placeholder before the determined 'afterElement'
+                taskListElement.insertBefore(placeholder, afterElement);
+            }
+        }
+
+        // Event handler for drop
+        function handleDrop(e) {
+            e.preventDefault();
+            const taskListElement = document.getElementById('taskList');
+            
+            // Get the ID of the dragged task
+            const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
+            
+            // Remove the placeholder line regardless of where it was dropped
+            const existingPlaceholder = taskListElement.querySelector('.drag-placeholder');
+            if (existingPlaceholder) {
+                existingPlaceholder.remove();
+            }
+
+            // Find the dragged task in the tasks array
+            const draggedTaskIndex = tasks.findIndex(task => task.id === draggedId);
+            if (draggedTaskIndex === -1) return;
+
+            const draggedTask = tasks[draggedTaskIndex];
+
+            // Temporarily remove the dragged task from the array to simplify finding the new index
+            tasks.splice(draggedTaskIndex, 1); 
+
+            // Determine the new index for insertion in the modified array
+            const afterElement = getDragAfterElement(taskListElement, e.clientY);
+            let newIndex;
+
+            if (afterElement) {
+                // Find the index of the 'afterElement' in the *currently filtered* tasks array.
+                // We want to insert *before* this element.
+                const afterTaskId = parseInt(afterElement.dataset.taskId);
+                newIndex = tasks.findIndex(task => task.id === afterTaskId);
+            } else {
+                // If afterElement is null, it means dropped at the very end.
+                newIndex = tasks.length; 
+            }
+
+            // Insert the dragged task at the determined new position
+            tasks.splice(newIndex, 0, draggedTask);
+
+            renderTasks();      // Re-render the UI to reflect the new order
+            updateTotalTime();  // Update total time (though it should remain same)
+            showMessage('Task reordered!', 'success');
+        }
+
+        // Event handler for dragend (cleanup)
+        function handleDragEnd(e) {
+            // Remove 'dragging' class from the dragged element
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+                draggedElement = null; // Clear the reference
+            }
+            // Ensure any placeholder is removed if drag ends outside a valid drop target
+            const existingPlaceholder = document.querySelector('.drag-placeholder');
+            if (existingPlaceholder) {
+                existingPlaceholder.remove();
+            }
+        }
+
+        // Renders (or re-renders) the list of tasks in the UI
+        function renderTasks() {
+            const taskListElement = document.getElementById('taskList');
+            const noTasksMessage = document.getElementById('noTasksMessage');
+
+            taskListElement.innerHTML = ''; // Clear existing content
+
+            if (tasks.length === 0) {
+                noTasksMessage.style.display = 'block';
+            } else {
+                noTasksMessage.style.display = 'none';
+                
+                tasks.forEach(task => {
+                    const taskItem = document.createElement('div');
+                    taskItem.classList.add('task-item');
+                    taskItem.setAttribute('draggable', 'true'); // Make task item draggable
+                    taskItem.dataset.taskId = task.id; // Store task ID for D&D logic
+
+                    // Add D&D event listeners to each task item
+                    taskItem.addEventListener('dragstart', handleDragStart);
+                    taskItem.addEventListener('dragend', handleDragEnd);
+
+                    taskItem.setAttribute('aria-labelledby', `task-name-${task.id}`);
+                    taskItem.setAttribute('aria-describedby', `task-time-${task.id}`);
+
+                    const taskDetails = document.createElement('div');
+                    taskDetails.classList.add('task-item-details');
+
+                    const taskName = document.createElement('div');
+                    taskName.classList.add('task-item-name');
+                    taskName.id = `task-name-${task.id}`;
+                    taskName.textContent = task.name;
+
+                    const taskTime = document.createElement('div');
+                    taskTime.classList.add('task-item-time');
+                    taskTime.id = `task-time-${task.id}`;
+                    taskTime.textContent = convertMinutesToHrsMin(task.totalMinutes);
+
+                    taskDetails.appendChild(taskName);
+                    taskDetails.appendChild(taskTime);
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.classList.add('remove-task-btn');
+                    removeBtn.innerHTML = '<i class="fa-regular fa-trash-can"></i>'; // Changed to icon only
+                    removeBtn.setAttribute('aria-label', `Remove task ${task.name}`);
+                    removeBtn.onclick = () => removeTask(task.id);
+
+                    taskItem.appendChild(taskDetails);
+                    taskItem.appendChild(removeBtn);
+                    taskListElement.appendChild(taskItem);
+                });
+            }
+        }
+
+        // Calculates and updates the cumulative total time display
+        function updateTotalTime() {
+            const totalResultElement = document.getElementById('totalResult');
+            const totalMinutesSum = tasks.reduce((sum, task) => sum + task.totalMinutes, 0);
+            totalResultElement.textContent = convertMinutesToHrsMin(totalMinutesSum);
+        }
+
+        // Event listener for 'Enter' key on the task duration input to add a task
+        document.getElementById('taskDurationInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                addTask();
+            }
+        });
+
+        // Event listener for 'Enter' key on the task name input to move focus to duration input
+        document.getElementById('taskNameInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                document.getElementById('taskDurationInput').focus();
+            }
+        });
+
+        // Initial setup when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTasks();
+            updateTotalTime();
+
+            // Add dragover and drop listeners to the taskList container ONCE
+            // These are essential for the container to accept drops
+            const taskListElement = document.getElementById('taskList');
+            taskListElement.addEventListener('dragover', handleDragOver);
+            taskListElement.addEventListener('drop', handleDrop);
+        });
+    </script>
+</body>
+</html>
