@@ -2,7 +2,7 @@
     <title>CineHub | Explorer</title>
     <link rel="icon" type="image/x-icon" href="https://i.postimg.cc/90kZB6G7/Cine-Hub-Favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>
         :root {
             --primary-color: #3B8EA5;
@@ -447,7 +447,7 @@
                         </select>
                     </div>
 
-                    <input type="text" class="search-bar" id="searchInput" placeholder="Search Films &amp; TV Series" aria-label="Search titles">
+                    <input type="text" class="search-bar" id="searchInput" placeholder="Search Films & TV Series" aria-label="Search titles">
                 </nav>
             </div>
         </div>
@@ -490,7 +490,7 @@
     
     <script>
         const API_READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzMjlmODk4ZTU2NDJjOTA3MTVmZDJiNGE4MWYwZTJkNiIsIm5iZiI6MTcyOTA4Mzk2Ny43OTYzMzEsInN1YiI6IjYzYTRkNWQ3MzM0NGM2MDA3ZGMwYzRlOSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.cWbIkvzYe3PSzJDarr0VFC71EkkVZgzZr2j6zzoalug';
-        const EXCLUDED_GENRES = ['Reality', 'Talk', 'News', 'Kids'];
+        const EXCLUDED_GENRES = ['Reality', 'Talk', 'News', 'Soap', 'Kids'];
         let currentType = 'movie';
         let currentPage = 1;
         let totalPages = 1;
@@ -547,7 +547,7 @@
                 item.media_type === 'movie' || item.media_type === 'tv'
             ).filter(item => 
                 !item.genre_ids.some(id => 
-                    [10764, 10767, 10763].includes(id) // Exclude Reality, Talk, and News genres
+                    [10764, 10767, 10763, 10766].includes(id) // Exclude Reality, Talk, News, and Soap genres
                 )
             );
         }
@@ -626,25 +626,25 @@
                     throw new Error(`HTTP error! status: ${genreResponse.status}`);
                 }
                 const genreData = await genreResponse.json();
-                populateFilterOptions('genreFilter', (genreData.genres || []).map(genre => ({ value: genre.id, text: genre.name })));
+                let genres = genreData.genres || [];
+                if (currentType === 'tv') {
+                    const excludedTvGenres = ['News', 'Reality', 'Soap', 'Talk'];
+                    genres = genres.filter(genre => !excludedTvGenres.includes(genre.name));
+                }
+                populateFilterOptions('genreFilter', genres.map(genre => ({ value: genre.id, text: genre.name })));
 
                 const currentYear = new Date().getFullYear();
                 const years = Array.from({ length: 50 }, (_, i) => currentYear - i);
                 populateFilterOptions('yearFilter', years.map(year => ({ value: year, text: year.toString() })));
 
-                const languageUrl = 'https://api.themoviedb.org/3/configuration/languages';
-                const languageResponse = await fetch(languageUrl, {
-                    method: 'GET',
-                    headers: {
-                        'accept': 'application/json',
-                        'Authorization': `Bearer ${API_READ_ACCESS_TOKEN}`
-                    }
-                });
-                if (!languageResponse.ok) {
-                    throw new Error(`HTTP error! status: ${languageResponse.status}`);
-                }
-                const languageData = await languageResponse.json();
-                populateFilterOptions('languageFilter', (languageData || []).map(lang => ({ value: lang.iso_639_1, text: lang.english_name })));
+                const desiredLanguages = [
+                    { iso_639_1: 'en', english_name: 'English' },
+                    { iso_639_1: 'pt', english_name: 'Portuguese' },
+                    { iso_639_1: 'es', english_name: 'Spanish' },
+                    { iso_639_1: 'fr', english_name: 'French' },
+                    { iso_639_1: 'it', english_name: 'Italian' }
+                ];
+                populateFilterOptions('languageFilter', desiredLanguages.map(lang => ({ value: lang.iso_639_1, text: lang.english_name })));
 
                 const countryUrl = 'https://api.themoviedb.org/3/configuration/countries';
                 const countryResponse = await fetch(countryUrl, {
@@ -756,7 +756,7 @@
                 if (itemType !== currentType) continue;
 
                 const title = item.title || item.name || 'Unknown Title';
-                const posterPath = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://is.gd/zEC8Rb';
+                const posterPath = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://i.postimg.cc/3wmgc5fd/Image-Unavailable.png';
                 const releaseYear = (item.release_date || item.first_air_date || '').split('-')[0] || 'N/A';
                 const rating = item.vote_average ? `${item.vote_average.toFixed(1)} / 10` : 'N/A';
 
@@ -1011,7 +1011,7 @@
                 cast.forEach(member => {
                     castHtml += `
                         <div class="cast-member">
-                            <img src="${member.profile_path ? `https://image.tmdb.org/t/p/w200${member.profile_path}` : 'https://is.gd/zEC8Rb'}" alt="${member.name}" data-person-id="${member.person_id}">
+                            <img src="${member.profile_path ? `https://image.tmdb.org/t/p/w200${member.profile_path}` : 'https://i.postimg.cc/3wmgc5fd/Image-Unavailable.png'}" alt="${member.name}" data-person-id="${member.person_id}">
                             <div class="cast-tooltip">
                                 <p style="font-size: 16px; font-weight: Bolder; color: #01b4e4; margin-bottom: 15px;">${member.name}</p>
                                 <p><i class="fa-solid fa-masks-theater"></i> ${member.character}</p>
@@ -1057,7 +1057,7 @@
             
             filmography.forEach(item => {
                 const poster = document.createElement('img');
-                poster.src = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : 'https://is.gd/zEC8Rb';
+                poster.src = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : 'https://i.postimg.cc/3wmgc5fd/Image-Unavailable.png';
                 poster.alt = item.title || item.name;
                 poster.dataset.title = item.title || item.name;
                 poster.addEventListener('click', () => {
