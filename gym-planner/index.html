@@ -769,6 +769,8 @@
                     group: { name: 'shared', pull: 'clone', put: false }, 
                     animation: 150, 
                     sort: true,
+                    delay: 200, // Time in ms to hold before starting drag on touch devices
+                    delayOnTouchOnly: true, // Only apply delay for touch events
                     onEnd: handleSidebarSort
                 }); 
             });
@@ -780,6 +782,8 @@
                 new Sortable(list, {
                     group: 'shared',
                     animation: 150,
+                    delay: 200, // Time in ms to hold before starting drag on touch devices
+                    delayOnTouchOnly: true, // Only apply delay for touch events
                     onAdd: (evt) => {
                         const itemEl = evt.item;
                         const dayId = evt.to.dataset.dayId;
