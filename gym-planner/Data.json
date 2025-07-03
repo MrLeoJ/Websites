@@ -1,0 +1,422 @@
+{
+  "exercises": [
+    {
+      "type": "Cardio",
+      "name": "Jogging",
+      "muscleGroup": "N/A",
+      "level": "Beginner",
+      "description": "",
+      "url": "",
+      "color": "#f2f55c",
+      "id": "ex_1751302914302"
+    },
+    {
+      "type": "Cardio",
+      "name": "Skipping Rope",
+      "muscleGroup": "N/A",
+      "level": "Intermediate",
+      "description": "",
+      "url": "",
+      "color": "#f2f55c",
+      "id": "ex_1751310788318"
+    },
+    {
+      "type": "Cardio",
+      "name": "Treadmill",
+      "muscleGroup": "N/A",
+      "level": "Beginner",
+      "description": "",
+      "url": "",
+      "color": "#f2f55c",
+      "id": "ex_1751533997956"
+    },
+    {
+      "type": "Powerlifting",
+      "name": "Abs",
+      "muscleGroup": "Abs",
+      "level": "Beginner",
+      "description": "Home Workout",
+      "url": "",
+      "color": "#ff8160",
+      "id": "ex_1751535659019"
+    },
+    {
+      "type": "Powerlifting",
+      "name": "Forearm Plank",
+      "muscleGroup": "Abs",
+      "level": "Beginner",
+      "description": "Home Workout",
+      "url": "https://youtu.be/3ECmYz2qxCQ?list=TLGGsmIBbjsPBn8wMzA3MjAyNQ",
+      "color": "#ff8160",
+      "id": "ex_1751535792906"
+    },
+    {
+      "type": "Powerlifting",
+      "name": "Push-Ups",
+      "muscleGroup": "Chest",
+      "level": "Beginner",
+      "description": "Home Workout",
+      "url": "https://youtu.be/Xdzfcn2XgNs?list=TLGGfN7eQ0H1wR0wMzA3MjAyNQ",
+      "color": "#ff8160",
+      "id": "ex_1751364284801"
+    },
+    {
+      "type": "Powerlifting",
+      "name": "Alternating Deltoid Raise",
+      "muscleGroup": "Shoulders",
+      "level": "Beginner",
+      "description": "",
+      "url": "https://youtu.be/HGRC9zAk10M?list=TLGGaTzz1GD91_szMDA2MjAyNQ",
+      "color": "#f7a445",
+      "id": "ex_1751310984992"
+    },
+    {
+      "type": "Powerlifting",
+      "name": "Seated Dumbbell Shoulder Press",
+      "muscleGroup": "Shoulders",
+      "level": "Beginner",
+      "description": "",
+      "url": "https://youtu.be/IgC8EGv6qyQ?list=TLGGzesLuf-qmpszMDA2MjAyNQ",
+      "color": "#f7a445",
+      "id": "ex_1751311150448"
+    },
+    {
+      "type": "Powerlifting",
+      "name": "Reverse Flyes",
+      "muscleGroup": "Shoulders",
+      "level": "Beginner",
+      "description": "",
+      "url": "https://youtu.be/70yGLTberJU?list=TLGGr2t2Fy1AGSUzMDA2MjAyNQ",
+      "color": "#f7a445",
+      "id": "ex_1751311086470"
+    },
+    {
+      "type": "Powerlifting",
+      "name": "Triceps Bench Dips",
+      "muscleGroup": "Triceps",
+      "level": "Beginner",
+      "description": "Home Workout",
+      "url": "https://youtu.be/NP4lGYtZQzQ?list=TLGG9fDjDNMRSugwMzA3MjAyNQ",
+      "color": "#ff8160",
+      "id": "ex_1751535467160"
+    },
+    {
+      "type": "Stretching",
+      "name": "Childs Pose",
+      "muscleGroup": "N/A",
+      "level": "Beginner",
+      "description": "",
+      "url": "https://youtu.be/LNpensmaCDw?list=TLGGU_LuUq08mygzMDA2MjAyNQ",
+      "color": "#ffb8f9",
+      "id": "ex_1751311376687"
+    },
+    {
+      "type": "Stretching",
+      "name": "Camel Stretch",
+      "muscleGroup": "N/A",
+      "level": "Beginner",
+      "description": "",
+      "url": "https://youtu.be/d0heWb4Xt4o?list=TLGGPW35hB5jtrczMDA2MjAyNQ",
+      "color": "#ffb8f9",
+      "id": "ex_1751311337699"
+    }
+  ],
+  "weeklyPlan": {
+    "monday": [
+      {
+        "exerciseId": "ex_1751302914302",
+        "planId": "plan_1751534334183",
+        "completed": false,
+        "time": "-",
+        "distance": "4 km",
+        "intensity": "🟦 Low"
+      },
+      {
+        "exerciseId": "ex_1751364284801",
+        "planId": "plan_1751534531729",
+        "completed": false,
+        "sets": "2",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535467160",
+        "planId": "plan_1751535559251",
+        "completed": false,
+        "sets": "10",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535659019",
+        "planId": "plan_1751535694318",
+        "completed": false,
+        "sets": "5",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535792906",
+        "planId": "plan_1751535850585",
+        "completed": false,
+        "sets": "15s",
+        "reps": "-",
+        "rest": "-"
+      }
+    ],
+    "tuesday": [
+      {
+        "exerciseId": "ex_1751302914302",
+        "planId": "plan_1751534348192",
+        "completed": false,
+        "time": "-",
+        "distance": "4 km",
+        "intensity": "🟦 Low"
+      },
+      {
+        "exerciseId": "ex_1751364284801",
+        "planId": "plan_1751534596414",
+        "completed": false,
+        "sets": "2",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535467160",
+        "planId": "plan_1751535600536",
+        "completed": false,
+        "sets": "10",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535659019",
+        "planId": "plan_1751535707402",
+        "completed": false,
+        "sets": "5",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535792906",
+        "planId": "plan_1751535895033",
+        "completed": false,
+        "sets": "15s",
+        "reps": "-",
+        "rest": "-"
+      }
+    ],
+    "wednesday": [
+      {
+        "exerciseId": "ex_1751302914302",
+        "planId": "plan_1751534349553",
+        "completed": false,
+        "time": "-",
+        "distance": "4 km",
+        "intensity": "🟦 Low"
+      },
+      {
+        "exerciseId": "ex_1751364284801",
+        "planId": "plan_1751534597182",
+        "completed": false,
+        "sets": "2",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535467160",
+        "planId": "plan_1751535601494",
+        "completed": false,
+        "sets": "10",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535659019",
+        "planId": "plan_1751535708362",
+        "completed": false,
+        "sets": "5",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535792906",
+        "planId": "plan_1751535896410",
+        "completed": false,
+        "sets": "15s",
+        "reps": "-",
+        "rest": "-"
+      }
+    ],
+    "thursday": [
+      {
+        "exerciseId": "ex_1751302914302",
+        "planId": "plan_1751534350361",
+        "completed": false,
+        "time": "-",
+        "distance": "4 km",
+        "intensity": "🟦 Low"
+      },
+      {
+        "exerciseId": "ex_1751364284801",
+        "planId": "plan_1751535305215",
+        "completed": false,
+        "sets": "2",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535467160",
+        "planId": "plan_1751535602418",
+        "completed": false,
+        "sets": "10",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535659019",
+        "planId": "plan_1751535709260",
+        "completed": false,
+        "sets": "5",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535792906",
+        "planId": "plan_1751535897247",
+        "completed": false,
+        "sets": "15s",
+        "reps": "-",
+        "rest": "-"
+      }
+    ],
+    "friday": [
+      {
+        "exerciseId": "ex_1751302914302",
+        "planId": "plan_1751534351095",
+        "completed": false,
+        "time": "-",
+        "distance": "4 km",
+        "intensity": "🟦 Low"
+      },
+      {
+        "exerciseId": "ex_1751364284801",
+        "planId": "plan_1751534598624",
+        "completed": false,
+        "sets": "2",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535467160",
+        "planId": "plan_1751535603585",
+        "completed": false,
+        "sets": "10",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535659019",
+        "planId": "plan_1751535716937",
+        "completed": false,
+        "sets": "5",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535792906",
+        "planId": "plan_1751535898044",
+        "completed": false,
+        "sets": "15s",
+        "reps": "-",
+        "rest": "-"
+      }
+    ],
+    "saturday": [
+      {
+        "exerciseId": "ex_1751302914302",
+        "planId": "plan_1751534356096",
+        "completed": false,
+        "time": "-",
+        "distance": "4 km",
+        "intensity": "🟦 Low"
+      },
+      {
+        "exerciseId": "ex_1751364284801",
+        "planId": "plan_1751534599296",
+        "completed": false,
+        "sets": "2",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535467160",
+        "planId": "plan_1751535604526",
+        "completed": false,
+        "sets": "10",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535659019",
+        "planId": "plan_1751535712982",
+        "completed": false,
+        "sets": "5",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535792906",
+        "planId": "plan_1751535898848",
+        "completed": false,
+        "sets": "15s",
+        "reps": "-",
+        "rest": "-"
+      }
+    ],
+    "sunday": [
+      {
+        "exerciseId": "ex_1751302914302",
+        "planId": "plan_1751534351778",
+        "completed": false,
+        "time": "-",
+        "distance": "4 km",
+        "intensity": "🟦 Low"
+      },
+      {
+        "exerciseId": "ex_1751364284801",
+        "planId": "plan_1751534600029",
+        "completed": false,
+        "sets": "2",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535467160",
+        "planId": "plan_1751535605508",
+        "completed": false,
+        "sets": "10",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535659019",
+        "planId": "plan_1751535713947",
+        "completed": false,
+        "sets": "5",
+        "reps": "1",
+        "rest": "-"
+      },
+      {
+        "exerciseId": "ex_1751535792906",
+        "planId": "plan_1751535899605",
+        "completed": false,
+        "sets": "15s",
+        "reps": "-",
+        "rest": "-"
+      }
+    ]
+  },
+  "week_start_date": "2025-06-30",
+  "week_end_date": "2025-08-02"
+}
