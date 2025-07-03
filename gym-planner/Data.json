@@ -136,7 +136,7 @@
         "planId": "plan_1751534531729",
         "completed": false,
         "sets": "2",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
@@ -144,7 +144,7 @@
         "planId": "plan_1751535559251",
         "completed": false,
         "sets": "10",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
@@ -152,7 +152,7 @@
         "planId": "plan_1751535694318",
         "completed": false,
         "sets": "5",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
@@ -160,7 +160,7 @@
         "planId": "plan_1751535850585",
         "completed": false,
         "sets": "15s",
-        "reps": "-",
+        "reps": "3x Day",
         "rest": "-"
       }
     ],
@@ -175,34 +175,34 @@
       },
       {
         "exerciseId": "ex_1751364284801",
-        "planId": "plan_1751534596414",
+        "planId": "plan_1751543466420",
         "completed": false,
         "sets": "2",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535467160",
-        "planId": "plan_1751535600536",
+        "planId": "plan_1751543475244",
         "completed": false,
         "sets": "10",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535659019",
-        "planId": "plan_1751535707402",
+        "planId": "plan_1751543484657",
         "completed": false,
         "sets": "5",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535792906",
-        "planId": "plan_1751535895033",
+        "planId": "plan_1751543495256",
         "completed": false,
         "sets": "15s",
-        "reps": "-",
+        "reps": "3x Day",
         "rest": "-"
       }
     ],
@@ -217,34 +217,34 @@
       },
       {
         "exerciseId": "ex_1751364284801",
-        "planId": "plan_1751534597182",
+        "planId": "plan_1751543467581",
         "completed": false,
         "sets": "2",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535467160",
-        "planId": "plan_1751535601494",
+        "planId": "plan_1751543476322",
         "completed": false,
         "sets": "10",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535659019",
-        "planId": "plan_1751535708362",
+        "planId": "plan_1751543486754",
         "completed": false,
         "sets": "5",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535792906",
-        "planId": "plan_1751535896410",
+        "planId": "plan_1751543497724",
         "completed": false,
         "sets": "15s",
-        "reps": "-",
+        "reps": "3x Day",
         "rest": "-"
       }
     ],
@@ -259,34 +259,34 @@
       },
       {
         "exerciseId": "ex_1751364284801",
-        "planId": "plan_1751535305215",
+        "planId": "plan_1751543468565",
         "completed": false,
         "sets": "2",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535467160",
-        "planId": "plan_1751535602418",
+        "planId": "plan_1751543477727",
         "completed": false,
         "sets": "10",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535659019",
-        "planId": "plan_1751535709260",
+        "planId": "plan_1751543488856",
         "completed": false,
         "sets": "5",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535792906",
-        "planId": "plan_1751535897247",
+        "planId": "plan_1751543499447",
         "completed": false,
         "sets": "15s",
-        "reps": "-",
+        "reps": "3x Day",
         "rest": "-"
       }
     ],
@@ -301,34 +301,34 @@
       },
       {
         "exerciseId": "ex_1751364284801",
-        "planId": "plan_1751534598624",
+        "planId": "plan_1751543470038",
         "completed": false,
         "sets": "2",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535467160",
-        "planId": "plan_1751535603585",
+        "planId": "plan_1751543478966",
         "completed": false,
         "sets": "10",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535659019",
-        "planId": "plan_1751535716937",
+        "planId": "plan_1751543490082",
         "completed": false,
         "sets": "5",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535792906",
-        "planId": "plan_1751535898044",
+        "planId": "plan_1751543500722",
         "completed": false,
         "sets": "15s",
-        "reps": "-",
+        "reps": "3x Day",
         "rest": "-"
       }
     ],
@@ -343,34 +343,34 @@
       },
       {
         "exerciseId": "ex_1751364284801",
-        "planId": "plan_1751534599296",
+        "planId": "plan_1751543471058",
         "completed": false,
         "sets": "2",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535467160",
-        "planId": "plan_1751535604526",
+        "planId": "plan_1751543480194",
         "completed": false,
         "sets": "10",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535659019",
-        "planId": "plan_1751535712982",
+        "planId": "plan_1751543491632",
         "completed": false,
         "sets": "5",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535792906",
-        "planId": "plan_1751535898848",
+        "planId": "plan_1751543501949",
         "completed": false,
         "sets": "15s",
-        "reps": "-",
+        "reps": "3x Day",
         "rest": "-"
       }
     ],
@@ -385,34 +385,34 @@
       },
       {
         "exerciseId": "ex_1751364284801",
-        "planId": "plan_1751534600029",
+        "planId": "plan_1751543472358",
         "completed": false,
         "sets": "2",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535467160",
-        "planId": "plan_1751535605508",
+        "planId": "plan_1751543481227",
         "completed": false,
         "sets": "10",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535659019",
-        "planId": "plan_1751535713947",
+        "planId": "plan_1751543493096",
         "completed": false,
         "sets": "5",
-        "reps": "1",
+        "reps": "3x Day",
         "rest": "-"
       },
       {
         "exerciseId": "ex_1751535792906",
-        "planId": "plan_1751535899605",
+        "planId": "plan_1751543503571",
         "completed": false,
         "sets": "15s",
-        "reps": "-",
+        "reps": "3x Day",
         "rest": "-"
       }
     ]
