@@ -256,7 +256,7 @@
                     <button class="icon-btn" id="export-pdf-btn" aria-label="Save as PDF"><i class="fa-solid fa-file-pdf"></i></button>
                     <span>|</span>
                     <button class="icon-btn" id="import-plan-btn" aria-label="Upload"><i class="fa-solid fa-cloud-arrow-up"></i></button>
-                    <button class="icon-btn" id="export-plan-btn" aria-label="Download" tooltip="Download"><i class="fa-solid fa-cloud-arrow-down"></i></button>
+                    <button class="icon-btn" id="export-plan-btn" aria-label="Download"><i class="fa-solid fa-cloud-arrow-down"></i></button>
                     <input type="file" id="import-file-input" accept=".json">
                 </div>
             </header>
@@ -301,9 +301,9 @@
         const getEl = (id) => document.getElementById(id);
         const calendarEl = getEl('calendar'), sidebar = getEl('sidebar'), mainContent = getEl('main-content'), searchInput = getEl('search-exercise');
 
-        function init() {
+        async function init() {
             injectModalHTML();
-            loadData();
+            await loadData();
             renderWeekTitle();
             populateDropdowns();
             renderCalendarDays();
@@ -313,26 +313,45 @@
             initSortable();
         }
 
-        function loadData() {
+        async function loadData() {
             const savedData = localStorage.getItem('gymWorkoutPlanner');
             if (savedData) {
                 appData = JSON.parse(savedData);
-                appData.exercises.forEach(ex => {
-                    if (!ex.level) ex.level = 'Beginner';
-                    if (!ex.type) ex.type = 'Powerlifting';
-                    if (ex.type === 'Strength') ex.type = 'Powerlifting';
-                });
-                daysOfWeek.forEach(day => {
-                    const dayKey = day.toLowerCase();
-                    if (!appData.weeklyPlan[dayKey]) appData.weeklyPlan[dayKey] = [];
-                    appData.weeklyPlan[dayKey].forEach(item => {
-                        if (item.completed === undefined) item.completed = false;
-                    });
-                });
             } else {
-                appData.exercises = [{ id: 'ex1', type: 'Powerlifting', name: 'Barbell Bench Press', description: 'Chest press with a barbell.', url: 'https://www.youtube.com/watch?v=rT7DgCr-3pg', muscleGroup: 'Chest', level: 'Intermediate', color: '#bb86fc' }];
-                appData.weeklyPlan = { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [] };
+                try {
+                    const response = await fetch('Data.json');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const importedData = await response.json();
+                    if (importedData.exercises && importedData.weeklyPlan) {
+                        appData = importedData;
+                        showToast('Plan loaded from Data.json', 'info');
+                        console.log('Successfully loaded initial plan from Data.json');
+                    } else {
+                        throw new Error('Invalid Data.json format.');
+                    }
+                } catch (error) {
+                    console.info('Data.json not found or invalid. Initializing with default sample data.', error.message);
+                    appData.exercises = [{ id: 'ex1', type: 'Powerlifting', name: 'Barbell Bench Press', description: 'Chest press with a barbell.', url: 'https://www.youtube.com/watch?v=rT7DgCr-3pg', muscleGroup: 'Chest', level: 'Intermediate', color: '#bb86fc' }];
+                    appData.weeklyPlan = { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [] };
+                }
             }
+
+            // --- Data Normalization (run this regardless of source) ---
+            appData.exercises.forEach(ex => {
+                if (!ex.level) ex.level = 'Beginner';
+                if (!ex.type) ex.type = 'Powerlifting';
+                if (ex.type === 'Strength') ex.type = 'Powerlifting';
+            });
+            daysOfWeek.forEach(day => {
+                const dayKey = day.toLowerCase();
+                if (!appData.weeklyPlan[dayKey]) appData.weeklyPlan[dayKey] = [];
+                appData.weeklyPlan[dayKey].forEach(item => {
+                    if (item.completed === undefined) item.completed = false;
+                });
+            });
+
             if (!appData.week_start_date) {
                 const today = new Date();
                 const dayOfWeek = today.getDay();
@@ -340,6 +359,7 @@
                 monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
                 appData.week_start_date = monday.toISOString().split('T')[0];
             }
+            saveData();
         }
         function saveData() { localStorage.setItem('gymWorkoutPlanner', JSON.stringify(appData)); }
 
@@ -601,6 +621,22 @@
             calendarEl.addEventListener('click', handleDayHeaderClick);
             calendarEl.addEventListener('input', handleCalendarInput);
             calendarEl.addEventListener('dblclick', handleWorkoutDblClick);
+            
+            // Mobile double-tap support
+            let lastTapTime = 0;
+            calendarEl.addEventListener('touchend', (e) => {
+                const card = e.target.closest('.workout-card');
+                if (!card) return;
+
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTapTime;
+
+                if (tapLength < 300 && tapLength > 0) {
+                    e.preventDefault(); // Prevent zoom
+                    handleWorkoutDblClick(e); // Reuse existing double-click logic
+                }
+                lastTapTime = currentTime;
+            });
         }
 
         function handleDayHeaderClick(e) {
