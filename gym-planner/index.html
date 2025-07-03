@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Workout Planner</title>
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+    
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- SortableJS Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <!-- html2pdf Library for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    
+    <style>
+        /* ------------------- */
+        /* --- 1. GLOBALS & THEME --- */
+        /* ------------------- */
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --surface-color-hover: #2a2a2a;
+            --primary-color: #03dac6; /* Teal accent */
+            --primary-variant-color: #018786;
+            --secondary-color: #bb86fc; /* Purple accent */
+            --text-color: #e0e0e0;
+            --text-color-secondary: #a0a0a0;
+            --border-color: #333333;
+            --error-color: #cf6679;
+            --success-color: #4CAF50;
+            --info-color: #2196F3;
+            --font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --sidebar-width: 320px;
+            --header-height: 60px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow: hidden;
+        }
+        
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; /* Firefox */ }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: rgba(51, 51, 51, 0.75); border-radius: 10px; border: 2px solid var(--surface-color); }
+        ::-webkit-scrollbar-thumb:hover { background-color: rgba(94, 94, 94, 1); }
+        ::-webkit-scrollbar-button { display: none; }
+
+        /* ------------------- */
+        /* --- 2. LAYOUT --- */
+        /* ------------------- */
+        .app-container { display: flex; height: 100vh; }
+        .sidebar { width: var(--sidebar-width); height: 100vh; background-color: var(--surface-color); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; transform: translateX(-100%); transition: transform 0.3s ease-in-out; z-index: 1000; }
+        .sidebar.open { transform: translateX(0); box-shadow: 5px 0 15px rgba(0,0,0,0.3); }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; width: 100%; }
+        .main-header { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; height: var(--header-height); background-color: var(--surface-color); border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .main-header-left { display: flex; align-items: center; gap: 15px; }
+        .data-buttons { display: flex; align-items: center; gap: 5px; }
+        .week-title-container { display: flex; align-items: center; gap: 10px; }
+        .week-title-container h1 { font-size: 1.2rem; white-space: nowrap; }
+        #start-date-input { display: none; }
+        .calendar-container { flex-grow: 1; padding: 20px; overflow-y: auto; }
+        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 15px; min-height: calc(100vh - var(--header-height) - 40px); max-width: 100%; }
+        
+        /* Maximized Day View */
+        .calendar.day-maximized { 
+            display: flex;
+            justify-content: center;
+        }
+        .calendar.day-maximized .day:not(.maximized) { display: none; }
+        .day.maximized {
+            flex-grow: 0;
+            flex-shrink: 0;
+            width: 100%;
+        }
+        .day.maximized .day-header { cursor: zoom-out; }
+
+        /* ------------------- */
+        /* --- 3. COMPONENTS --- */
+        /* ------------------- */
+
+        /* Sidebar Components */
+        .sidebar-header { padding: 0 20px; height: var(--header-height); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .sidebar-header h2 { font-size: 1.2rem; }
+        .sidebar-content { padding: 20px; overflow-y: auto; flex-grow: 1; position: relative; }
+        .search-bar { width: 100%; padding: 10px; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-color); margin-bottom: 20px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
+        .btn-primary { background-color: var(--primary-color); color: #000; }
+        .btn-primary:hover { background-color: var(--primary-variant-color); color: var(--text-color); }
+        .btn-danger { background-color: var(--error-color); color: #000; }
+        .btn-danger:hover { background-color: #b00020; color: #fff; }
+        .btn-info { background-color: var(--info-color); color: #fff; }
+        .btn-info:hover { background-color: #1976D2; }
+        .btn-full-width { width: 100%; margin-bottom: 10px; }
+        .icon-btn { background: none; border: none; color: var(--text-color-secondary); cursor: pointer; padding: 5px; font-size: 1.2rem; line-height: 1; transition: color 0.2s; }
+        .icon-btn:hover { color: var(--primary-color); }
+
+        #back-to-top-btn { position: fixed; bottom: 20px; left: calc(var(--sidebar-width) - 60px); z-index: 1001; background-color: var(--primary-color); color: #000; border-radius: 50%; width: 40px; height: 40px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.5); transition: opacity 0.3s, transform 0.3s; opacity: 1; transform: scale(1); }
+        #back-to-top-btn:hover { background-color: var(--primary-variant-color); transform: scale(1.1); }
+        #back-to-top-btn.hidden { opacity: 0; transform: scale(0.5); pointer-events: none; }
+
+        #exercise-list .exercise-item { background-color: #2c2c2c; padding: 12px; margin-bottom: 10px; border-radius: 5px; cursor: grab; display: flex; flex-direction: column; align-items: flex-start; border-left: 4px solid var(--secondary-color); }
+        .exercise-item-details { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .exercise-description { font-size: 0.75rem; color: var(--text-color-secondary); font-style: italic; margin-top: 4px; }
+        .exercise-actions { display: flex; gap: 5px; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-color); width: 100%; }
+        .exercise-actions .icon-btn { flex-grow: 1; text-align: center; padding: 8px 0; border-radius: 4px; background-color: transparent; transition: background-color 0.2s, color 0.2s; }
+        .exercise-actions .icon-btn:hover { background-color: var(--bg-color); color: var(--primary-color); }
+        .exercise-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .exercise-name { font-size:13px; font-weight: bold; display: block; }
+        .type-badge, .muscle-group-badge, .level-badge { font-size: 0.6rem; color: var(--text-color-secondary); padding: 2px 6px; border-radius: 10px; display: inline-block; text-transform: capitalize; }
+        .type-badge {background-color: #444;}
+        .muscle-group-badge {border: 1px solid #555;}
+        .level-badge { border: 1px solid #555; }
+        #exercise-list .exercise-item:active { cursor: grabbing; }
+
+        /* Calendar Components */
+        .day { background-color: var(--surface-color); border-radius: 8px; display: flex; flex-direction: column; }
+        .day-header { padding: 10px 15px; font-weight: bold; text-align: center; border-bottom: 1px solid var(--border-color); cursor: zoom-in; }
+        .workout-list { padding: 10px; flex-grow: 1; min-height: 150px; }
+        .workout-group-header { font-size: 0.8rem; font-weight: 600; color: #555; text-transform: uppercase; margin: 10px 0 8px; }
+        .workout-group-header:first-child { margin-top: 0; }
+        .workout-card { background-color: #2c2c2c; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid var(--primary-color); display: flex; flex-direction: column; cursor: pointer; transition: opacity 0.2s; }
+        .workout-card.completed { opacity: 0.6; }
+        .workout-card.completed .workout-card-header h4 { text-decoration: line-through; }
+        .workout-card-content { padding: 12px; }
+        .workout-card-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .workout-card-header h4 { font-size: 0.8rem; flex-grow: 1; }
+        .workout-description { font-size: 0.75rem; color: var(--text-color-secondary); font-style: italic; margin-top: 4px; margin-bottom: 8px; }
+        .workout-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+        .workout-details .input-group { display: flex; flex-direction: column; }
+        .workout-details label { font-size: 0.6rem; color: var(--text-color-secondary); margin-bottom: 2px; text-align: center; }
+        .workout-details input, .workout-details select { width: 100%; padding: 5px; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 3px; color: var(--text-color); font-size: 0.8rem; text-align: center; }
+        .workout-video-btn { background-color: #393939; color: #1f1f1f; border: none; width: 100%; padding: 8px 0; cursor: pointer; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; transition: background-color 0.2s, color 0.2s; }
+        .workout-video-btn:hover { background-color: #5f5f5f; color: var(--video-icon-color, #03dac6); }
+        
+        /* New styles for complete button */
+        .complete-workout-btn {
+            background-color: #393939;
+            border-radius: 10px;
+            width: 30px;
+            height: 30px;
+            font-size: 0.9rem;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease-in-out;
+        }
+        .complete-workout-btn:hover {
+            background-color: #52d6ce;
+            color: #393939;
+        }
+
+        .workout-card.completed .complete-workout-btn {
+            background: none;
+            border: 2px solid #52d6ce;
+            color: #52d6ce;
+        }
+
+        /* Drag-and-Drop Visuals */
+        .sortable-ghost { opacity: 0.4; background: #444; }
+        .sortable-drag { opacity: 1 !important; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+        
+        /* Modals & Notifications */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background-color: var(--surface-color); padding: 10px; border-radius: 8px; width: 90%; max-width: 800px; position: relative; }
+        .modal h3 { margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: var(--text-color-secondary); }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-color); font-family: var(--font-family); }
+        .radio-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .radio-group label { display: flex; align-items: center; gap: 5px; padding: 8px 12px; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 5px; cursor: pointer; transition: all 0.2s; flex-grow: 1; justify-content: center; }
+        .radio-group input[type="radio"] { display: none; }
+        .radio-group input[type="radio"]:checked + label { background-color: var(--primary-color); color: #000; border-color: var(--primary-color); }
+        .modal-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+        #video-modal .modal-content { width: 90%; max-width: 854px; background: #000; padding: 0; }
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .close-modal-btn { position: absolute; top: -35px; right: 0; font-size: 2rem; color: #fff; }
+
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; align-items: flex-end;}
+        .toast { display: flex; align-items: center; justify-content: space-between; gap: 15px; width: fit-content; padding: 15px 20px; border-radius: 5px; color: #fff; font-weight: bold; opacity: 0; transform: translateX(100%); transition: opacity 0.3s, transform 0.3s; }
+        .toast.show { opacity: 1; transform: translateX(0); }
+        .toast.success { background-color: var(--success-color); }
+        .toast.error { background-color: var(--error-color); }
+        .toast.info { background-color: var(--info-color); }
+        .toast-close-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 0; line-height: 1;}
+        .toast-undo-btn { background: none; border: none; color: #fff; font-weight: bold; text-decoration: underline; cursor: pointer; margin-left: 10px; padding: 5px; }
+        #confirm-modal .modal-body { margin-bottom: 20px; }
+
+        /* Utility & Mobile */
+        .hidden { display: none !important; }
+        #import-file-input { display: none; }
+        @media (max-width: 992px) {
+            .calendar:not(.day-maximized) { grid-template-columns: 1fr; }
+            .week-title-container { flex-direction: column; align-items: flex-start; gap: 5px; }
+            .week-title-container h1 { font-size: 1rem; }
+        }
+
+        @media (min-width: 993px) {
+            .day.maximized {
+                width: 40%;
+            }
+        }
+        
+        /* PDF Print Styles */
+        @media print { body * { visibility: hidden; } #pdf-content, #pdf-content * { visibility: visible; } #pdf-content { position: absolute; left: 0; top: 0; width: 100%; } }
+        .pdf-print-area { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container" id="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Exercise Library</h2>
+                <button class="icon-btn" id="sidebar-close-btn" aria-label="Close sidebar">×</button>
+            </div>
+            <div class="sidebar-content" id="sidebar-content">
+                <input type="search" id="search-exercise" class="search-bar" placeholder="Search Exercises...">
+                <button class="btn btn-primary btn-full-width" id="add-exercise-btn"><i class="fa-solid fa-plus"></i> Add Exercise</button>
+                <button class="btn btn-danger btn-full-width" id="delete-all-exercises-btn"><i class="fa-regular fa-trash-can"></i> Delete Exercises</button>
+                <div id="exercise-list"></div>
+            </div>
+            <button class="icon-btn hidden" id="back-to-top-btn" title="Back to Top"><i class="fa-solid fa-arrow-up"></i></button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="main-content">
+            <header class="main-header">
+                <div class="main-header-left">
+                    <button class="icon-btn" id="sidebar-open-btn" aria-label="Open sidebar"><i class="fa-solid fa-bars"></i></button>
+                    <div class="week-title-container">
+                        <h1 id="week-title">Week: </h1>
+                        <button class="icon-btn" id="date-picker-btn" aria-label="Select Week Start"><i class="fa-regular fa-calendar"></i></button>
+                        <input type="date" id="start-date-input" aria-label="Week start date">
+                    </div>
+                </div>
+                <div class="data-buttons">
+                    <button class="icon-btn" id="clear-plan-btn" aria-label="Clear Week"><i class="fa-solid fa-trash-can"></i></button>
+                    <button class="icon-btn" id="export-pdf-btn" aria-label="Save as PDF"><i class="fa-solid fa-file-pdf"></i></button>
+                    <span>|</span>
+                    <button class="icon-btn" id="import-plan-btn" aria-label="Upload"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+                    <button class="icon-btn" id="export-plan-btn" aria-label="Download" tooltip="Download"><i class="fa-solid fa-cloud-arrow-down"></i></button>
+                    <input type="file" id="import-file-input" accept=".json">
+                </div>
+            </header>
+            
+            <div class="calendar-container">
+                <div class="calendar" id="calendar"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden PDF staging area -->
+    <div id="pdf-print-area" class="pdf-print-area"></div>
+
+    <!-- Modals & Toasts -->
+    <div id="toast-container"></div>
+    <div class="modal-overlay" id="confirm-modal-overlay">
+        <div class="modal" id="confirm-modal">
+            <h3>Confirmation</h3>
+            <p class="modal-body" id="confirm-modal-text"></p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="confirm-cancel-btn">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="exercise-modal-overlay"></div>
+    <div class="modal-overlay" id="video-modal-overlay"></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // ===================================================================
+        // =========== 1. STATE MANAGEMENT & INITIALIZATION ==================
+        // ===================================================================
+        let appData = { exercises: [], weeklyPlan: {}, week_start_date: null };
+        const daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+        const muscleGroups = ['N/A', 'Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Legs', 'Abs', 'Calves', 'Forearms', 'Full Body'];
+        const difficultyLevels = ['Beginner', 'Intermediate', 'Advanced'];
+        const exerciseTypes = ['Cardio', 'Powerlifting', 'Stretching'];
+        const typeOrder = ['Cardio', 'Powerlifting', 'Stretching'];
+
+        const getEl = (id) => document.getElementById(id);
+        const calendarEl = getEl('calendar'), sidebar = getEl('sidebar'), mainContent = getEl('main-content'), searchInput = getEl('search-exercise');
+
+        function init() {
+            injectModalHTML();
+            loadData();
+            renderWeekTitle();
+            populateDropdowns();
+            renderCalendarDays();
+            renderExerciseList();
+            renderWeeklyPlan();
+            setupEventListeners();
+            initSortable();
+        }
+
+        function loadData() {
+            const savedData = localStorage.getItem('gymWorkoutPlanner');
+            if (savedData) {
+                appData = JSON.parse(savedData);
+                appData.exercises.forEach(ex => {
+                    if (!ex.level) ex.level = 'Beginner';
+                    if (!ex.type) ex.type = 'Powerlifting';
+                    if (ex.type === 'Strength') ex.type = 'Powerlifting';
+                });
+                daysOfWeek.forEach(day => {
+                    const dayKey = day.toLowerCase();
+                    if (!appData.weeklyPlan[dayKey]) appData.weeklyPlan[dayKey] = [];
+                    appData.weeklyPlan[dayKey].forEach(item => {
+                        if (item.completed === undefined) item.completed = false;
+                    });
+                });
+            } else {
+                appData.exercises = [{ id: 'ex1', type: 'Powerlifting', name: 'Barbell Bench Press', description: 'Chest press with a barbell.', url: 'https://www.youtube.com/watch?v=rT7DgCr-3pg', muscleGroup: 'Chest', level: 'Intermediate', color: '#bb86fc' }];
+                appData.weeklyPlan = { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [] };
+            }
+            if (!appData.week_start_date) {
+                const today = new Date();
+                const dayOfWeek = today.getDay();
+                const monday = new Date(today);
+                monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+                appData.week_start_date = monday.toISOString().split('T')[0];
+            }
+        }
+        function saveData() { localStorage.setItem('gymWorkoutPlanner', JSON.stringify(appData)); }
+
+        // ===================================================================
+        // ====================== 2. RENDERING FUNCTIONS =====================
+        // ===================================================================
+
+        function renderWeekTitle() {
+            const startDate = new Date(appData.week_start_date + 'T00:00:00');
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 6);
+            
+            const options = { month: 'short', day: '2-digit', year: 'numeric' };
+            const formattedStart = startDate.toLocaleDateString('en-GB', options);
+            const formattedEnd = endDate.toLocaleDateString('en-GB', options);
+
+            getEl('week-title').textContent = `${formattedStart} - ${formattedEnd}`;
+            getEl('start-date-input').value = appData.week_start_date;
+        }
+
+        function createWorkoutCard(workout, exercise) {
+            const card = document.createElement('div');
+            card.className = 'workout-card';
+            if(workout.completed) card.classList.add('completed');
+            card.dataset.planId = workout.planId;
+            card.dataset.exerciseId = exercise.id;
+            card.style.borderLeftColor = exercise.color || 'var(--primary-color)';
+
+            let detailsHTML = '';
+            if (exercise.type === 'Cardio') {
+                const intensities = ['🟦 Low', '🟨 Medium', '🟥 High'];
+                detailsHTML = `<div class="input-group"> <label>Time</label> <input type="text" inputmode="numeric" class="workout-input" data-field="time" value="${workout.time || ''}" placeholder="min"> </div> <div class="input-group"> <label>Dist.</label> <input type="text" inputmode="numeric" class="workout-input" data-field="distance" value="${workout.distance || ''}" placeholder="Km"> </div> <div class="input-group"> <label>Intensity</label> <select class="workout-input" data-field="intensity"> ${intensities.map(i => `<option value="${i}" ${workout.intensity === i ? 'selected' : ''}>${i}</option>`).join('')} </select> </div>`;
+            } else {
+                detailsHTML = `<div class="input-group"><label>Sets</label><input type="text" inputmode="numeric" class="workout-input" data-field="sets" value="${workout.sets || ''}" placeholder="3"></div> <div class="input-group"><label>Reps</label><input type="text" inputmode="numeric" class="workout-input" data-field="reps" value="${workout.reps || ''}" placeholder="15"></div> <div class="input-group"><label>Rest</label><input type="text" inputmode="numeric" class="workout-input" data-field="rest" value="${workout.rest || ''}" placeholder="60"></div>`;
+            }
+            
+            card.innerHTML = `
+                <div class="workout-card-content">
+                    <div class="workout-card-header">
+                        <h4 style="color: ${exercise.color || 'var(--primary-color)'};">${exercise.name}</h4>
+                        <button class="icon-btn complete-workout-btn" title="Toggle Complete"><i class="fa-solid fa-check"></i></button>
+                    </div>
+                    <div class="exercise-badges" style="margin-bottom: 10px;">
+                        ${(exercise.muscleGroup && exercise.muscleGroup !== 'N/A') ? `<span class="muscle-group-badge">${exercise.muscleGroup}</span>` : ''}
+                        ${exercise.level ? `<span class="level-badge">${exercise.level}</span>` : ''}
+                    </div>
+                    ${exercise.description ? `<p class="workout-description">${exercise.description}</p>` : ''}
+                    <div class="workout-details">${detailsHTML}</div>
+                </div>
+                ${exercise.url ? `<button class="workout-video-btn" aria-label="Watch video"><i class="fa-solid fa-play"></i></button>` : ''}
+            `;
+            return card;
+        }
+
+        function renderCalendarDays() { calendarEl.innerHTML = daysOfWeek.map(day => `<div class="day" data-day="${day.toLowerCase()}"><div class="day-header">${day}</div><div class="workout-list" data-day-id="${day.toLowerCase()}"></div></div>`).join(''); }
+        
+        function createSidebarExerciseItem(exercise) {
+            const itemEl = document.createElement('div');
+            itemEl.className = 'exercise-item';
+            itemEl.dataset.id = exercise.id;
+            itemEl.style.borderLeftColor = exercise.color || 'var(--secondary-color)';
+            itemEl.innerHTML = `
+                <div class="exercise-item-details">
+                    <span class="exercise-name" style="color: ${exercise.color || 'var(--secondary-color)'};">${exercise.name}</span>
+                    <div class="exercise-badges">
+                        <span class="type-badge">${exercise.type || 'Powerlifting'}</span>
+                        ${(exercise.muscleGroup && exercise.muscleGroup !== 'N/A') ? `<span class="muscle-group-badge">${exercise.muscleGroup}</span>` : ''}
+                        ${exercise.level ? `<span class="level-badge">${exercise.level}</span>` : ''}
+                    </div>
+                    ${exercise.description ? `<p class="exercise-description">${exercise.description}</p>`: ''}
+                </div>
+                <div class="exercise-actions">
+                    ${exercise.url ? `<button class="icon-btn play-exercise-btn" data-id="${exercise.id}" title="Play Video"><i class="fa-solid fa-circle-play"></i></button>` : ''}
+                    <button class="icon-btn duplicate-exercise-btn" data-id="${exercise.id}" title="Duplicate"><i class="fa-solid fa-clone"></i></button>
+                    <button class="icon-btn edit-exercise-btn" data-id="${exercise.id}" title="Edit"><i class="fa-solid fa-pencil"></i></button>
+                    <button class="icon-btn delete-exercise-btn" data-id="${exercise.id}" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
+                </div>`;
+            return itemEl;
+        }
+
+        function renderExerciseList() {
+            const exerciseListEl = getEl('exercise-list');
+            exerciseListEl.innerHTML = '';
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredExercises = appData.exercises.filter(ex => 
+                ex.name.toLowerCase().includes(searchTerm) || 
+                (ex.description && ex.description.toLowerCase().includes(searchTerm)) ||
+                (ex.muscleGroup && ex.muscleGroup.toLowerCase().includes(searchTerm)) || 
+                (ex.level && ex.level.toLowerCase().includes(searchTerm)) || 
+                ex.type.toLowerCase().includes(searchTerm)
+            );
+
+            const groups = { Powerlifting: {}, Stretching: {}, Cardio: { list: [] } };
+            filteredExercises.forEach(ex => {
+                const type = ex.type || 'Powerlifting';
+                if (type === 'Powerlifting' || type === 'Stretching') {
+                    const mg = ex.muscleGroup || 'N/A';
+                    if (!groups[type][mg]) groups[type][mg] = [];
+                    groups[type][mg].push(ex);
+                } else if (type === 'Cardio') {
+                    groups.Cardio.list.push(ex);
+                }
+            });
+
+            const renderHeader = (text) => { const header = document.createElement('h3'); header.textContent = text; header.style.cssText = 'color: #6e6e6e; margin-top: 20px; font-size: 1.1rem; margin-bottom: 5px;'; exerciseListEl.appendChild(header); };
+            
+            typeOrder.forEach(type => {
+                if ((type === 'Powerlifting' || type === 'Stretching') && Object.keys(groups[type]).length > 0) {
+                    renderHeader(type);
+                    const sortedMuscleGroups = Object.keys(groups[type]).sort((a, b) => { if (a === 'N/A') return 1; if (b === 'N/A') return -1; return a.localeCompare(b); });
+                    sortedMuscleGroups.forEach(mg => {
+                        if (mg !== 'N/A') { const mgHeader = document.createElement('h4'); mgHeader.textContent = mg; mgHeader.style.cssText = 'color: #6e6e6e; font-weight: 600; font-size: 0.9rem; opacity: 0.8; margin-left: 5px; margin-bottom: 5px;'; exerciseListEl.appendChild(mgHeader); }
+                        const sublist = document.createElement('div'); sublist.className = 'exercise-subgroup-list';
+                        groups[type][mg].forEach(ex => sublist.appendChild(createSidebarExerciseItem(ex)));
+                        exerciseListEl.appendChild(sublist);
+                    });
+                } else if (type === 'Cardio' && groups.Cardio.list.length > 0) {
+                    renderHeader(type);
+                    const sublist = document.createElement('div'); sublist.className = 'exercise-subgroup-list';
+                    groups.Cardio.list.forEach(ex => sublist.appendChild(createSidebarExerciseItem(ex)));
+                    exerciseListEl.appendChild(sublist);
+                }
+            });
+            initSortableForSidebar();
+        }
+
+        function renderWeeklyPlan() {
+            const typeOrderMap = new Map(typeOrder.map((type, i) => [type, i]));
+            daysOfWeek.forEach(day => {
+                const dayId = day.toLowerCase();
+                const workoutListEl = document.querySelector(`.workout-list[data-day-id="${dayId}"]`);
+                if (!workoutListEl) return;
+                
+                workoutListEl.innerHTML = '';
+                const dailyWorkouts = [...appData.weeklyPlan[dayId]];
+                if (dailyWorkouts.length === 0) return;
+
+                dailyWorkouts.sort((a, b) => {
+                    const exA = appData.exercises.find(ex => ex.id === a.exerciseId);
+                    const exB = appData.exercises.find(ex => ex.id === b.exerciseId);
+                    return (typeOrderMap.get(exA?.type) ?? 99) - (typeOrderMap.get(exB?.type) ?? 99);
+                });
+
+                let lastType = '';
+                dailyWorkouts.forEach(workout => {
+                    const exercise = appData.exercises.find(ex => ex.id === workout.exerciseId);
+                    if (exercise) {
+                        if (exercise.type !== lastType) {
+                            const groupHeader = document.createElement('h5');
+                            groupHeader.className = 'workout-group-header';
+                            groupHeader.textContent = exercise.type;
+                            workoutListEl.appendChild(groupHeader);
+                            lastType = exercise.type;
+                        }
+                        workoutListEl.appendChild(createWorkoutCard(workout, exercise));
+                    }
+                });
+            });
+        }
+        
+        function populateDropdowns() { 
+            const muscleSelect = getEl('exercise-muscle-group-input');
+            const levelSelect = getEl('exercise-level-input');
+            muscleSelect.innerHTML = muscleGroups.map(group => `<option value="${group}">${group}</option>`).join(''); 
+            levelSelect.innerHTML = difficultyLevels.map(level => `<option value="${level}">${level}</option>`).join('');
+        }
+        
+        // ===================================================================
+        // ======================= 3. UI/UX HELPERS ==========================
+        // ===================================================================
+        
+        function showToast(message, type = 'info', options = {}) {
+            const toastContainer = getEl('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const messageEl = document.createElement('span');
+            messageEl.textContent = message;
+            const contentWrapper = document.createElement('div');
+            contentWrapper.style.cssText = 'display: flex; align-items: center;';
+            contentWrapper.appendChild(messageEl);
+
+            if (options.onUndo) {
+                const undoBtn = document.createElement('button');
+                undoBtn.className = 'toast-undo-btn';
+                undoBtn.textContent = 'Undo';
+                undoBtn.onclick = () => { options.onUndo(); closeToast(); };
+                contentWrapper.appendChild(undoBtn);
+            }
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'toast-close-btn';
+            closeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+            const closeToast = () => { toast.classList.remove('show'); toast.addEventListener('transitionend', () => toast.remove()); clearTimeout(toast.timeoutId); };
+            closeBtn.onclick = closeToast;
+
+            toast.append(contentWrapper, closeBtn);
+            toastContainer.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            toast.timeoutId = setTimeout(closeToast, 5000);
+        }
+
+        function showConfirm(message, onConfirm) {
+            const confirmModal = getEl('confirm-modal-overlay');
+            getEl('confirm-modal-text').textContent = message;
+            confirmModal.style.display = 'flex';
+            const okBtn = getEl('confirm-ok-btn');
+            const cancelBtn = getEl('confirm-cancel-btn');
+            const handleConfirm = () => { onConfirm(); cleanup(); };
+            const cleanup = () => { confirmModal.style.display = 'none'; okBtn.removeEventListener('click', handleConfirm); cancelBtn.removeEventListener('click', cleanup); confirmModal.removeEventListener('click', handleOverlayClick); };
+            const handleOverlayClick = (e) => { if (e.target === confirmModal) cleanup(); }
+            okBtn.addEventListener('click', handleConfirm, { once: true });
+            cancelBtn.addEventListener('click', cleanup, { once: true });
+            confirmModal.addEventListener('click', handleOverlayClick, { once: true });
+        }
+
+        // ===================================================================
+        // ===================== 4. EVENT LISTENERS ==========================
+        // ===================================================================
+        
+        function setupEventListeners() {
+            getEl('sidebar-open-btn').addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.add('open'); });
+            getEl('sidebar-close-btn').addEventListener('click', () => sidebar.classList.remove('open'));
+            mainContent.addEventListener('click', () => sidebar.classList.remove('open'));
+            sidebar.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const editBtn = e.target.closest('.edit-exercise-btn'), deleteBtn = e.target.closest('.delete-exercise-btn'), playBtn = e.target.closest('.play-exercise-btn'), duplicateBtn = e.target.closest('.duplicate-exercise-btn');
+                if (editBtn) openExerciseModal(editBtn.dataset.id);
+                if (deleteBtn) showConfirm('Delete this exercise permanently? It will be removed from all weekly plans.', () => deleteExercise(deleteBtn.dataset.id));
+                if (playBtn) { const exercise = appData.exercises.find(ex => ex.id === playBtn.dataset.id); if (exercise?.url) openVideoModal(exercise.url); }
+                if (duplicateBtn) duplicateExerciseFromList(duplicateBtn.dataset.id);
+            });
+
+            getEl('date-picker-btn').addEventListener('click', () => getEl('start-date-input').showPicker());
+            getEl('start-date-input').addEventListener('change', (e) => { appData.week_start_date = e.target.value; saveData(); renderWeekTitle(); });
+            getEl('clear-plan-btn').addEventListener('click', () => showConfirm('Are you sure you want to clear all exercises from the current week?', clearWeeklyPlan));
+
+            getEl('import-plan-btn').addEventListener('click', () => getEl('import-file-input').click());
+            getEl('import-file-input').addEventListener('change', importPlan);
+            getEl('export-plan-btn').addEventListener('click', exportPlan);
+            getEl('export-pdf-btn').addEventListener('click', exportPlanAsPDF);
+
+            getEl('add-exercise-btn').addEventListener('click', () => openExerciseModal());
+            getEl('delete-all-exercises-btn').addEventListener('click', () => showConfirm('DELETE all exercises? This is irreversible and will also clear your weekly plan!', deleteAllExercises));
+            
+            searchInput.addEventListener('input', renderExerciseList);
+            searchInput.addEventListener('keydown', e => { if (e.key === 'Escape') { searchInput.value = ''; renderExerciseList(); } });
+
+            const sidebarContent = getEl('sidebar-content');
+            const backToTopBtn = getEl('back-to-top-btn');
+            const exerciseListEl = getEl('exercise-list');
+            const scrollThreshold = exerciseListEl.offsetTop; 
+            
+            sidebarContent.addEventListener('scroll', () => {
+                backToTopBtn.classList.toggle('hidden', sidebarContent.scrollTop < scrollThreshold);
+            });
+            backToTopBtn.addEventListener('click', () => sidebarContent.scrollTo({ top: 0, behavior: 'smooth' }));
+            
+            document.body.addEventListener('click', handleBodyClick);
+            calendarEl.addEventListener('click', handleDayHeaderClick);
+            calendarEl.addEventListener('input', handleCalendarInput);
+            calendarEl.addEventListener('dblclick', handleWorkoutDblClick);
+        }
+
+        function handleDayHeaderClick(e) {
+            const header = e.target.closest('.day-header');
+            if (!header) return;
+
+            const dayEl = header.closest('.day');
+            const isCurrentlyMaximized = dayEl.classList.contains('maximized');
+
+            calendarEl.querySelectorAll('.day').forEach(d => d.classList.remove('maximized'));
+            
+            if (isCurrentlyMaximized) {
+                calendarEl.classList.remove('day-maximized');
+            } else {
+                calendarEl.classList.add('day-maximized');
+                dayEl.classList.add('maximized');
+            }
+        }
+        
+        function handleWorkoutDblClick(e) {
+            const card = e.target.closest('.workout-card');
+            if (!card) return;
+            const dayId = card.closest('.day').dataset.day;
+            const planId = card.dataset.planId;
+            const workoutIndex = appData.weeklyPlan[dayId].findIndex(w => w.planId === planId);
+            if (workoutIndex === -1) return;
+            
+            const removedWorkout = appData.weeklyPlan[dayId].splice(workoutIndex, 1)[0];
+            saveData();
+            renderWeeklyPlan();
+
+            showToast('Workout removed.', 'info', { onUndo: () => { appData.weeklyPlan[dayId].splice(workoutIndex, 0, removedWorkout); saveData(); renderWeeklyPlan(); showToast('Workout restored!', 'success'); } });
+        }
+
+        function handleBodyClick(e) {
+            const videoBtn = e.target.closest('.workout-video-btn');
+            const completeBtn = e.target.closest('.complete-workout-btn');
+
+            if (e.target.closest('.modal-cancel-btn')) closeExerciseModal();
+            if (e.target.closest('.close-modal-btn')) closeVideoModal();
+            if (e.target === getEl('exercise-modal-overlay')) closeExerciseModal();
+            if (e.target === getEl('video-modal-overlay')) closeVideoModal();
+            if (videoBtn) { const exerciseId = videoBtn.closest('.workout-card').dataset.exerciseId; const exercise = appData.exercises.find(ex => ex.id === exerciseId); if (exercise?.url) openVideoModal(exercise.url); }
+            if (completeBtn) {
+                const card = completeBtn.closest('.workout-card');
+                const dayId = card.closest('.day').dataset.day;
+                const planId = card.dataset.planId;
+                toggleWorkoutComplete(dayId, planId, card);
+            }
+        }
+
+        function handleCalendarInput(e) { 
+            if (e.target.classList.contains('workout-input')) { 
+                const card = e.target.closest('.workout-card');
+                updateWorkoutDetails(card.closest('.day').dataset.day, card.dataset.planId, e.target.dataset.field, e.target.value);
+            } 
+        }
+
+        // ===================================================================
+        // ===================== 5. CRUD & DATA FUNCTIONS ====================
+        // ===================================================================
+
+        function duplicateExerciseFromList(id) {
+            const originalExercise = appData.exercises.find(ex => ex.id === id);
+            if (!originalExercise) return;
+            const newExercise = JSON.parse(JSON.stringify(originalExercise));
+            newExercise.id = `ex_${Date.now()}`;
+            newExercise.name = `${originalExercise.name} (Copy)`;
+            const originalIndex = appData.exercises.findIndex(ex => ex.id === id);
+            appData.exercises.splice(originalIndex > -1 ? originalIndex + 1 : appData.exercises.length, 0, newExercise);
+            saveData();
+            renderExerciseList();
+            showToast('Exercise duplicated!', 'success');
+        }
+
+        function exportPlanAsPDF() {
+            const printArea = getEl('pdf-print-area');
+            const calendarClone = calendarEl.cloneNode(true);
+            const weekTitle = getEl('week-title').textContent;
+            const safeFilename = weekTitle.replace(/\s-\s/g, '_').replace(/\s/g, '-');
+
+            printArea.innerHTML = '';
+            const pdfHeader = document.createElement('h1'); pdfHeader.textContent = 'Workout Plan'; pdfHeader.style.cssText = 'text-align: center; margin-bottom: 10px;';
+            const pdfSubHeader = document.createElement('h2'); pdfSubHeader.textContent = weekTitle; pdfSubHeader.style.cssText = 'text-align: center; margin-bottom: 20px; color: #555; font-size: 1.2rem;';
+            printArea.append(pdfHeader, pdfSubHeader, calendarClone);
+            
+            printArea.style.cssText = 'display: block; background: #ffffff; color: #000000; padding: 20px;';
+            calendarClone.style.gridTemplateColumns = '1fr';
+            calendarClone.querySelectorAll('.workout-list').forEach(list => list.style.minHeight = 'auto');
+            calendarClone.querySelectorAll('.day, .workout-card, .workout-details input, .workout-details select').forEach(el => { el.style.backgroundColor = '#f9f9f9'; el.style.color = '#000'; el.style.border = '1px solid #ddd'; });
+            calendarClone.querySelectorAll('.workout-card').forEach(el => { el.style.cursor = 'default'; el.classList.remove('completed'); });
+            calendarClone.querySelectorAll('.workout-video-btn, .icon-btn, .exercise-actions, .workout-group-header, .complete-workout-btn').forEach(btn => { if(btn.classList.contains('workout-group-header')) { btn.style.color = '#333'; } else { btn.style.display = 'none'; } });
+            calendarClone.querySelectorAll('.workout-card-header h4').forEach(h4 => h4.style.color = '#000');
+            calendarClone.querySelectorAll('input, select').forEach(input => { input.setAttribute('readonly', true); input.style.textAlign = 'center'; if(input.tagName === 'SELECT') { input.style.appearance = 'none'; } });
+            
+            const options = { margin: 0.5, filename: `${safeFilename}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+            html2pdf().from(printArea).set(options).save().then(() => { printArea.style.display = 'none'; printArea.innerHTML = ''; });
+            showToast('Generating PDF...', 'info');
+        }
+
+        function clearWeeklyPlan() { for (const day in appData.weeklyPlan) { appData.weeklyPlan[day] = []; } saveData(); renderWeeklyPlan(); showToast('Weekly plan has been cleared.', 'success'); }
+        function deleteAllExercises() { appData.exercises = []; clearWeeklyPlan(); renderExerciseList(); showToast('All exercises deleted.', 'success'); }
+        function deleteExercise(id) { appData.exercises = appData.exercises.filter(ex => ex.id !== id); for (const day in appData.weeklyPlan) { appData.weeklyPlan[day] = appData.weeklyPlan[day].filter(w => w.exerciseId !== id); } saveData(); renderExerciseList(); renderWeeklyPlan(); showToast('Exercise deleted successfully.', 'success'); }
+        function importPlan(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (event) => { try { const importedData = JSON.parse(event.target.result); if (importedData.exercises && importedData.weeklyPlan) { appData = importedData; saveData(); init(); showToast('Plan imported successfully!', 'success'); } else { showToast('Invalid plan file format.', 'error'); } } catch (error) { showToast('Error reading or parsing the file.', 'error'); } }; reader.readAsText(file); e.target.value = ''; }
+        function exportPlan() { const dataStr = JSON.stringify(appData, null, 2); const dataBlob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(dataBlob); const link = document.createElement('a'); link.href = url; link.download = `gym-plan-${new Date().toISOString().split('T')[0]}.json`; link.click(); URL.revokeObjectURL(url); }
+        function updateWorkoutDetails(dayId, planId, field, value) { const workout = appData.weeklyPlan[dayId].find(w => w.planId === planId); if (workout) { workout[field] = value; saveData(); } }
+        function toggleWorkoutComplete(dayId, planId, cardElement) { const workout = appData.weeklyPlan[dayId].find(w => w.planId === planId); if (workout) { workout.completed = !workout.completed; cardElement.classList.toggle('completed', workout.completed); saveData(); } }
+
+        // ===================================================================
+        // ======================= 6. MODAL/INIT HELPERS =====================
+        // ===================================================================
+        
+        function handleSidebarSort(evt) {
+            if (evt.pullMode === 'clone' || evt.from !== evt.to) return;
+            const visibleIdsInNewOrder = Array.from(getEl('exercise-list').querySelectorAll('.exercise-item')).map(el => el.dataset.id);
+            appData.exercises.sort((a, b) => {
+                let indexA = visibleIdsInNewOrder.indexOf(a.id);
+                let indexB = visibleIdsInNewOrder.indexOf(b.id);
+                if (indexA === -1) indexA = Infinity;
+                if (indexB === -1) indexB = Infinity;
+                if (indexA === Infinity && indexB === Infinity) return 0;
+                return indexA - indexB;
+            });
+            saveData();
+        }
+
+        function initSortableForSidebar() {
+            document.querySelectorAll('.exercise-subgroup-list').forEach(list => { 
+                new Sortable(list, { 
+                    group: { name: 'shared', pull: 'clone', put: false }, 
+                    animation: 150, 
+                    sort: true,
+                    onEnd: handleSidebarSort
+                }); 
+            });
+        }
+
+        function initSortable() {
+            initSortableForSidebar();
+            document.querySelectorAll('.workout-list').forEach(list => {
+                new Sortable(list, {
+                    group: 'shared',
+                    animation: 150,
+                    onAdd: (evt) => {
+                        const itemEl = evt.item;
+                        const dayId = evt.to.dataset.dayId;
+                        const exerciseId = itemEl.dataset.id;
+                        const exercise = appData.exercises.find(ex => ex.id === exerciseId);
+                        if (!exercise) return;
+                        
+                        const newWorkout = { exerciseId: exercise.id, planId: `plan_${Date.now()}`, completed: false };
+                        if (exercise.type === 'Cardio') { Object.assign(newWorkout, { time: '', distance: '', intensity: '🟨 Medium' }); } 
+                        else { Object.assign(newWorkout, { sets: '', reps: '', rest: '' }); }
+                        
+                        const newIndex = Array.from(evt.to.children).indexOf(itemEl);
+                        appData.weeklyPlan[dayId].splice(newIndex, 0, newWorkout);
+                        saveData();
+                        renderWeeklyPlan(); 
+                        itemEl.remove();
+                    },
+                    onEnd: (evt) => {
+                        const itemEl = evt.item;
+                        const planId = itemEl.dataset.planId;
+                        if (!planId) return;
+                        
+                        const fromDayId = evt.from.dataset.dayId;
+                        const toDayId = evt.to.dataset.dayId;
+                        const isCopy = evt.originalEvent.ctrlKey || evt.originalEvent.metaKey;
+
+                        const workoutIndex = appData.weeklyPlan[fromDayId].findIndex(w => w.planId === planId);
+                        if (workoutIndex === -1) { renderWeeklyPlan(); return; }
+
+                        if (isCopy) {
+                            const originalWorkout = appData.weeklyPlan[fromDayId][workoutIndex];
+                            const newWorkout = JSON.parse(JSON.stringify(originalWorkout));
+                            newWorkout.planId = `plan_${Date.now()}`;
+                            newWorkout.completed = false;
+                            
+                            const dropIndex = Array.from(evt.to.children).map(child => child.dataset.planId).indexOf(planId);
+                            appData.weeklyPlan[toDayId].splice(dropIndex, 0, newWorkout);
+                            showToast('Exercise copied!', 'info');
+                        } else {
+                            if (fromDayId === toDayId) {
+                                const newOrderedPlanIds = Array.from(evt.to.querySelectorAll('.workout-card')).map(card => card.dataset.planId);
+                                appData.weeklyPlan[fromDayId].sort((a, b) => newOrderedPlanIds.indexOf(a.planId) - newOrderedPlanIds.indexOf(b.planId));
+                            } else {
+                                const [workout] = appData.weeklyPlan[fromDayId].splice(workoutIndex, 1);
+                                if (workout) {
+                                    const dropIndex = Array.from(evt.to.children).map(child => child.dataset.planId).indexOf(planId);
+                                    appData.weeklyPlan[toDayId].splice(dropIndex, 0, workout);
+                                }
+                            }
+                        }
+                        saveData();
+                        renderWeeklyPlan();
+                    }
+                });
+            });
+        }
+        
+        function updateExerciseFormVisibility(type) {
+            getEl('muscle-group-form-group').style.display = (type === 'Cardio') ? 'none' : 'block';
+            getEl('level-form-group').style.display = 'block';
+        }
+
+        function openExerciseModal(id = null) {
+            const form = getEl('exercise-form');
+            form.reset();
+            const modalTitle = getEl('modal-title');
+            const colorPicker = getEl('exercise-color-picker');
+            const colorHex = getEl('exercise-color-hex');
+
+            if (id) {
+                const exercise = appData.exercises.find(ex => ex.id === id);
+                if (exercise) {
+                    modalTitle.textContent = 'Edit Exercise';
+                    getEl('exercise-id').value = exercise.id;
+                    document.querySelector(`input[name="exercise-type"][value="${exercise.type}"]`).checked = true;
+                    getEl('exercise-name-input').value = exercise.name;
+                    getEl('exercise-muscle-group-input').value = exercise.muscleGroup;
+                    getEl('exercise-level-input').value = exercise.level || 'Beginner';
+                    getEl('exercise-desc-input').value = exercise.description;
+                    getEl('exercise-url-input').value = exercise.url;
+                    colorPicker.value = exercise.color || '#bb86fc';
+                    colorHex.value = exercise.color || '#bb86fc';
+                    updateExerciseFormVisibility(exercise.type);
+                }
+            } else {
+                modalTitle.textContent = 'Add New Exercise';
+                getEl('exercise-id').value = '';
+                document.querySelector('input[name="exercise-type"][value="Powerlifting"]').checked = true;
+                getEl('exercise-level-input').value = 'Beginner';
+                colorPicker.value = '#bb86fc';
+                colorHex.value = '#bb86fc';
+                updateExerciseFormVisibility('Powerlifting');
+            }
+            getEl('exercise-modal-overlay').style.display = 'flex';
+        }
+        function closeExerciseModal() { getEl('exercise-modal-overlay').style.display = 'none'; }
+        function openVideoModal(url) { const videoIdMatch = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/); if (videoIdMatch?.pop) { const videoId = videoIdMatch.pop(); getEl('youtube-iframe').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`; getEl('video-modal-overlay').style.display = 'flex'; } else { showToast('Invalid YouTube URL.', 'error'); } }
+        function closeVideoModal() { getEl('video-modal-overlay').style.display = 'none'; getEl('youtube-iframe').src = ''; }
+        
+        function injectModalHTML() {
+            getEl('exercise-modal-overlay').innerHTML = `<div class="modal"> <h3 id="modal-title">Add New Exercise</h3> <form id="exercise-form"> <input type="hidden" id="exercise-id"> <div class="form-group"> <label>Exercise Type</label> <div class="radio-group"> ${exerciseTypes.map(type => `<input type="radio" id="type-${type.toLowerCase()}" name="exercise-type" value="${type}"><label for="type-${type.toLowerCase()}">${type}</label>`).join('')} </div> </div> <div class="form-group"><label for="exercise-name-input">Exercise Name</label><input type="text" id="exercise-name-input" required></div> <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"> <div class="form-group" id="muscle-group-form-group"><label for="exercise-muscle-group-input">Muscle Group</label><select id="exercise-muscle-group-input" required></select></div> <div class="form-group" id="level-form-group"><label for="exercise-level-input">Difficulty Level</label><select id="exercise-level-input" required></select></div> </div> <div class="form-group"><label for="exercise-desc-input">Description (Optional)</label><textarea id="exercise-desc-input" rows="3"></textarea></div> <div class="form-group"><label for="exercise-url-input">YouTube URL (Optional)</label><input type="url" id="exercise-url-input" placeholder="https://www.youtube.com/watch?v=..."></div> <div class="form-group"><label for="exercise-color-picker">Card Color</label><div style="display:flex;align-items:center;gap:10px;"><input type="color" id="exercise-color-picker" value="#bb86fc" style="padding:0;border:none;width:50px;height:40px;background:none;"><input type="text" id="exercise-color-hex" maxlength="7" placeholder="#bb86fc" style="flex-grow:1;"></div></div> <div class="modal-actions"> <button type="button" class="btn btn-secondary modal-cancel-btn">Cancel</button> <button type="submit" class="btn btn-primary">Save Exercise</button> </div> </form> </div>`;
+            getEl('video-modal-overlay').innerHTML = `<div class="modal modal-content" id="video-modal"><button class="icon-btn close-modal-btn">×</button><div class="video-wrapper"><iframe id="youtube-iframe" width="854" height="480" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
+            
+            const colorPicker = getEl('exercise-color-picker');
+            const colorHex = getEl('exercise-color-hex');
+            colorPicker.addEventListener('input', (e) => colorHex.value = e.target.value);
+            colorHex.addEventListener('input', (e) => { if (/^#[0-9A-F]{6}$/i.test(e.target.value)) { colorPicker.value = e.target.value; } });
+
+            document.querySelectorAll('input[name="exercise-type"]').forEach(radio => radio.addEventListener('change', (e) => updateExerciseFormVisibility(e.target.value)));
+            
+            getEl('exercise-form').addEventListener('submit', (e) => { 
+                e.preventDefault(); 
+                const id = getEl('exercise-id').value; 
+                const data = { type: document.querySelector('input[name="exercise-type"]:checked').value, name: getEl('exercise-name-input').value.trim(), muscleGroup: getEl('exercise-muscle-group-input').value, level: getEl('exercise-level-input').value, description: getEl('exercise-desc-input').value.trim(), url: getEl('exercise-url-input').value.trim(), color: getEl('exercise-color-picker').value }; 
+                if (!data.name) { showToast('Exercise name is required.', 'error'); return; } 
+                if (id) { const index = appData.exercises.findIndex(ex => ex.id === id); if (index > -1) { appData.exercises[index] = { ...appData.exercises[index], ...data }; showToast('Exercise updated!', 'success'); } } 
+                else { data.id = `ex_${Date.now()}`; appData.exercises.push(data); showToast('Exercise added!', 'success'); } 
+                saveData(); renderExerciseList(); renderWeeklyPlan(); closeExerciseModal(); 
+            });
+        }
+        
+        init();
+    });
+    </script>
+
+</body>
+</html>
