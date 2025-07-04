@@ -1003,7 +1003,7 @@ document.addEventListener('DOMContentLoaded', () => {
             otherFilters.forEach(el => el.classList.remove('hidden'));
             movieTypeBtn.classList.add('active');
             mediaType = 'movie';
-            searchInput.placeholder = 'Films or Actors...';
+            searchInput.placeholder = 'Search for Films...';
 
             resetAndFetch();
         } else {
@@ -1020,7 +1020,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Hide other filters
             otherFilters.forEach(el => el.classList.add('hidden'));
 
-            searchInput.placeholder = 'Search for an actor...';
+            searchInput.placeholder = 'Search for Actors...';
 
             if (searchTerm) {
                 handleSearch();
@@ -1042,7 +1042,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mediaType = 'movie';
         movieTypeBtn.classList.add('active');
         tvTypeBtn.classList.remove('active');
-        searchInput.placeholder = 'Films or Actors...';
+        searchInput.placeholder = 'Search for Films...';
         
         if (isWatchlistMode) {
             displayWatchlist();
@@ -1062,7 +1062,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mediaType = 'tv';
         tvTypeBtn.classList.add('active');
         movieTypeBtn.classList.remove('active');
-        searchInput.placeholder = 'TV Series or Actors...';
+        searchInput.placeholder = 'Search for TV Series...';
 
         if (isWatchlistMode) {
             displayWatchlist();
