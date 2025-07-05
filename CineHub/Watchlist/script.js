@@ -6,8 +6,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const ACCOUNT_ID = '16613298';
     const API_BASE_URL = 'https://api.themoviedb.org/3';
     const UNAVAILABLE_IMAGE_URL = 'https://i.postimg.cc/3wmgc5fd/Image-Unavailable.png';
-    const EXCLUDED_GENRE_NAMES = ['Reality', 'Talk', 'News', 'Soap'];
-    
+    const EXCLUDED_GENRE_NAMES = ['Reality', 'Talk', 'Soap', 'Kids', 'News', 'Documentary'];
+    const EXCLUDED_KEYWORDS = ['wwe', 'award', 'awards', 'oscar', 'emmy', 'grammy', 'golden globe'];
+    const EXCLUDED_TITLES = [
+        "the jonathan ross show", "loose women", "the jeremy kyle show", "the graham norton show", "big brother", "love island", "the great british bake off", "strictly come dancing", "the apprentice", "i'm a celebrity... get me out of here!", "the only way is essex", "gogglebox", "rupaul’s drag race uk", "made in chelsea", "britain's got talent", "the masked singer", "the voice", "america's next top model", "top chef", "shark tank", "keeping up with the kardashians", "american idol", "the bachelor", "the bachelorette", "survivor", "good morning america", "live with kelly and mark", "the today show", "the drew barrymore show", "dr. phil", "the tonight show starring jimmy fallon", "jimmy kimmel live", "late night with seth meyers", "the late show with stephen colbert", "the daily show", "real time with bill maher", "judge judy", "mock the week", "a league of their own", "taskmaster", "never mind the buzzcocks", "8 out of 10 cats", "would i lie to you", "meet the richardsons", "big fat quiz", "hypothetical", "the danny kaye show", "deal or no deal"
+    ].map(t => t.toLowerCase());
+
     let mediaType = 'movie';
     let currentPage = 1;
     let totalPages = 1;
@@ -19,19 +23,53 @@ document.addEventListener('DOMContentLoaded', () => {
     // Search & Watchlist state
     let isActorSearchMode = false;
     let isWatchlistMode = false;
+    let isWatchingMode = false;
     let watchlistItems = [];
     let selectedSort = 'date_added_desc';
+    let selectedNetwork = '';
+    let lastPlayedItem = null; // For "Watch Next" feature
 
     // Filter states
     let selectedGenre = '';
     let selectedYear = '';
     let selectedCountry = '';
     let selectedLanguage = '';
+    
+    // Maps TV Network IDs to Movie Watch Provider IDs for unified filtering
+    const networkToProviderMap = {
+        '213': '8',    // Netflix
+        '2552': '350', // Apple TV+
+        '1024': '9',   // Amazon Prime Video
+        '49': '384',   // HBO -> Max
+        '3186': '384', // HBO Max -> Max
+        '6783': '384', // Max
+        '67': '37',    // Showtime
+        '3353': '387', // Peacock Premium
+        '4330': '531', // Paramount+
+        '6219': '391', // MGM+
+        '318': '31',   // Starz
+        '453': '15',   // Hulu
+        '174': '257',  // AMC+
+        '1436': '188', // YouTube
+        '4692': '207', // Roku Channel
+        '2739': '337', // Disney+
+        '214': '39',   // Sky Go (UK)
+        '4': '2',      // BBC One -> iPlayer
+        '332': '2',    // BBC Two -> iPlayer
+        '3': '2',      // BBC Three -> iPlayer
+        '5871': '103', // ITVX
+        '26': '1796',  // Channel 4
+        '99': '138',   // My5 (Channel 5)
+        '4025': '210', // BritBox
+        '19': '15',    // Fox -> Hulu
+        '6': '387',    // NBC -> Peacock
+    };
 
     // --- DOM ELEMENTS ---
     const header = document.getElementById('app-header');
     const movieTypeBtn = document.getElementById('movie-type-btn');
     const tvTypeBtn = document.getElementById('tv-type-btn');
+    const watchingBtn = document.getElementById('watching-btn');
     const watchlistBtn = document.getElementById('watchlist-btn');
     const actorSearchToggle = document.getElementById('actor-search-toggle');
     const searchInput = document.getElementById('search-input');
@@ -46,18 +84,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const toast = document.getElementById('toast-notification');
 
     const sortByWrapper = document.getElementById('sort-by-wrapper');
+    const networkFilterWrapper = document.getElementById('network-filter-wrapper');
     const genreFilterWrapper = document.getElementById('genre-filter-wrapper');
     const yearFilterWrapper = document.getElementById('year-filter-wrapper');
     const countryFilterWrapper = document.getElementById('country-filter-wrapper');
     const languageFilterWrapper = document.getElementById('language-filter-wrapper');
     
-    const otherFilters = [
-        genreFilterWrapper,
-        yearFilterWrapper,
-        countryFilterWrapper,
-        languageFilterWrapper,
-        resetBtn,
-    ];
+    // --- HELPERS ---
+    const calculateAge = (birthday) => {
+        if (!birthday) return 'N/A';
+        const ageDifMs = Date.now() - new Date(birthday).getTime();
+        const ageDate = new Date(ageDifMs);
+        return Math.abs(ageDate.getUTCFullYear() - 1970);
+    };
+
+    const isExcludedByKeyword = (title) => {
+        if (!title) return false;
+        return EXCLUDED_KEYWORDS.some(keyword => title.toLowerCase().includes(keyword));
+    };
+    
+    const isItemExcluded = (item, excludedGenreIds) => {
+        const title = (item.title || item.name || '').toLowerCase();
+        
+        if (EXCLUDED_TITLES.includes(title)) return true;
+        if (isExcludedByKeyword(title)) return true;
+        if (!item.genre_ids || item.genre_ids.length === 0) return true;
+        if (excludedGenreIds && item.genre_ids.some(id => excludedGenreIds.includes(id))) return true;
+
+        return false;
+    };
 
     // --- API SERVICE ---
     const fetchFromApi = async (endpoint, options = {}, useV4Auth = false) => {
@@ -76,10 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(url, fetchOptions);
             if (!response.ok) {
-                if (!isWatchlistMode) {
-                    mediaContainer.innerHTML = `<div class="no-results-container" style="display: block;"><i class="fas fa-exclamation-triangle"></i><p>API Error</p><p>Could not fetch data. Please check the API key or network connection.</p></div>`;
-                    loader.classList.add('hidden');
-                }
                 throw new Error(`API Error: ${response.status}`);
             }
             return response.json();
@@ -112,32 +163,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (page === 1) {
             mediaContainer.innerHTML = '';
-            loader.classList.remove('hidden');
             noResults.classList.add('hidden');
-        } else {
-            loader.classList.remove('hidden');
         }
+        loader.classList.remove('hidden');
 
         try {
             let endpoint;
+            // Initialize params without language or region to allow for broader filtering
             const params = new URLSearchParams({
                 page: String(page),
                 'include_adult': 'false',
-                'language': 'en-US',
             });
             
             if (searchTerm.length > 2) {
+                // For search, add language to get more relevant results
+                params.append('language', 'en-US');
                 params.append('query', searchTerm);
+                if (selectedYear) {
+                    params.append(mediaType === 'movie' ? 'primary_release_year' : 'first_air_date_year', selectedYear);
+                }
                 endpoint = `search/${mediaType}?${params.toString()}`;
-
-            } else {
+            } else { // Discover mode
                 const excludedIds = await getExcludedGenreIds(mediaType);
+                
                 params.append('sort_by', 'popularity.desc');
                 if (excludedIds.length > 0) params.append('without_genres', excludedIds.join(','));
+
+                // Apply general filters
                 if (selectedGenre) params.append('with_genres', selectedGenre);
                 if (selectedYear) params.append(mediaType === 'movie' ? 'primary_release_year' : 'first_air_date_year', selectedYear);
                 if (selectedCountry) params.append('with_origin_country', selectedCountry);
                 if (selectedLanguage) params.append('with_original_language', selectedLanguage);
+
+                // Apply network/provider filter
+                if (selectedNetwork) {
+                    if (mediaType === 'tv') {
+                        params.append('with_networks', selectedNetwork);
+                    } else if (mediaType === 'movie') {
+                        const providerId = networkToProviderMap[selectedNetwork];
+                        if (providerId) {
+                            params.append('with_watch_providers', providerId);
+                            // A watch_region is required when using with_watch_providers
+                            params.append('watch_region', selectedCountry || 'US');
+                            params.append('with_watch_monetization_types', 'flatrate');
+                        }
+                    }
+                }
+                
                 endpoint = `discover/${mediaType}?${params.toString()}`;
             }
 
@@ -145,19 +217,48 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (!append) mediaContainer.innerHTML = '';
             
-            const results = data.results || [];
+            const excludedIds = await getExcludedGenreIds(mediaType);
+            let results = (data.results || []).filter(item => !isItemExcluded(item, excludedIds));
+            
+            const areAnyFiltersActive = searchTerm.length > 2 || selectedNetwork || selectedGenre || selectedYear || selectedCountry || selectedLanguage;
+            if (!append && !areAnyFiltersActive) {
+                for (let i = results.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [results[i], results[j]] = [results[j], results[i]];
+                }
+            }
+
             results.forEach(item => {
                 const card = createMediaCardElement(item);
                 if(card) mediaContainer.appendChild(card);
             });
 
             if (page === 1) {
-                totalPages = data.total_pages || 1;
-                if(results.length === 0) noResults.classList.remove('hidden');
+                totalPages = Math.min(data.total_pages || 1, 500); // Cap at TMDB's 500 page limit
+                if (results.length === 0) {
+                    noResults.innerHTML = `
+                        <i class="fas fa-ghost"></i>
+                        <p>No results found.</p>
+                        <p>Try adjusting your search or filters.</p>`;
+                    noResults.classList.remove('hidden');
+                }
             }
             updateAllCardWatchlistIcons();
         } catch (error) {
-            if (error.name !== 'AbortError') console.error("Failed to fetch media:", error);
+            if (error.name !== 'AbortError') {
+                console.error("Failed to fetch media:", error);
+                if (!append) { // Handle error on initial load
+                    mediaContainer.innerHTML = '';
+                    noResults.innerHTML = `
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>API Error</p>
+                        <p>Could not fetch data. Please try again later.</p>`;
+                    noResults.classList.remove('hidden');
+                } else { // Handle error on pagination (scrolling)
+                    showToast('Error loading more results.');
+                    currentPage = totalPages; // Prevent further scroll requests on error
+                }
+            }
         } finally {
             isLoading = false;
             loader.classList.add('hidden');
@@ -165,6 +266,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
+    const fetchAndDisplayPopularActors = async (page = 1, append = false) => {
+        if (isLoading) {
+            if (currentFetchAbortController) currentFetchAbortController.abort();
+        }
+        isLoading = true;
+        currentFetchAbortController = new AbortController();
+
+        if (!append) {
+            mediaContainer.innerHTML = '';
+            noResults.classList.add('hidden');
+        }
+        loader.classList.remove('hidden');
+
+        try {
+            const data = await fetchFromApi(`person/popular?page=${page}`, { signal: currentFetchAbortController.signal });
+            
+            let results = data.results || [];
+            if (page === 1 && !append) {
+                // Shuffle on first load
+                for (let i = results.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [results[i], results[j]] = [results[j], results[i]];
+                }
+            }
+            
+            totalPages = data.total_pages || 1;
+
+            if (results.length > 0) {
+                results.forEach(person => {
+                    const personCard = createPersonCardElement(person);
+                    if (personCard) mediaContainer.appendChild(personCard);
+                });
+            } else if (!append) {
+                noResults.classList.remove('hidden');
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error("Popular actor fetch failed", error);
+                if (!append) noResults.classList.remove('hidden');
+            }
+        } finally {
+            isLoading = false;
+            loader.classList.add('hidden');
+            currentFetchAbortController = null;
+        }
+    };
+
     const fetchAndDisplayActors = async () => {
         if (isLoading) {
             if (currentFetchAbortController) currentFetchAbortController.abort();
@@ -211,6 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
         input.className = 'custom-select-input';
         input.placeholder = placeholder;
         input.setAttribute('aria-label', placeholder);
+        input.setAttribute('autocomplete', 'off');
 
         const arrow = document.createElement('i');
         arrow.className = 'fas fa-chevron-down custom-select-arrow';
@@ -218,6 +367,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const optionsContainer = document.createElement('div');
         optionsContainer.className = 'custom-select-options';
 
+        const closeAllSelects = (exceptThisOne = null) => {
+            document.querySelectorAll('.custom-select-options.open').forEach(openContainer => {
+                if (openContainer !== exceptThisOne) {
+                    openContainer.classList.remove('open');
+                }
+            });
+        };
+
+        const toggleOptions = (forceOpen = null) => {
+            const currentlyOpen = optionsContainer.classList.contains('open');
+            const shouldOpen = forceOpen !== null ? forceOpen : !currentlyOpen;
+            
+            closeAllSelects(shouldOpen ? optionsContainer : null);
+
+            if (shouldOpen) {
+                optionsContainer.classList.add('open');
+            } else {
+                optionsContainer.classList.remove('open');
+            }
+        };
+
+        const handleSelect = (optionEl) => {
+            input.value = optionEl.dataset.value === '' ? '' : optionEl.textContent;
+            if (input.value === '') input.placeholder = placeholder;
+            onSelect(optionEl.dataset.value);
+            toggleOptions(false);
+        };
+        
         const allOption = document.createElement('div');
         allOption.className = 'custom-select-option';
         allOption.textContent = placeholder;
@@ -233,13 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
             optionEl.onclick = () => handleSelect(optionEl);
             optionsContainer.appendChild(optionEl);
         });
-
-        const handleSelect = (optionEl) => {
-            input.value = optionEl.dataset.value === '' ? '' : optionEl.textContent;
-            if (input.value === '') input.placeholder = placeholder;
-            onSelect(optionEl.dataset.value);
-            optionsContainer.classList.remove('open');
-        }
         
         input.addEventListener('input', () => {
             const filter = input.value.toLowerCase();
@@ -249,9 +419,48 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        input.addEventListener('focus', () => optionsContainer.classList.add('open'));
+        input.addEventListener('focus', () => toggleOptions(true));
         selectContainer.addEventListener('click', (e) => e.stopPropagation());
-        arrow.addEventListener('click', () => optionsContainer.classList.toggle('open'));
+
+        input.addEventListener('keydown', (e) => {
+            const isOptionsOpen = optionsContainer.classList.contains('open');
+            if (e.key === 'Escape') {
+                toggleOptions(false);
+                return;
+            }
+
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (!isOptionsOpen) toggleOptions(true);
+                
+                const visibleOptions = Array.from(optionsContainer.querySelectorAll('.custom-select-option')).filter(o => o.style.display !== 'none');
+                if (!visibleOptions.length) return;
+
+                let highlightedIndex = visibleOptions.findIndex(opt => opt.classList.contains('highlighted'));
+                
+                if (highlightedIndex !== -1) {
+                    visibleOptions[highlightedIndex].classList.remove('highlighted');
+                }
+
+                if (e.key === 'ArrowDown') {
+                    highlightedIndex = (highlightedIndex + 1) % visibleOptions.length;
+                } else { // ArrowUp
+                    highlightedIndex = (highlightedIndex - 1 + visibleOptions.length) % visibleOptions.length;
+                }
+                
+                visibleOptions[highlightedIndex].classList.add('highlighted');
+                visibleOptions[highlightedIndex].scrollIntoView({ block: 'nearest' });
+            }
+
+            if (e.key === 'Enter' && isOptionsOpen) {
+                e.preventDefault();
+                const highlighted = optionsContainer.querySelector('.highlighted');
+                if (highlighted) {
+                    handleSelect(highlighted);
+                }
+            }
+        });
+
 
         selectContainer.append(input, arrow, optionsContainer);
         wrapper.appendChild(selectContainer);
@@ -296,8 +505,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentYear = new Date().getFullYear();
             for(let i=0; i<70; i++) yearOptions.push({value: currentYear-i, name: String(currentYear-i)});
             
-            const handleFilterChange = () => isWatchlistMode ? displayWatchlist() : resetAndFetch();
+            const networkOptions = [
+                { value: '213', name: 'Netflix' }, { value: '2552', name: 'Apple TV+' },
+                { value: '1024', name: 'Amazon Prime' }, { value: '49', name: 'HBO' },
+                { value: '3186', name: 'HBO Max' }, { value: '67', name: 'Showtime' },
+                { value: '3353', name: 'Peacock' }, { value: '4330', name: 'Paramount+' },
+                { value: '6219', name: 'MGM+' }, { value: '318', name: 'Starz' },
+                { value: '19', name: 'Fox' }, { value: '6', name: 'NBC' },
+                { value: '453', name: 'Hulu' }, { value: '174', name: 'AMC+' },
+                { value: '6783', name: 'Max' }, { value: '1436', name: 'YouTube' },
+                { value: '4692', name: 'Roku' }, { value: '2739', name: 'Disney+' },
+                { value: '214', name: 'Sky' }, { value: '4', name: 'BBC One' },
+                { value: '332', name: 'BBC Two' }, { value: '3', name: 'BBC Three' },
+                { value: '5871', name: 'ITV X' }, { value: '26', name: 'Channel 4' },
+                { value: '99', name: 'Channel 5' }, { value: '4025', name: 'BritBox' }
+            ].sort((a, b) => a.name.localeCompare(b.name));
 
+            const handleFilterChange = () => (isWatchlistMode || isWatchingMode) ? displayWatchlist() : resetAndFetch();
+
+            customSelects.network = createCustomSelect(networkFilterWrapper, 'All Networks', networkOptions, (value) => { selectedNetwork = value; handleFilterChange(); });
             customSelects.genre = createCustomSelect(genreFilterWrapper, 'All Genres', genreOptions, (value) => { selectedGenre = value; handleFilterChange(); });
             customSelects.year = createCustomSelect(yearFilterWrapper, 'All Years', yearOptions, (value) => { selectedYear = value; handleFilterChange(); });
             customSelects.country = createCustomSelect(countryFilterWrapper, 'All Countries', countryOptions, (value) => { selectedCountry = value; handleFilterChange(); });
@@ -313,8 +539,56 @@ document.addEventListener('DOMContentLoaded', () => {
         totalPages = 1;
         fetchAndDisplayMedia(1, false);
     };
+
+    const updateFiltersUI = () => {
+        const isDiscover = !isActorSearchMode && !isWatchlistMode && !isWatchingMode;
+        const mediaTypeToggleContainer = movieTypeBtn.parentElement;
+
+        mediaTypeToggleContainer.classList.toggle('hidden', isWatchingMode);
+        
+        const allFilters = [networkFilterWrapper, genreFilterWrapper, yearFilterWrapper, countryFilterWrapper, languageFilterWrapper, resetBtn];
+        allFilters.forEach(el => el.classList.toggle('hidden', isActorSearchMode));
+        
+        const showNetworkFilter = (isDiscover || isWatchlistMode) && mediaType === 'tv';
+        networkFilterWrapper.classList.toggle('hidden', !showNetworkFilter);
+
+        if (isActorSearchMode) {
+            searchInput.placeholder = 'Search for Actors...';
+        } else if (mediaType === 'tv') {
+            searchInput.placeholder = 'Search for TV Series...';
+        } else {
+            searchInput.placeholder = 'Search for Films...';
+        }
+    };
+
     
     // --- WATCHLIST LOGIC ---
+    const calculateNextEpisode = (item, watchedProgress) => {
+        const itemProgress = watchedProgress[item.id];
+        let nextUp = { season: 1, episode: 1 };
+        
+        if (!itemProgress || !item.seasons) return nextUp;
+
+        const validSeasons = item.seasons.filter(s => s.season_number > 0 && s.episode_count > 0);
+        if (validSeasons.length === 0) return nextUp;
+
+        const lastWatchedSeason = validSeasons.find(s => s.season_number === itemProgress.season);
+        if (lastWatchedSeason) {
+            if (itemProgress.episode < lastWatchedSeason.episode_count) {
+                nextUp = { season: itemProgress.season, episode: itemProgress.episode + 1 };
+            } else {
+                const nextSeason = validSeasons.find(s => s.season_number === itemProgress.season + 1);
+                if (nextSeason) {
+                    nextUp = { season: nextSeason.season_number, episode: 1 };
+                } else {
+                    // Finished series, return last watched episode
+                    nextUp = { season: itemProgress.season, episode: itemProgress.episode };
+                }
+            }
+        }
+        return nextUp;
+    };
+
     const fetchWatchlist = async () => {
         try {
             const fetchPage = async (type, page) => fetchFromApi(`account/${ACCOUNT_ID}/watchlist/${type}?page=${page}`, {}, true);
@@ -358,7 +632,27 @@ document.addEventListener('DOMContentLoaded', () => {
         noResults.classList.add('hidden');
         loader.classList.remove('hidden');
 
-        let filtered = watchlistItems.filter(item => {
+        let itemsToDisplay = watchlistItems;
+        const watchedProgress = JSON.parse(localStorage.getItem('watchedProgress')) || {};
+
+        if (isWatchingMode) {
+            itemsToDisplay = itemsToDisplay.filter(item => {
+                if (item.media_type !== 'tv') return false;
+                const nextUp = calculateNextEpisode(item, watchedProgress);
+                // A series is being watched if the next episode to watch is not S1E1
+                return !(nextUp.season === 1 && nextUp.episode === 1);
+            });
+        } else if (isWatchlistMode) {
+            itemsToDisplay = itemsToDisplay.filter(item => {
+                if (item.media_type !== 'tv') return true; // Always include movies
+                const nextUp = calculateNextEpisode(item, watchedProgress);
+                // Only include TV series that have not been started
+                return nextUp.season === 1 && nextUp.episode === 1;
+            });
+        }
+
+
+        let filtered = itemsToDisplay.filter(item => {
             const title = item.title || item.name || '';
             const releaseYear = (item.release_date || item.first_air_date || 'N/A').substring(0, 4);
 
@@ -368,6 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectedYear && releaseYear !== selectedYear) return false;
             if (selectedCountry && !(item.production_countries?.some(c => c.iso_3166_1 === selectedCountry))) return false;
             if (selectedLanguage && item.original_language !== selectedLanguage) return false;
+            if (selectedNetwork && item.media_type === 'tv' && !item.networks?.some(n => n.id == selectedNetwork)) return false;
             return true;
         });
 
@@ -400,7 +695,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateAllCardWatchlistIcons = () => {
         const cards = document.querySelectorAll('.watchlist-btn');
         cards.forEach(btn => {
-            const card = btn.closest('.media-card');
+            const card = btn.closest('.media-card, .filmography-detail-container');
             if (card) {
                 const id = card.dataset.id;
                 const isInWatchlist = watchlistItems.some(item => item.id == id);
@@ -423,7 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (isInWatchlist) {
                 watchlistItems = watchlistItems.filter(item => item.id != id);
-                if (isWatchlistMode && button) {
+                if ((isWatchlistMode || isWatchingMode) && button) {
                     button.closest('.media-card-wrapper')?.remove();
                     if (mediaContainer.children.length === 0) noResults.classList.remove('hidden');
                 }
@@ -433,7 +728,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             updateAllCardWatchlistIcons();
             
-            // Also update the specific button that was clicked, as it might not be on a media card
             if (button) {
                 const isNowInWatchlist = !isInWatchlist;
                 button.classList.toggle('in-watchlist', isNowInWatchlist);
@@ -460,36 +754,64 @@ document.addEventListener('DOMContentLoaded', () => {
         return Array.from({ length: episodeCount }, (_, i) => `<option value="${i + 1}">Ep ${i + 1}</option>`).join('');
     };
 
-    const openPlayer = (id, type, controlsContainer) => {
+    const openPlayer = (id, type, controlsContainer, mediaDetails) => {
         const isTV = type === 'tv';
         let src;
 
         if (isTV) {
-            const season = controlsContainer.querySelector('.player-season-select')?.value || '1';
-            const episode = controlsContainer.querySelector('.player-episode-select')?.value || '1';
+            const seasonSelect = controlsContainer.querySelector('.player-season-select');
+            const episodeSelect = controlsContainer.querySelector('.player-episode-select');
+            const season = seasonSelect?.value || '1';
+            const episode = episodeSelect?.value || '1';
             src = `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
+            
+            const watchedProgress = JSON.parse(localStorage.getItem('watchedProgress')) || {};
+            watchedProgress[id] = { season: parseInt(season, 10), episode: parseInt(episode, 10) };
+            localStorage.setItem('watchedProgress', JSON.stringify(watchedProgress));
+
+            lastPlayedItem = {
+                id,
+                type,
+                season: parseInt(season, 10),
+                episode: parseInt(episode, 10),
+                title: mediaDetails.title || mediaDetails.name
+            };
         } else {
             src = `https://vidsrc.xyz/embed/movie?tmdb=${id}`;
+            lastPlayedItem = null;
         }
         window.open(src, '_blank');
     };
 
     const createPersonCardElement = (person) => {
+        if (!person.profile_path) return null;
         const title = person.name;
-        const posterUrl = person.profile_path ? `https://image.tmdb.org/t/p/w500${person.profile_path}` : UNAVAILABLE_IMAGE_URL;
+        const posterUrl = `https://image.tmdb.org/t/p/w500${person.profile_path}`;
         const escapedName = title.replace(/'/g, "\\'");
-
+    
         const wrapper = document.createElement('div');
         wrapper.className = 'media-card-wrapper';
-
+    
         const card = document.createElement('div');
         card.className = 'media-card';
+        card.dataset.id = person.id;
+        card.dataset.type = 'person';
+        card.dataset.detailsLoaded = 'false';
         card.onclick = () => showFilmography(person.id, escapedName);
-
+    
         card.innerHTML = `
             <img src="${posterUrl}" alt="Photo of ${title}" class="media-card-poster" loading="lazy"/>
-            <div class="media-card-overlay person-card-overlay">
-                <h3 class="person-card-name">${title}</h3>
+            <div class="media-card-overlay">
+                <div class="details-pane">
+                    <div class="details-spinner"><div class="spinner-small"></div></div>
+                    <div class="details-content hidden">
+                       <div class="details-text-container">
+                           <div class="person-name-text"><strong>${title}</strong></div>
+                           <div class="nationality-text-container hidden"><strong><i class="fa-solid fa-location-dot" aria-hidden="true"></i></strong>⠀<span class="nationality-text"></span></div>
+                           <div class="age-text-container hidden"><strong><i class="fa-solid fa-cake-candles" aria-hidden="true"></i></strong>⠀<span class="age-text"></span></div>
+                       </div>
+                    </div>
+                </div>
             </div>
         `;
         wrapper.appendChild(card);
@@ -527,10 +849,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="details-spinner"><div class="spinner-small"></div></div>
                     <div class="details-content hidden">
                        <div class="details-text-container">
-                           <div class="country-text-container hidden"><strong><i class="fa-solid fa-earth-americas" aria-hidden="true"></i></strong>⠀<span class="country-text"></span></div>
-                           <div class="language-text-container hidden"><strong><i class="fa-regular fa-message" aria-hidden="true"></i></strong>⠀<span class="language-text"></span></div>
-                           <div class="genres-text-container hidden"><strong><i class="fa-solid fa-clapperboard" aria-hidden="true"></i></strong>⠀<span class="genres-text"></span></div>
-                           <div class="runtime-text-container hidden"><strong><i class="fa-regular fa-clock" aria-hidden="true"></i></strong>⠀<span class="runtime-text"></span></div>
+                           <div class="country-text-container hidden"><i class="fa-solid fa-earth-americas" aria-hidden="true"></i><span class="country-text"></span></div>
+                           <div class="language-text-container hidden"><i class="fa-regular fa-message" aria-hidden="true"></i><span class="language-text"></span></div>
+                           <div class="genres-text-container hidden"><i class="fa-solid fa-clapperboard" aria-hidden="true"></i><span class="genres-text"></span></div>
+                           <div class="series-text-container hidden"><i class="fa-regular fa-rectangle-list" aria-hidden="true"></i><span class="series-text"></span></div>
+                           <div class="network-text-container hidden"><i class="fa-solid fa-tv" aria-hidden="true"></i><span class="network-text"></span></div>
+                           <div class="runtime-text-container hidden"><i class="fa-regular fa-clock" aria-hidden="true"></i><span class="runtime-text"></span></div>
                        </div>
                        <div class="details-buttons">
                             <button class="details-btn watchlist-btn" title="Add to Watchlist"><i class="fas fa-bookmark"></i></button>
@@ -548,6 +872,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const spinner = card.querySelector('.details-spinner');
             const content = card.querySelector('.details-content');
     
+            if (type === 'tv') {
+                const network = media.networks?.[0]?.name;
+                if(network) {
+                    card.querySelector('.network-text').textContent = network;
+                    card.querySelector('.network-text-container').classList.remove('hidden');
+                }
+                const seasons = media.number_of_seasons;
+                if (seasons) {
+                    card.querySelector('.series-text').textContent = `${seasons} Season${seasons > 1 ? 's' : ''}`;
+                    card.querySelector('.series-text-container').classList.remove('hidden');
+                }
+            }
+            
             const runtime = media.runtime || (media.episode_run_time ? media.episode_run_time[0] : null);
             if (runtime) {
                 card.querySelector('.runtime-text').textContent = formatRuntime(runtime);
@@ -583,24 +920,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Add external player controls for watchlist items
-        if (isWatchlistMode) {
+        if (isWatchlistMode || isWatchingMode) {
             const playerControls = document.createElement('div');
             playerControls.className = 'watchlist-player-controls';
 
             if (type === 'tv' && media.seasons) {
                 const validSeasons = media.seasons.filter(s => s.season_number > 0 && s.episode_count > 0);
                 if (validSeasons.length > 0) {
+                    const watchedProgress = JSON.parse(localStorage.getItem('watchedProgress')) || {};
+                    const nextUp = calculateNextEpisode(media, watchedProgress);
+                    
+                    const initialSeasonData = validSeasons.find(s => s.season_number === nextUp.season) || validSeasons[0];
+
                      playerControls.innerHTML = `
                         <select class="player-season-select">
-                            ${validSeasons.map(s => `<option value="${s.season_number}">S ${s.season_number}</option>`).join('')}
+                            ${validSeasons.map(s => `<option value="${s.season_number}" ${s.season_number === nextUp.season ? 'selected' : ''}>S ${s.season_number}</option>`).join('')}
                         </select>
                         <select class="player-episode-select">
-                            ${generateEpisodeOptions(validSeasons[0].episode_count)}
+                            ${generateEpisodeOptions(initialSeasonData.episode_count)}
                         </select>
                         <button class="details-btn player-play-btn" title="Play Episode"><i class="fas fa-play"></i></button>
                     `;
+
                     const seasonSelect = playerControls.querySelector('.player-season-select');
                     const episodeSelect = playerControls.querySelector('.player-episode-select');
+                    if (episodeSelect) episodeSelect.value = nextUp.episode;
                     
                     seasonSelect.addEventListener('change', () => {
                         const selectedSeasonData = validSeasons.find(s => s.season_number == seasonSelect.value);
@@ -622,7 +966,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (playBtn) {
                     playBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        openPlayer(media.id, type, playerControls);
+                        openPlayer(media.id, type, playerControls, media);
                     });
                 }
                 wrapper.appendChild(playerControls);
@@ -639,10 +983,37 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- MODAL & EVENT HANDLERS ---
     const showToast = (message) => {
-        toast.textContent = message;
+        toast.innerHTML = `<span>${message}</span>`;
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 3000);
     };
+
+    const showNextEpisodeToast = (message, buttonText, onAction) => {
+        toast.classList.remove('show'); // Hide any previous toast
+        
+        toast.innerHTML = `
+            <span>${message}</span>
+             <div class="toast-buttons-container">
+                <button class="toast-action-btn">${buttonText}</button>
+                <button class="toast-close-btn">&times;</button>
+            </div>
+        `;
+        
+        const actionBtn = toast.querySelector('.toast-action-btn');
+        const closeBtn = toast.querySelector('.toast-close-btn');
+
+        const closeToast = () => toast.classList.remove('show');
+
+        actionBtn.onclick = () => {
+            onAction();
+            closeToast();
+        };
+
+        closeBtn.onclick = closeToast;
+
+        toast.classList.add('show');
+    };
+
 
     const _setModalContent = (content, { isTrailer = false, isNavigable = false } = {}) => {
         const modalId = 'modal-backdrop';
@@ -668,29 +1039,29 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.onclick = singleClickHandler;
         modal.ondblclick = dblClickHandler;
         
-        if (!isNavigable) {
-            const closeBtn = document.createElement('button');
-            closeBtn.className = isTrailer ? 'modal-close-btn-trailer' : 'modal-close-btn';
-            closeBtn.innerHTML = '<i class="fas fa-times fa-lg"></i>';
-            closeBtn.setAttribute('aria-label', 'Close modal');
-            closeBtn.onclick = closeModal;
-        }
+        const closeBtn = document.createElement('button');
+        closeBtn.className = isTrailer ? 'modal-close-btn-trailer' : 'modal-close-btn';
+        closeBtn.innerHTML = '<i class="fas fa-times fa-lg"></i>';
+        closeBtn.setAttribute('aria-label', 'Close modal');
+        closeBtn.onclick = closeModal;
 
         if (typeof content === 'string') {
             contentWrapper.innerHTML += content;
         } else {
             contentWrapper.appendChild(content);
         }
+        
+        contentWrapper.prepend(closeBtn);
 
         modal.appendChild(contentWrapper);
         modalContainer.innerHTML = '';
         modalContainer.appendChild(modal);
-        document.body.style.overflow = 'hidden';
+        document.documentElement.classList.add('is-modal-open');
     };
 
     window.closeModal = () => {
         modalContainer.innerHTML = '';
-        document.body.style.overflow = 'auto';
+        document.documentElement.classList.remove('is-modal-open');
         modalHistory = [];
     }
     
@@ -708,49 +1079,77 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const handleCardHover = async (e) => {
         const card = e.target.closest('.media-card');
-        if (!card || card.dataset.detailsLoaded === 'true' || isActorSearchMode) return;
-    
-        card.dataset.detailsLoaded = 'true'; 
+        if (!card || card.dataset.detailsLoaded === 'true') return;
     
         const id = card.dataset.id;
         const type = card.dataset.type;
+        card.dataset.detailsLoaded = 'true';
+    
         const spinner = card.querySelector('.details-spinner');
         const content = card.querySelector('.details-content');
     
         try {
-            const details = await fetchFromApi(`${type}/${id}?language=en-US`);
+            if (type === 'person') {
+                const details = await fetchFromApi(`person/${id}?language=en-US`);
+                
+                const age = calculateAge(details.birthday);
+                if (age && age !== 'N/A') {
+                    card.querySelector('.age-text').textContent = age;
+                    card.querySelector('.age-text-container').classList.remove('hidden');
+                }
     
-            const runtime = details.runtime || (details.episode_run_time ? details.episode_run_time[0] : null);
-            if (runtime) {
-                card.querySelector('.runtime-text').textContent = formatRuntime(runtime);
-                card.querySelector('.runtime-text-container').classList.remove('hidden');
+                const nationality = details.place_of_birth ? details.place_of_birth.split(',').pop().trim() : null;
+                if (nationality) {
+                    card.querySelector('.nationality-text').textContent = nationality;
+                    card.querySelector('.nationality-text-container').classList.remove('hidden');
+                }
+            } else { // Handle movie and TV
+                const details = await fetchFromApi(`${type}/${id}?language=en-US`);
+        
+                if (type === 'tv') {
+                    const network = details.networks?.[0]?.name;
+                    if (network) {
+                        card.querySelector('.network-text').textContent = network;
+                        card.querySelector('.network-text-container').classList.remove('hidden');
+                    }
+                    const seasons = details.number_of_seasons;
+                    if (seasons) {
+                        card.querySelector('.series-text').textContent = `${seasons} Season${seasons > 1 ? 's' : ''}`;
+                        card.querySelector('.series-text-container').classList.remove('hidden');
+                    }
+                }
+
+                const runtime = details.runtime || (details.episode_run_time ? details.episode_run_time[0] : null);
+                if (runtime) {
+                    card.querySelector('.runtime-text').textContent = formatRuntime(runtime);
+                    card.querySelector('.runtime-text-container').classList.remove('hidden');
+                }
+        
+                const country = details.production_countries?.[0]?.name;
+                if (country) {
+                    let displayCountry = country;
+                    if (country === 'United States of America') displayCountry = 'USA';
+                    if (country === 'United Kingdom') displayCountry = 'UK';
+                    card.querySelector('.country-text').textContent = displayCountry;
+                    card.querySelector('.country-text-container').classList.remove('hidden');
+                }
+        
+                const language = details.spoken_languages?.[0]?.english_name;
+                if (language) {
+                    card.querySelector('.language-text').textContent = language;
+                    card.querySelector('.language-text-container').classList.remove('hidden');
+                }
+        
+                const genres = details.genres?.map(g => g.name).join(', ');
+                if (genres) {
+                    card.querySelector('.genres-text').textContent = genres;
+                    card.querySelector('.genres-text-container').classList.remove('hidden');
+                }
             }
-    
-            const country = details.production_countries?.[0]?.name;
-            if (country) {
-                let displayCountry = country;
-                if (country === 'United States of America') displayCountry = 'USA';
-                if (country === 'United Kingdom') displayCountry = 'UK';
-                card.querySelector('.country-text').textContent = displayCountry;
-                card.querySelector('.country-text-container').classList.remove('hidden');
-            }
-    
-            const language = details.spoken_languages?.[0]?.english_name;
-            if (language) {
-                card.querySelector('.language-text').textContent = language;
-                card.querySelector('.language-text-container').classList.remove('hidden');
-            }
-    
-            const genres = details.genres?.map(g => g.name).join(', ');
-            if (genres) {
-                card.querySelector('.genres-text').textContent = genres;
-                card.querySelector('.genres-text-container').classList.remove('hidden');
-            }
-    
             spinner.classList.add('hidden');
             content.classList.remove('hidden');
         } catch (err) {
-            console.error("Error fetching details on hover", err);
+            console.error(`Error fetching details for ${type} on hover`, err);
             if (spinner) {
                 spinner.innerHTML = `<p class="details-error-text">Could not load details.</p>`;
             }
@@ -797,13 +1196,6 @@ document.addEventListener('DOMContentLoaded', () => {
         modalHistory.push({ content, options });
     }
     
-    const calculateAge = (birthday) => {
-        if (!birthday) return 'N/A';
-        const ageDifMs = Date.now() - new Date(birthday).getTime();
-        const ageDate = new Date(ageDifMs);
-        return Math.abs(ageDate.getUTCFullYear() - 1970);
-    };
-
     window.showCast = async (id, type) => {
         let content;
         try {
@@ -843,27 +1235,58 @@ document.addEventListener('DOMContentLoaded', () => {
         let content;
         try {
             const { cast } = await fetchFromApi(`person/${personId}/combined_credits?language=en-US`);
-            
+    
             const excludedFilmographyGenreIds = await Promise.all([getExcludedGenreIds('movie'), getExcludedGenreIds('tv')]).then(res => [...new Set(res.flat())]);
-            const filmography = (cast || [])
-                .filter(item => 
-                    (item.media_type === 'movie' || item.media_type === 'tv') && 
-                    item.poster_path &&
-                    !item.genre_ids.some(id => excludedFilmographyGenreIds.includes(id))
-                )
-                .sort((a,b) => b.popularity - a.popularity);
-            
-            let filmographyGridHTML = '';
-            filmography.forEach(item => {
-                const posterUrl = `https://image.tmdb.org/t/p/w200${item.poster_path}`;
-                const title = (item.title || item.name || '').replace(/'/g, "\\'");
-                filmographyGridHTML += `
-                     <div class="filmography-item" onclick="showFilmographyItemDetails(${item.id}, '${item.media_type}')">
-                        <img src="${posterUrl}" alt="${title}" class="filmography-item-poster"/>
-                    </div>
-                `;
+    
+            const filteredCredits = (cast || []).filter(item => {
+                if (item.media_type !== 'movie' && item.media_type !== 'tv') return false;
+                if (!item.poster_path) return false;
+                if (item.media_type === 'movie' && !item.release_date) return false;
+                if (item.media_type === 'tv' && !item.first_air_date) return false;
+                return !isItemExcluded(item, excludedFilmographyGenreIds);
             });
-            content = `<h2 class="modal-title">Filmography of ${name}</h2><div class="filmography-grid">${filmographyGridHTML}</div>`;
+    
+            const films = filteredCredits
+                .filter(item => item.media_type === 'movie')
+                .sort((a, b) => new Date(b.release_date) - new Date(a.release_date));
+    
+            const tvSeries = filteredCredits
+                .filter(item => item.media_type === 'tv')
+                .sort((a, b) => new Date(b.first_air_date) - new Date(a.first_air_date));
+    
+            const createGridHTML = (items) => {
+                if (!items || items.length === 0) return '';
+                let gridHTML = '<div class="filmography-grid">';
+                items.forEach(item => {
+                    const posterUrl = `https://image.tmdb.org/t/p/w200${item.poster_path}`;
+                    const title = (item.title || item.name || '').replace(/'/g, "\\'");
+                    gridHTML += `
+                         <div class="filmography-item" onclick="showFilmographyItemDetails(${item.id}, '${item.media_type}')">
+                            <img src="${posterUrl}" alt="${title}" class="filmography-item-poster"/>
+                        </div>
+                    `;
+                });
+                gridHTML += '</div>';
+                return gridHTML;
+            };
+    
+            let finalHTML = `<h2 class="modal-title">Filmography of ${name}</h2>`;
+    
+            if (films.length > 0) {
+                finalHTML += `<h4 style="font-size: 1.25rem; font-weight: 600; color: #3c4148; margin-top: 1.5rem;">Films</h4>`;
+                finalHTML += createGridHTML(films);
+            }
+    
+            if (tvSeries.length > 0) {
+                finalHTML += `<h4 style="font-size: 1.25rem; font-weight: 600; color: #3c4148; margin-top: 1.5rem;">TV Series</h4>`;
+                finalHTML += createGridHTML(tvSeries);
+            }
+    
+            if (films.length === 0 && tvSeries.length === 0) {
+                finalHTML += `<p class="modal-body-text" style="text-align: center; margin-top: 1rem;">No filmography found.</p>`;
+            }
+    
+            content = finalHTML;
         } catch (error) {
              content = `<h2 class="modal-title">Filmography of ${name}</h2><p class="modal-body-text" style="text-align: center;">Could not load filmography.</p>`;
         }
@@ -889,6 +1312,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             content = document.createElement('div');
             content.className = 'filmography-detail-container';
+            content.dataset.id = itemId;
             content.innerHTML = `
                 <div class="filmography-detail-view">
                     <img src="${posterUrl}" alt="Poster for ${title}" class="filmography-detail-poster"/>
@@ -914,12 +1338,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            const watchlistBtn = content.querySelector('.watchlist-btn');
-            const isInWatchlist = watchlistItems.some(item => item.id == itemId);
-            watchlistBtn.classList.toggle('in-watchlist', isInWatchlist);
-            watchlistBtn.title = isInWatchlist ? "Remove from Watchlist" : "Add to Watchlist";
+            updateAllCardWatchlistIcons();
             
-            watchlistBtn.onclick = (e) => { e.stopPropagation(); toggleWatchlistAction(itemId, itemType, watchlistBtn); };
+            content.querySelector('.watchlist-btn').onclick = (e) => { e.stopPropagation(); toggleWatchlistAction(itemId, itemType, e.currentTarget); };
             content.querySelector('.trailer-btn').onclick = (e) => { e.stopPropagation(); showTrailer(itemId, itemType); };
             content.querySelector('.cast-btn').onclick = (e) => { e.stopPropagation(); showCast(itemId, itemType); };
 
@@ -955,120 +1376,141 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const handleSearch = () => {
+        currentPage = 1;
+        totalPages = 1;
         if (isActorSearchMode) {
             if (searchTerm.length > 2) {
                 fetchAndDisplayActors();
+            } else if (searchTerm.length === 0) {
+                fetchAndDisplayPopularActors();
             } else {
                 mediaContainer.innerHTML = '';
                 noResults.classList.add('hidden');
                 loader.classList.add('hidden');
             }
         } else {
-            isWatchlistMode ? displayWatchlist() : resetAndFetch();
+            (isWatchlistMode || isWatchingMode) ? displayWatchlist() : resetAndFetch();
         }
     };
     const debouncedSearch = debounce(handleSearch, 1000);
 
     // --- EVENT LISTENERS ---
+    watchingBtn.addEventListener('click', () => {
+        // Toggling 'Watching' mode
+        isWatchingMode = !isWatchingMode;
+        watchingBtn.classList.toggle('active', isWatchingMode);
+
+        if (isWatchingMode) {
+            // If turning on, disable other modes
+            isWatchlistMode = false;
+            watchlistBtn.classList.remove('active');
+            isActorSearchMode = false;
+            actorSearchToggle.classList.remove('active');
+            
+            mediaType = 'tv'; // Watching is only for TV
+            movieTypeBtn.classList.remove('active');
+            tvTypeBtn.classList.add('active');
+            
+            displayWatchlist();
+        } else {
+            // If turning off, revert to discover view
+            resetAndFetch();
+        }
+        updateFiltersUI();
+    });
+
     watchlistBtn.addEventListener('click', () => {
+        // Toggling 'Watchlist' mode
         isWatchlistMode = !isWatchlistMode;
         watchlistBtn.classList.toggle('active', isWatchlistMode);
 
         if (isWatchlistMode) {
-            // Entering watchlist mode, so exit actor search mode
-            if (isActorSearchMode) {
-                isActorSearchMode = false;
-                actorSearchToggle.classList.remove('active');
-            }
-            // Make sure a media type is selected
+            // If turning on, disable other modes
+            isWatchingMode = false;
+            watchingBtn.classList.remove('active');
+            isActorSearchMode = false;
+            actorSearchToggle.classList.remove('active');
+            
             if (!movieTypeBtn.classList.contains('active') && !tvTypeBtn.classList.contains('active')) {
                 movieTypeBtn.classList.add('active');
                 mediaType = 'movie';
             }
-            otherFilters.forEach(el => el.classList.remove('hidden'));
             displayWatchlist();
         } else {
-            // Exiting watchlist mode, go back to discover
+            // If turning off, revert to discover view
             resetAndFetch();
         }
+        updateFiltersUI();
     });
 
     actorSearchToggle.addEventListener('click', () => {
+        isActorSearchMode = !isActorSearchMode;
+        actorSearchToggle.classList.toggle('active', isActorSearchMode);
+        
+        currentPage = 1;
+        totalPages = 1;
+        
+        // Turn off other modes when activating actor search
         if (isActorSearchMode) {
-            // Currently in actor mode, so toggle it OFF and return to discover mode.
-            isActorSearchMode = false;
-            actorSearchToggle.classList.remove('active');
-            
-            // Restore filters and default media type
-            otherFilters.forEach(el => el.classList.remove('hidden'));
-            movieTypeBtn.classList.add('active');
-            mediaType = 'movie';
-            searchInput.placeholder = 'Search for Films...';
-
-            resetAndFetch();
-        } else {
-            // Not in actor mode, so toggle it ON.
-            isActorSearchMode = true;
-            actorSearchToggle.classList.add('active');
-
-            // Deactivate other modes/buttons
             isWatchlistMode = false;
             watchlistBtn.classList.remove('active');
+            isWatchingMode = false;
+            watchingBtn.classList.remove('active');
             movieTypeBtn.classList.remove('active');
             tvTypeBtn.classList.remove('active');
-
-            // Hide other filters
-            otherFilters.forEach(el => el.classList.add('hidden'));
-
-            searchInput.placeholder = 'Search for Actors...';
-
+            
             if (searchTerm) {
                 handleSearch();
             } else {
-                mediaContainer.innerHTML = '';
-                noResults.classList.add('hidden');
+                fetchAndDisplayPopularActors();
             }
+        } else {
+            movieTypeBtn.classList.add('active'); // Default to films
+            mediaType = 'movie';
+            resetAndFetch();
         }
+        updateFiltersUI();
     });
 
     movieTypeBtn.addEventListener('click', () => {
-        // Clicking this button means we want discover mode for movies
-        if (isActorSearchMode) {
-            isActorSearchMode = false;
-            actorSearchToggle.classList.remove('active');
-            otherFilters.forEach(el => el.classList.remove('hidden'));
+        if (mediaType === 'movie' && !isActorSearchMode) return;
+        
+        if (mediaType !== 'movie') {
+            selectedNetwork = '';
+            if (customSelects.network) customSelects.network.reset();
         }
+        
+        // When switching to movies, turn off special modes
+        isActorSearchMode = false;
+        actorSearchToggle.classList.remove('active');
+        isWatchingMode = false;
+        watchingBtn.classList.remove('active');
         
         mediaType = 'movie';
         movieTypeBtn.classList.add('active');
         tvTypeBtn.classList.remove('active');
-        searchInput.placeholder = 'Search for Films...';
         
-        if (isWatchlistMode) {
-            displayWatchlist();
-        } else {
-            resetAndFetch();
-        }
+        updateFiltersUI();
+        // If watchlist is active, filter it for movies, otherwise do a fresh fetch
+        isWatchlistMode ? displayWatchlist() : resetAndFetch();
     });
 
     tvTypeBtn.addEventListener('click', () => {
-        // Clicking this button means we want discover mode for tv
-        if (isActorSearchMode) {
-            isActorSearchMode = false;
-            actorSearchToggle.classList.remove('active');
-            otherFilters.forEach(el => el.classList.remove('hidden'));
-        }
+        if (mediaType === 'tv' && !isActorSearchMode) return;
+
+        // When switching to TV, turn off special modes
+        isActorSearchMode = false;
+        actorSearchToggle.classList.remove('active');
+        isWatchingMode = false;
+        watchingBtn.classList.remove('active');
 
         mediaType = 'tv';
         tvTypeBtn.classList.add('active');
         movieTypeBtn.classList.remove('active');
-        searchInput.placeholder = 'Search for TV Series...';
 
-        if (isWatchlistMode) {
-            displayWatchlist();
-        } else {
-            resetAndFetch();
-        }
+        updateFiltersUI();
+        // If watchlist is active, filter it for TV, otherwise do a fresh fetch
+        isWatchlistMode ? displayWatchlist() : resetAndFetch();
     });
     
     searchInput.addEventListener('input', (e) => {
@@ -1077,8 +1519,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     resetBtn.addEventListener('click', () => {
-        // Reset state variables
         isWatchlistMode = false;
+        isWatchingMode = false;
         isActorSearchMode = false;
         mediaType = 'movie';
         searchTerm = '';
@@ -1086,24 +1528,19 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedYear = '';
         selectedCountry = '';
         selectedLanguage = '';
+        selectedNetwork = '';
         currentPage = 1;
         totalPages = 1;
 
-        // Reset UI elements
         watchlistBtn.classList.remove('active');
+        watchingBtn.classList.remove('active');
         actorSearchToggle.classList.remove('active');
         movieTypeBtn.classList.add('active');
         tvTypeBtn.classList.remove('active');
         searchInput.value = '';
-        searchInput.placeholder = 'Films or Actors...';
-        
-        // Make sure all filters are visible
-        otherFilters.forEach(el => el.classList.remove('hidden'));
-        sortByWrapper.classList.add('hidden');
         
         Object.values(customSelects).forEach(s => s.reset());
-        
-        // Fetch default content
+        updateFiltersUI();
         resetAndFetch();
     });
     
@@ -1141,10 +1578,74 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && lastPlayedItem && lastPlayedItem.type === 'tv') {
+            const itemToProcess = { ...lastPlayedItem }; // Make a copy
+            lastPlayedItem = null; // Null immediately to prevent re-trigger
+
+            const seriesData = watchlistItems.find(item => item.id === itemToProcess.id);
+            if (!seriesData || !seriesData.seasons) {
+                return;
+            }
+
+            let nextUp = null;
+            const currentSeasonData = seriesData.seasons.find(s => s.season_number === itemToProcess.season);
+
+            if (currentSeasonData && itemToProcess.episode < currentSeasonData.episode_count) {
+                nextUp = { season: itemToProcess.season, episode: itemToProcess.episode + 1 };
+            } else {
+                const nextSeasonData = seriesData.seasons.find(s => s.season_number === itemToProcess.season + 1);
+                if (nextSeasonData && nextSeasonData.episode_count > 0) {
+                    nextUp = { season: nextSeasonData.season_number, episode: 1 };
+                }
+            }
+            
+            if (nextUp) {
+                const message = `Finished this Episode of ${itemToProcess.title}? (S. ${itemToProcess.season} Ep. ${itemToProcess.episode})`;
+                const buttonText = `Watch Next`;
+                
+                const onAction = () => {
+                    const src = `https://vidsrc.xyz/embed/tv?tmdb=${itemToProcess.id}&season=${nextUp.season}&episode=${nextUp.episode}`;
+                    const watchedProgress = JSON.parse(localStorage.getItem('watchedProgress')) || {};
+                    watchedProgress[itemToProcess.id] = { season: nextUp.season, episode: nextUp.episode };
+                    localStorage.setItem('watchedProgress', JSON.stringify(watchedProgress));
+
+                    // When user clicks 'watch next', we can set this as the new lastPlayedItem,
+                    // in case they come back from that tab.
+                    lastPlayedItem = { ...itemToProcess, season: nextUp.season, episode: nextUp.episode };
+                    window.open(src, '_blank');
+
+                    // Update the UI on the card if it's visible
+                    const cardWrapper = document.querySelector(`.media-card[data-id="${seriesData.id}"]`)?.closest('.media-card-wrapper');
+                    if (cardWrapper) {
+                         const seasonSelect = cardWrapper.querySelector('.player-season-select');
+                         const episodeSelect = cardWrapper.querySelector('.player-episode-select');
+                         if(seasonSelect) seasonSelect.value = nextUp.season;
+                         const selectedSeasonData = seriesData.seasons.find(s => s.season_number == nextUp.season);
+                         if (selectedSeasonData && episodeSelect) {
+                            episodeSelect.innerHTML = generateEpisodeOptions(selectedSeasonData.episode_count);
+                            episodeSelect.value = nextUp.episode;
+                         }
+                    }
+                };
+                showNextEpisodeToast(message, buttonText, onAction);
+            }
+        }
+    });
+
     const observer = new IntersectionObserver(entries => {
-        if (entries[0].isIntersecting && !isLoading && !isWatchlistMode && !isActorSearchMode && currentPage < totalPages) {
-            currentPage++;
-            fetchAndDisplayMedia(currentPage, true);
+        if (entries[0].isIntersecting && !isLoading) {
+            if (isActorSearchMode && searchTerm.length === 0) {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    fetchAndDisplayPopularActors(currentPage, true);
+                }
+            } else if (!isWatchlistMode && !isWatchingMode && !isActorSearchMode) {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    fetchAndDisplayMedia(currentPage, true);
+                }
+            }
         }
     }, { rootMargin: '200px' });
 
@@ -1152,6 +1653,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- INITIALIZATION ---
     fetchFilterOptions();
-    fetchAndDisplayMedia();
+    updateFiltersUI();
+    resetAndFetch();
     fetchWatchlist();
 });
