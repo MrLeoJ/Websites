@@ -6,55 +6,67 @@
     <title>Online Notepad</title>
     <link rel="icon" type="image/x-icon" href="fav-icon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Sanchez&family=Poppins&family=Prata&family=Roboto&family=Merienda&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-    <div id="editor-container">
-        <div id="editor" contenteditable="true"></div>
+    <div id="app-content">
+        <div id="tabs-container">
+            <div id="tabs-list"></div>
+            <button id="add-tab-btn" title="Add new tab"><i class="fa-solid fa-plus"></i></button>
+        </div>
+
+        <div id="editor-container">
+            <div id="editor" contenteditable="true" spellcheck="false"></div>
+        </div>
+
+        <div id="toolbar">
+            <div class="left">
+                <span id="wordCharCount" title="Word and Character Count"><i class="fas fa-font"></i>&nbsp; 0 words &nbsp;|&nbsp; 0 characters</span>
+                <span id="readTime" title="Estimated Read Time"><i class="fas fa-clock"></i>&nbsp; 0 min read</span>
+            </div>
+
+            <div class="center">
+                <button id="textColor-btn" data-tooltip="Text Color"><i class="fas fa-paint-brush"></i></button>
+                <span class="toolbar-divider"></span>
+                <button id="fontFamily-btn" data-tooltip="Font Family"><i class="fas fa-font"></i></button>
+                <button id="fontSize-btn" data-tooltip="Font Size"><i class="fas fa-text-height"></i></button>
+                <button id="letterSpacing-btn" data-tooltip="Letter Spacing"><i class="fas fa-text-width"></i></button>
+                <button id="lineSpacing-btn" data-tooltip="Line Spacing"><i class="fas fa-bars"></i></button>
+                <button id="textAlign-btn" data-tooltip="Text Align"><i class="fas fa-align-left"></i></button>
+                <span class="toolbar-divider"></span>
+                <button id="bold-btn" data-tooltip="Bold (Ctrl+B)"><i class="fas fa-bold"></i></button>
+                <button id="italic-btn" data-tooltip="Italic (Ctrl+I)"><i class="fas fa-italic"></i></button>
+                <button id="underline-btn" data-tooltip="Underline (Ctrl+U)"><i class="fas fa-underline"></i></button>
+                <button id="strikethrough-btn" data-tooltip="Strikethrough (Ctrl+Shift+S)"><i class="fas fa-strikethrough"></i></button>
+                <button id="superscript-btn" data-tooltip="Superscript (Ctrl+.)"><i class="fas fa-superscript"></i></button>
+                <button id="subscript-btn" data-tooltip="Subscript (Ctrl+,)"><i class="fas fa-subscript"></i></button>
+                <span class="toolbar-divider"></span>
+                <button id="ul-btn" data-tooltip="Bulleted List (*+Space)"><i class="fas fa-list-ul"></i></button>
+                <button id="ol-btn" data-tooltip="Numbered List (Ctrl+Shift+8)"><i class="fas fa-list-ol"></i></button>
+                <button id="checkbox-btn" data-tooltip="Checkbox ([]+Space)"><i class="far fa-check-square"></i></button>
+                <span class="toolbar-divider"></span>
+            </div>
+
+            <div class="right">
+                <button id="pdf-btn" data-tooltip="PDF"><i class="fas fa-file-pdf"></i></button>
+                <button id="html-btn" data-tooltip="HTML"><i class="fas fa-file-code"></i></button>
+                <button id="copy-btn" data-tooltip="Copy Text"><i class="far fa-copy"></i></button>
+                <span class="toolbar-divider"></span>
+                <button id="download-json-btn" data-tooltip="Download"><i class="fa-solid fa-cloud-arrow-down"></i></button>
+                <button id="upload-json-btn" data-tooltip="Upload"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+                <span class="toolbar-divider"></span>
+                <button id="modeToggle-btn" data-tooltip="Dark/Light Mode"><i id="mode-icon" class="far fa-lightbulb"></i></button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="popup-overlay" class="hidden">
+        <div id="popup"></div>
     </div>
 
-    <div id="toolbar">
-        <div class="left">
-            <span id="wordCharCount" title="Word and Character Count"></span>
-            <span id="readTime" title="Estimated Read Time"></span>
-        </div>
-
-        <div class="center">
-            <button id="textColor" title="Text Color"><i class="fas fa-paint-brush"></i></button>
-            <span class="toolbar-divider"></span>
-            <button id="fontFamily" title="Font Family"><i class="fas fa-font"></i></button>
-            <button id="fontSize" title="Font Size"><i class="fas fa-text-height"></i></button>
-            <button id="letterSpacing" title="Letter Spacing"><i class="fas fa-text-width"></i></button>
-            <button id="lineSpacing" title="Line Spacing"><i class="fas fa-bars"></i></button>
-            <button id="textAlign" title="Text Align"><i class="fas fa-align-left"></i></button>
-            <span class="toolbar-divider"></span>
-            <button onclick="formatDoc('bold')" title="Bold"><i class="fas fa-bold"></i></button>
-            <button onclick="formatDoc('italic')" title="Italic"><i class="fas fa-italic"></i></button>
-            <button onclick="formatDoc('underline')" title="Underline"><i class="fas fa-underline"></i></button>
-            <button onclick="formatDoc('strikethrough')" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
-            <button onclick="formatDoc('superscript')" title="Superscript"><i class="fas fa-superscript"></i></button>
-            <button onclick="formatDoc('subscript')" title="Subscript"><i class="fas fa-subscript"></i></button>
-            <span class="toolbar-divider"></span>
-            <button onclick="formatDoc('insertUnorderedList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
-            <button onclick="formatDoc('insertOrderedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
-
-            <button onclick="insertCheckbox()" title="Insert Checkbox"><i class="far fa-check-square"></i></button>
-        </div>
-
-        <div class="right">
-            <button onclick="downloadPDF()" title="Download PDF"><i class="fas fa-file-pdf"></i></button>
-            <button onclick="downloadHTML()" title="Download HTML"><i class="fas fa-file-code"></i></button>
-            <button onclick="copyText()" title="Copy Text"><i class="far fa-copy"></i></button>
-            <span class="toolbar-divider"></span>
-            <button onclick="toggleMode()" id="modeToggle" title="Dark/Light Mode"><i class="far fa-lightbulb"></i></button>
-        </div>
-    </div>
-
-    <div id="popup" class="popup"></div>
-    <div id="colorPicker" class="color-picker"></div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
