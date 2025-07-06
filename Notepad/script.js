@@ -1,6 +1,8 @@
 
 
-// DOM Elements
+'use strict';
+
+// --- DOM Elements ---
 const editor = document.getElementById('editor');
 const wordCharCountEl = document.getElementById('wordCharCount');
 const readTimeEl = document.getElementById('readTime');
@@ -9,7 +11,7 @@ const popupOverlay = document.getElementById('popup-overlay');
 const appContent = document.getElementById('app-content');
 const tabsList = document.getElementById('tabs-list');
 
-// State Management
+// --- State Management ---
 let state = {
     tabs: [],
     activeTabId: null,
@@ -19,8 +21,7 @@ let messageTimeout = null;
 let currentSelection = null;
 let saveTimer = null; // For debouncing editor saves
 
-
-// Toolbar Options
+// --- Toolbar Options ---
 const fontFamilies = ['Sanchez', 'Poppins', 'Prata', 'Roboto', 'Merienda'];
 const fontSizes = ['12px', '13px', '14px', '16px', '18px', '20px', '24px', '28px'];
 const letterSpacings = ['normal', '0.5px', '1px', '1.5px', '2px'];
@@ -29,21 +30,32 @@ const colors = ['#FFFFFF', '#000000', '#FF0000', '#00FF00', '#FF7F50', '#FFFF00'
 const alignments = ['Left', 'Center', 'Right', 'Justify'];
 
 // --- INITIALIZATION ---
+
+/**
+ * Initializes the application upon page load.
+ */
 window.addEventListener('load', () => {
     loadState();
     initTabs();
     initSortable();
+    initEditorSortable();
     initDarkMode();
     setupEventListeners();
     setupMutationObserver();
     editor.focus();
     document.execCommand('styleWithCSS', false, true);
+
+    // Hide toolbar and tabs by default
+    document.getElementById('toolbar').classList.add('hidden');
+    document.getElementById('tabs-container').classList.add('hidden');
 });
 
-// Add beforeunload listener to guarantee data is saved on exit.
+/**
+ * Ensures the current state is saved before the user leaves the page.
+ * This handles saving pending tab name edits and the current editor content.
+ */
 window.addEventListener('beforeunload', () => {
-    // First, commit any pending tab name changes. This handles the case where a user
-    // edits a tab name and refreshes the page before the 'blur' event can save the change.
+    // Commit any pending tab name changes from an element that is still in focus.
     const editingTabNameEl = document.querySelector('.tab-name[contenteditable="true"]');
     if (editingTabNameEl) {
         const tabEl = editingTabNameEl.closest('.tab');
@@ -57,67 +69,104 @@ window.addEventListener('beforeunload', () => {
         }
     }
 
-    // If a content save is scheduled, cancel it to avoid redundant saves.
+    // If a debounced save is pending, clear it to avoid redundant saves.
     if (saveTimer) {
         clearTimeout(saveTimer);
     }
     
-    // Finally, save the current tab's content. This function also calls saveState(),
-    // persisting both the editor content and any tab name changes made above.
+    // Save the current tab's content immediately. This also saves the overall state.
     saveCurrentTabContent();
 });
 
+// --- STATE & DATA ---
+
+/**
+ * Loads the application state from localStorage.
+ * If no state is found or if the stored state is invalid, it falls back to a default state.
+ */
 function loadState() {
     const savedState = localStorage.getItem('notepadState');
     if (savedState) {
         try {
             const parsedState = JSON.parse(savedState);
-            // Add validation to ensure the loaded data is in the expected format.
+            // Validate the structure of the loaded state.
             if (parsedState && Array.isArray(parsedState.tabs) && parsedState.hasOwnProperty('activeTabId')) {
                 state = parsedState;
             } else {
-                // This handles cases where localStorage has data but it's not the right shape.
                 console.warn('Found invalid state in localStorage. Starting with a fresh state.');
             }
         } catch (e) {
             console.error('Failed to parse notepad state from localStorage. Starting fresh.', e);
-            // If JSON is corrupted, we'll start with a fresh state instead of crashing.
         }
     }
 }
 
+/**
+ * Saves the current application state to localStorage.
+ */
 function saveState() {
     localStorage.setItem('notepadState', JSON.stringify(state));
 }
 
+/**
+ * Persists the content of the currently active tab to the state object.
+ * This function is debounced to prevent excessive writes to localStorage during typing.
+ */
+function handleEditorChange() {
+    updateCounts();
+    // Debounce the save operation to improve performance.
+    if (saveTimer) {
+        clearTimeout(saveTimer);
+    }
+    saveTimer = setTimeout(saveCurrentTabContent, 500); // Save 500ms after the last change.
+}
+
+/**
+ * Saves the editor's current HTML content to the active tab object and then saves the entire state.
+ * It checks if the content has actually changed to avoid redundant writes.
+ */
+function saveCurrentTabContent() {
+    const activeTab = state.tabs.find(t => t.id === state.activeTabId);
+    if (activeTab) {
+        if (activeTab.content !== editor.innerHTML) {
+            activeTab.content = editor.innerHTML;
+            saveState();
+        }
+    }
+}
+
+// --- INITIALIZATION HELPERS ---
+
+/**
+ * Initializes the tab system. Creates a default tab if none exist.
+ * Renders the tabs and loads the content of the active tab.
+ */
 function initTabs() {
-    // If state is empty, create a default tab.
     if (state.tabs.length === 0) {
         const newTab = { id: Date.now(), name: 'Tab #1', content: '' };
         state.tabs.push(newTab);
         state.activeTabId = newTab.id;
-        saveState(); // Persist the newly created tab state immediately.
+        saveState();
     }
 
-    // Ensure the activeTabId is valid, falling back to the first tab if not.
     let activeTab = state.tabs.find(t => t.id === state.activeTabId);
     if (!activeTab && state.tabs.length > 0) {
         state.activeTabId = state.tabs[0].id;
         activeTab = state.tabs[0];
-        saveState(); // Correct the invalid activeTabId in storage.
+        saveState();
     }
 
-    // Render the tab UI.
     renderTabs();
 
-    // Load the active tab's content into the editor and update counts.
     if (activeTab) {
         editor.innerHTML = activeTab.content || '';
         updateCounts();
     }
 }
 
-
+/**
+ * Initializes the drag-and-drop functionality for tabs using the Sortable.js library.
+ */
 function initSortable() {
     new Sortable(tabsList, {
         animation: 150,
@@ -135,16 +184,47 @@ function initSortable() {
     });
 }
 
+/**
+ * Initializes drag-and-drop for reordering elements within the editor.
+ */
+function initEditorSortable() {
+    new Sortable(editor, {
+        animation: 150,
+        ghostClass: 'editor-ghost',
+        // Sortablejs targets direct children by default, which works for block elements.
+        // The mutation observer will automatically trigger a save on reorder.
+    });
+}
+
+
+/**
+ * Sets the initial dark/light mode based on the value stored in localStorage.
+ */
 function initDarkMode() {
-    const modeIcon = document.getElementById('mode-icon');
-    if (localStorage.getItem('darkMode') === 'false') {
-        document.body.classList.remove('dark-mode');
-    } else {
+    if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
     }
 }
 
+/**
+ * Sets up a MutationObserver to watch for changes in the editor content.
+ */
+function setupMutationObserver() {
+    const observer = new MutationObserver(handleEditorChange);
+    observer.observe(editor, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+    });
+}
+
 // --- TAB MANAGEMENT ---
+
+/**
+ * Renders the list of tabs in the UI based on the current state.
+ */
 function renderTabs() {
     tabsList.innerHTML = '';
     state.tabs.forEach(tab => {
@@ -159,12 +239,12 @@ function renderTabs() {
         tabName.textContent = tab.name;
         tabName.className = 'tab-name';
         
+        // Handle single-click to switch tab
         tabEl.addEventListener('click', () => {
-             // Use a timeout to distinguish between single and double clicks
             if (clickTimeout) {
                 clearTimeout(clickTimeout);
                 clickTimeout = null;
-                return; // It's a double click, do nothing here
+                return;
             }
             clickTimeout = setTimeout(() => {
                 switchTab(tab.id);
@@ -172,6 +252,7 @@ function renderTabs() {
             }, 250);
         });
 
+        // Handle double-click to edit tab name
         tabEl.addEventListener('dblclick', () => {
             clearTimeout(clickTimeout);
             clickTimeout = null;
@@ -180,16 +261,15 @@ function renderTabs() {
             document.execCommand('selectAll', false, null);
         });
 
+        // Save tab name on blur
         tabName.addEventListener('blur', () => {
             tabName.contentEditable = false;
-            if (tabName.textContent.trim() === '') {
-                tabName.textContent = tab.name; // Revert if empty
-            } else {
-                tab.name = tabName.textContent;
-            }
+            tab.name = tabName.textContent.trim() || tab.name; // Revert if empty
             saveState();
+            renderTabs(); // Re-render to ensure consistency
         });
 
+        // Save tab name on Enter key
         tabName.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -207,18 +287,24 @@ function renderTabs() {
         
         tabEl.appendChild(tabName);
         tabEl.appendChild(closeBtn);
-
         tabsList.appendChild(tabEl);
     });
 }
 
+/**
+ * Creates and switches to a new tab.
+ */
 function addTab() {
-    saveCurrentTabContent(); // Save current tab before adding a new one
+    saveCurrentTabContent();
     const newTab = { id: Date.now(), name: `Tab #${state.tabs.length + 1}`, content: '' };
     state.tabs.push(newTab);
     switchTab(newTab.id);
 }
 
+/**
+ * Switches the active tab.
+ * @param {number} tabId - The ID of the tab to switch to.
+ */
 function switchTab(tabId) {
     if (state.activeTabId === tabId) return;
 
@@ -235,64 +321,62 @@ function switchTab(tabId) {
     }
 }
 
+/**
+ * Deletes a tab and handles switching to a new active tab if necessary.
+ * @param {number} tabIdToDelete - The ID of the tab to delete.
+ */
 function deleteTab(tabIdToDelete) {
     const tabIndex = state.tabs.findIndex(t => t.id === tabIdToDelete);
     if (tabIndex === -1) return;
 
     const wasActive = state.activeTabId === tabIdToDelete;
 
-    // Remove tab from state
+    // Remove the tab from the state array.
     state.tabs.splice(tabIndex, 1);
 
     if (wasActive) {
-        // If it was the active tab, we need to pick a new one and switch
+        // If the deleted tab was the active one, we must select a new active tab.
         if (state.tabs.length > 0) {
+            // A common strategy is to activate the tab to the left, or the first tab
+            // if the deleted one was at the beginning of the list.
             const newActiveIndex = Math.max(0, tabIndex - 1);
-            state.activeTabId = state.tabs[newActiveIndex].id;
-            switchTab(state.activeTabId);
-
+            const newActiveTabId = state.tabs[newActiveIndex].id;
+            
+            // Call switchTab with the new ID. It will handle loading content,
+            // re-rendering, and saving the state. `state.activeTabId` still holds
+            // the old (deleted) ID at this point, so the guard clause in `switchTab`
+            // will not prevent it from running.
+            switchTab(newActiveTabId);
         } else {
-            // No tabs left, create a new one
+            // If the last tab was deleted, create a fresh one.
             addTab();
         }
     } else {
-        // It was not the active tab. Just re-render the tabs and save.
+        // If an inactive tab was deleted, the active tab remains the same.
+        // We just need to re-render the UI and save the updated tabs array.
         renderTabs();
         saveState();
     }
 }
 
-// --- EVENT LISTENERS & OBSERVER ---
+// --- EVENT LISTENERS ---
+
+/**
+ * Sets up all initial event listeners for the application.
+ */
 function setupEventListeners() {
+    // Editor listeners
     editor.addEventListener('paste', handlePaste);
     editor.addEventListener('keydown', handleKeyDown);
     editor.addEventListener('click', handleEditorClick);
 
-    document.getElementById('add-tab-btn').onclick = addTab;
-    document.getElementById('textColor-btn').onclick = () => showOptionsPopup('Text Color', colors, (color) => formatDoc('foreColor', color));
-    document.getElementById('fontFamily-btn').onclick = () => showOptionsPopup('Font Family', fontFamilies, (font) => formatDoc('fontName', font));
-    document.getElementById('fontSize-btn').onclick = () => showOptionsPopup('Font Size', fontSizes, applyStyleToSelection('fontSize'));
-    document.getElementById('letterSpacing-btn').onclick = () => showOptionsPopup('Letter Spacing', letterSpacings, applyStyleToSelection('letterSpacing'));
-    document.getElementById('lineSpacing-btn').onclick = () => showOptionsPopup('Line Spacing', lineSpacings, applyStyleToSelection('lineHeight'));
-    document.getElementById('textAlign-btn').onclick = () => showOptionsPopup('Text Align', alignments, (val) => formatDoc('justify' + val));
-    
-    document.getElementById('bold-btn').onclick = () => formatDoc('bold');
-    document.getElementById('italic-btn').onclick = () => formatDoc('italic');
-    document.getElementById('underline-btn').onclick = () => formatDoc('underline');
-    document.getElementById('strikethrough-btn').onclick = () => formatDoc('strikethrough');
-    document.getElementById('superscript-btn').onclick = () => formatDoc('superscript');
-    document.getElementById('subscript-btn').onclick = () => formatDoc('subscript');
-    document.getElementById('ul-btn').onclick = () => formatDoc('insertUnorderedList');
-    document.getElementById('ol-btn').onclick = () => formatDoc('insertOrderedList');
-    document.getElementById('checkbox-btn').onclick = insertCheckbox;
-    
-    document.getElementById('pdf-btn').onclick = downloadPDF;
-    document.getElementById('html-btn').onclick = downloadHTML;
-    document.getElementById('copy-btn').onclick = copyText;
-    document.getElementById('download-json-btn').onclick = downloadJSON;
-    document.getElementById('upload-json-btn').onclick = uploadJSON;
-    document.getElementById('modeToggle-btn').onclick = toggleMode;
+    // Tab listeners
+    document.getElementById('add-tab-btn').addEventListener('click', addTab);
 
+    // Toolbar Listeners
+    setupToolbarListeners();
+
+    // Popup and Global Listeners
     popupOverlay.addEventListener('click', (e) => {
         if (e.target === popupOverlay) {
             hidePopup();
@@ -300,47 +384,64 @@ function setupEventListeners() {
     });
 
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            if (!popupOverlay.classList.contains('hidden')) {
-                hidePopup();
-            }
+        // Hide popup on escape
+        if (e.key === 'Escape' && !popupOverlay.classList.contains('hidden')) {
+            hidePopup();
+        }
+        
+        // Toggle toolbar and tabs visibility with Ctrl + \
+        if ((e.ctrlKey || e.metaKey) && e.key === '\\') {
+            e.preventDefault();
+            document.getElementById('toolbar').classList.toggle('hidden');
+            document.getElementById('tabs-container').classList.toggle('hidden');
         }
     });
 }
 
-function setupMutationObserver() {
-    const observer = new MutationObserver(() => {
-        handleEditorChange();
-    });
+/**
+ * Attaches click event listeners to all toolbar buttons.
+ */
+function setupToolbarListeners() {
+    const listeners = {
+        'textColor-btn': () => showOptionsPopup('Text Color', colors, (color) => formatDoc('foreColor', color)),
+        'fontFamily-btn': () => showOptionsPopup('Font Family', fontFamilies, (font) => formatDoc('fontName', font)),
+        'fontSize-btn': () => showOptionsPopup('Font Size', fontSizes, applyStyleToSelection('fontSize')),
+        'letterSpacing-btn': () => showOptionsPopup('Letter Spacing', letterSpacings, applyStyleToSelection('letterSpacing')),
+        'lineSpacing-btn': () => showOptionsPopup('Line Spacing', lineSpacings, applyStyleToSelection('lineHeight')),
+        'textAlign-btn': () => showOptionsPopup('Text Align', alignments, (val) => formatDoc('justify' + val)),
+        'bold-btn': () => formatDoc('bold'),
+        'italic-btn': () => formatDoc('italic'),
+        'underline-btn': () => formatDoc('underline'),
+        'strikethrough-btn': () => formatDoc('strikethrough'),
+        'superscript-btn': () => formatDoc('superscript'),
+        'subscript-btn': () => formatDoc('subscript'),
+        'ul-btn': () => formatDoc('insertUnorderedList'),
+        'ol-btn': () => formatDoc('insertOrderedList'),
+        'checkbox-btn': insertCheckbox,
+        'hr-btn': insertDivider,
+        'pdf-btn': downloadPDF,
+        'html-btn': downloadHTML,
+        'copy-btn': copyText,
+        'download-json-btn': downloadJSON,
+        'upload-json-btn': uploadJSON,
+        'modeToggle-btn': toggleMode,
+    };
 
-    observer.observe(editor, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-    });
-}
-
-// --- EDITOR HANDLERS ---
-function handleEditorChange() {
-    updateCounts();
-    // Debounce the save operation to improve performance and avoid rapid-fire saves from MutationObserver.
-    if (saveTimer) {
-        clearTimeout(saveTimer);
-    }
-    saveTimer = setTimeout(saveCurrentTabContent, 500); // Save 500ms after the last change.
-}
-
-function saveCurrentTabContent() {
-    const activeTab = state.tabs.find(t => t.id === state.activeTabId);
-    if (activeTab) {
-        // Only save if the content has actually changed to prevent redundant saves.
-        if (activeTab.content !== editor.innerHTML) {
-            activeTab.content = editor.innerHTML;
-            saveState();
+    for (const [id, listener] of Object.entries(listeners)) {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.addEventListener('click', listener);
         }
     }
 }
 
+
+// --- EDITOR & KEYBOARD HANDLERS ---
+
+/**
+ * Handles clicks inside the editor, specifically to open links in a new tab.
+ * @param {MouseEvent} e - The click event.
+ */
 function handleEditorClick(e) {
     const link = e.target.closest('a');
     if (link && link.href) {
@@ -349,6 +450,10 @@ function handleEditorClick(e) {
     }
 }
 
+/**
+ * Handles the paste event to sanitize pasted text and auto-link URLs.
+ * @param {ClipboardEvent} e - The paste event.
+ */
 function handlePaste(e) {
     e.preventDefault();
     const text = (e.clipboardData || window.clipboardData).getData('text/plain');
@@ -361,72 +466,47 @@ function handlePaste(e) {
     }
 }
 
+/**
+ * Retrieves detailed information about the current user selection.
+ * @returns {object} An object containing the selection, range, and relevant nodes.
+ */
 function getSelectionInfo() {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return {};
     const range = selection.getRangeAt(0);
-    const node = range.startContainer;
-
-    let block = node;
-    while (block && block.parentNode !== editor) {
-        block = block.parentNode;
-        if (block === editor) break;
-    }
-    
-    if (!block || block === editor) {
-        block = node.nodeType === 1 ? node : node.parentNode;
-    }
-    
-    const rangeBefore = document.createRange();
-    let atBlockStart = false;
-    if (block !== editor && block.isContentEditable) {
-        try {
-            rangeBefore.setStart(block, 0);
-            rangeBefore.setEnd(range.startContainer, range.startOffset);
-            atBlockStart = rangeBefore.toString().trim() === '';
-        } catch (e) {
-            // Error can happen in complex scenarios, default to false
-            atBlockStart = false;
-        }
-    }
-
-    return { selection, range, node, block, atBlockStart };
+    return { selection, range, node: range.startContainer };
 }
 
-
+/**
+ * Handles keydown events in the editor for shortcuts and markdown-like features.
+ * @param {KeyboardEvent} e - The keydown event.
+ */
 function handleKeyDown(e) {
+    const { selection, range, node } = getSelectionInfo();
+    const modifier = e.ctrlKey || e.metaKey;
+
     // Markdown-style shortcuts
-    if (e.key === ' ') {
-        const { selection, range, node } = getSelectionInfo();
-        if (node && range.collapsed && node.nodeType === 3) { // nodeType 3 is Text node
-            const textBeforeCursor = node.textContent.substring(0, range.startOffset);
-            const trimmedText = textBeforeCursor.trim();
+    if (e.key === ' ' && node && range.collapsed && node.nodeType === 3) {
+        const textBeforeCursor = node.textContent.substring(0, range.startOffset);
+        const trimmedText = textBeforeCursor.trim();
+        if (trimmedText === '*' || trimmedText === '[]') {
+            e.preventDefault();
+            const startIndex = textBeforeCursor.indexOf(trimmedText);
+            node.textContent = node.textContent.substring(0, startIndex) + node.textContent.substring(range.startOffset);
+            range.setStart(node, startIndex);
+            range.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(range);
 
-            if (trimmedText === '*' || trimmedText === '[]') {
-                e.preventDefault();
-                const startIndex = textBeforeCursor.indexOf(trimmedText);
-
-                // Manually remove the trigger text by rebuilding the text node's content
-                node.textContent = node.textContent.substring(0, startIndex) + node.textContent.substring(range.startOffset);
-
-                // Move cursor to the position where the trigger text was
-                range.setStart(node, startIndex);
-                range.collapse(true);
-                selection.removeAllRanges();
-                selection.addRange(range);
-
-                if (trimmedText === '*') {
-                    formatDoc('insertUnorderedList');
-                } else { // '[]'
-                    insertCheckbox();
-                }
-                return;
-            }
+            if (trimmedText === '*') formatDoc('insertUnorderedList');
+            else insertCheckbox();
+            return;
         }
     }
 
+    // --- for horizontal rule
     if (e.key === 'Enter') {
-        const { selection, block } = getSelectionInfo();
+        const block = node.nodeType === 1 ? node : node.parentNode;
         if (block && block !== editor && block.textContent.trim() === '---') {
             e.preventDefault();
             const hr = document.createElement('hr');
@@ -434,34 +514,30 @@ function handleKeyDown(e) {
             parent.replaceChild(hr, block);
             
             const newBlock = document.createElement('div');
-            newBlock.innerHTML = '<br>'; // Ensures it's visible and editable
+            newBlock.innerHTML = '<br>';
             parent.insertBefore(newBlock, hr.nextSibling);
             
             const newRange = document.createRange();
             newRange.setStart(newBlock, 0);
-            newRange.collapse(true);
             selection.removeAllRanges();
             selection.addRange(newRange);
             return;
         }
     }
-
-    // Use a single modifier check for Ctrl on Win/Linux and Cmd on Mac
-    const modifier = e.ctrlKey || e.metaKey;
-
+    
+    // Ctrl/Cmd + K for link
     if (modifier && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        const selection = window.getSelection();
         if (selection.toString().length > 0) {
             currentSelection = selection.getRangeAt(0).cloneRange();
             showLinkPopup();
         } else {
             showPopupMessage('Select text to create a link');
         }
-        return; // Early return to not conflict with other shortcuts
+        return;
     }
     
-    // Formatting shortcuts
+    // Standard formatting shortcuts
     if (modifier) {
         let command = null;
         switch(e.key.toLowerCase()){
@@ -471,7 +547,6 @@ function handleKeyDown(e) {
             case 's': if(e.shiftKey) command = 'strikethrough'; break;
             case '.': command = 'superscript'; break;
             case ',': command = 'subscript'; break;
-            case '7': if(e.shiftKey) command = 'insertUnorderedList'; break;
             case '8': if(e.shiftKey) command = 'insertOrderedList'; break;
         }
         if(command){
@@ -481,48 +556,24 @@ function handleKeyDown(e) {
         }
     }
 
-    if (e.key === 'Tab' && !e.shiftKey) {
+    // Tab for indentation
+    if (e.key === 'Tab') {
         e.preventDefault();
-        document.execCommand('indent');
-    }
-    if (e.key === 'Tab' && e.shiftKey) {
-        e.preventDefault();
-        document.execCommand('outdent');
+        document.execCommand(e.shiftKey ? 'outdent' : 'indent');
     }
 }
 
+/**
+ * Updates the word count, character count, and estimated read time.
+ */
 function updateCounts() {
-    // To accurately count, we create a temporary clone of the editor 
-    // and remove elements that shouldn't be part of the count.
     const editorClone = editor.cloneNode(true);
-
-    // Remove horizontal rules which don't count as text
-    editorClone.querySelectorAll('hr').forEach(hr => hr.remove());
-
-    // Remove checkbox wrappers, which contain a non-rendering input and a space character
-    editorClone.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-        if (checkbox.parentElement) {
-            checkbox.parentElement.remove();
-        }
-    });
-
-    // Remove divs that are just placeholders for the '---' divider
-    Array.from(editorClone.children).forEach(child => {
-        if (child.textContent.trim() === '---') {
-            child.remove();
-        }
-    });
-
-    const text = editorClone.innerText;
+    editorClone.querySelectorAll('hr, input[type="checkbox"]').forEach(el => el.parentElement.remove());
+    const text = editorClone.innerText || '';
     const trimmedText = text.trim();
 
-    // Word count is based on trimmed text, splitting by one or more whitespace characters.
     const wordCount = trimmedText === '' ? 0 : trimmedText.split(/\s+/).filter(Boolean).length;
-    
-    // Character count should be 0 if the editor is effectively empty (contains only whitespace).
-    // Otherwise, it's the length of the text from our cleaned-up clone.
-    const charCount = trimmedText === '' ? 0 : text.length;
-    
+    const charCount = text.length;
     const readTime = Math.ceil(wordCount / 200);
 
     wordCharCountEl.innerHTML = `<i class="fas fa-font"></i>&nbsp; ${wordCount} words &nbsp;|&nbsp; ${charCount} characters`;
@@ -531,11 +582,23 @@ function updateCounts() {
 
 
 // --- TOOLBAR ACTIONS ---
+
+/**
+ * Executes a document formatting command.
+ * @param {string} cmd - The command to execute (e.g., 'bold', 'italic').
+ * @param {string|null} value - The value for the command, if any.
+ */
 function formatDoc(cmd, value = null) {
     document.execCommand(cmd, false, value);
     editor.focus();
 }
 
+/**
+ * Applies a CSS style to the selected text.
+ * This function has a robust fallback for complex selections that cross element boundaries.
+ * @param {string} styleProperty - The CSS property to apply (e.g., 'fontSize').
+ * @returns {function(string): void} A function that takes the style value.
+ */
 function applyStyleToSelection(styleProperty) {
     return function(styleValue) {
         const selection = window.getSelection();
@@ -545,36 +608,38 @@ function applyStyleToSelection(styleProperty) {
         if (range.collapsed) {
             document.execCommand('formatBlock', false, 'div');
             const container = range.startContainer.parentNode;
-            if(container && container !== editor) {
-                 container.style[styleProperty] = styleValue;
+            if (container && container !== editor) {
+                container.style[styleProperty] = styleValue;
             }
         } else {
             const span = document.createElement('span');
             span.style[styleProperty] = styleValue;
-            
             try {
                 range.surroundContents(span);
             } catch (e) {
-                // Fallback for complex selections
-                document.execCommand('fontSize', false, '7'); // a large size
-                const tempElements = editor.getElementsByTagName('font');
-                while(tempElements.length > 0) {
-                    const tempEl = tempElements[0];
-                    const parent = tempEl.parentNode;
+                // Fallback for complex selections (e.g., across multiple paragraphs).
+                // Uses a "magic color" to mark the text, which is safer than using generic tags.
+                const magicColor = '#1a2b3c';
+                document.execCommand('foreColor', false, magicColor);
+                
+                editor.querySelectorAll(`font[color="${magicColor}"]`).forEach(tempEl => {
                     const newSpan = document.createElement('span');
                     newSpan.style[styleProperty] = styleValue;
-                    newSpan.innerHTML = tempEl.innerHTML;
-                    parent.replaceChild(newSpan, tempEl);
-                }
-                 document.execCommand('fontSize', false, '3'); // reset to default
+                    while (tempEl.firstChild) {
+                        newSpan.appendChild(tempEl.firstChild);
+                    }
+                    tempEl.parentNode.replaceChild(newSpan, tempEl);
+                });
             }
         }
-        
         editor.focus();
     };
 }
 
 
+/**
+ * Inserts a custom checkbox element into the editor.
+ */
 function insertCheckbox() {
     const checkboxWrapper = document.createElement('span');
     checkboxWrapper.contentEditable = false;
@@ -585,6 +650,7 @@ function insertCheckbox() {
         const range = selection.getRangeAt(0);
         range.deleteContents();
         range.insertNode(checkboxWrapper);
+        // Place cursor after the inserted checkbox
         range.setStartAfter(checkboxWrapper);
         range.collapse(true);
         selection.removeAllRanges();
@@ -592,11 +658,28 @@ function insertCheckbox() {
     }
 }
 
+/**
+ * Inserts a horizontal rule (divider) into the editor.
+ */
+function insertDivider() {
+    // Using insertHTML is a reliable way to add the HR and a new block for typing.
+    // It places the content at the cursor, splitting blocks if necessary,
+    // and the browser will automatically place the cursor in the new div.
+    document.execCommand('insertHTML', false, '<hr><div><br></div>');
+    editor.focus();
+}
+
+/**
+ * Toggles between light and dark mode.
+ */
 function toggleMode() {
     const isDarkMode = document.body.classList.toggle('dark-mode');
     localStorage.setItem('darkMode', isDarkMode);
 }
 
+/**
+ * Downloads the entire notepad state (all tabs) as a JSON file.
+ */
 function downloadJSON() {
     saveCurrentTabContent();
     const dataStr = JSON.stringify(state, null, 2);
@@ -604,13 +687,14 @@ function downloadJSON() {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'notepad-data.json';
-    document.body.appendChild(a); // For compatibility
     a.click();
-    document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
     showPopupMessage('Notepad data downloaded!');
 }
 
+/**
+ * Opens a file dialog to upload and load a notepad state from a JSON file.
+ */
 function uploadJSON() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -625,30 +709,9 @@ function uploadJSON() {
                 const parsedState = JSON.parse(readerEvent.target.result);
                 if (parsedState && Array.isArray(parsedState.tabs) && parsedState.hasOwnProperty('activeTabId')) {
                     state = parsedState;
-
-                    if (state.tabs.length === 0) {
-                        // If loaded state is empty, re-initialize
-                        initTabs();
-                        showPopupMessage('Empty notepad loaded, created a new tab.');
-                        return;
-                    }
-                    
-                    let activeTab = state.tabs.find(t => t.id === state.activeTabId);
-                    
-                    // If active tab from file is not found, default to the first tab
-                    if (!activeTab) {
-                        state.activeTabId = state.tabs[0].id;
-                        activeTab = state.tabs[0];
-                    }
-
-                    // Manually update the UI since switchTab() might not trigger a change
-                    editor.innerHTML = activeTab.content || '';
-                    renderTabs();
-                    updateCounts();
-                    saveState(); // Save the newly loaded state
-
+                    initTabs(); // Re-initialize UI with the new state
+                    saveState();
                     showPopupMessage('Notepad data loaded successfully!');
-
                 } else {
                     showPopupMessage('Invalid notepad data file.');
                 }
@@ -662,43 +725,31 @@ function uploadJSON() {
     input.click();
 }
 
+/**
+ * Generates and downloads a PDF of the current tab's content.
+ */
 function downloadPDF() {
     const activeTab = state.tabs.find(t => t.id === state.activeTabId);
     if (!activeTab) return;
 
     showPopupMessage('Generating PDF...');
 
-    // Create a temporary, off-screen container for PDF generation
     const printContainer = document.createElement('div');
-    printContainer.style.position = 'absolute';
-    printContainer.style.left = '-9999px';
-    printContainer.style.width = '210mm'; // A4 width
-
-    // This wrapper ensures a consistent white background and black text for the PDF
     const contentWrapper = document.createElement('div');
     contentWrapper.style.backgroundColor = '#ffffff';
     contentWrapper.style.color = '#000000';
-    contentWrapper.style.padding = '0';
-    contentWrapper.style.margin = '0';
     contentWrapper.style.fontFamily = `'Sanchez', serif`;
 
     const pdfContent = document.createElement('div');
     pdfContent.style.padding = '20px 40px';
     pdfContent.style.lineHeight = '1.6';
     pdfContent.style.fontSize = '14px';
-    pdfContent.style.fontFamily = 'inherit';
-    pdfContent.style.color = 'inherit';
-    pdfContent.style.backgroundColor = 'inherit';
     pdfContent.innerHTML = editor.innerHTML;
     
-    // Force link color to be standard blue for PDF
-    pdfContent.querySelectorAll('a').forEach(link => {
-        link.style.color = '#0000EE';
-    });
+    pdfContent.querySelectorAll('a').forEach(link => { link.style.color = '#0000EE'; });
 
     contentWrapper.appendChild(pdfContent);
     printContainer.appendChild(contentWrapper);
-    document.body.appendChild(printContainer);
     
     const options = {
         margin: [0.5, 0.5, 0.5, 0.5],
@@ -709,42 +760,21 @@ function downloadPDF() {
     };
 
     html2pdf().from(contentWrapper).set(options).save().then(() => {
-        document.body.removeChild(printContainer); // Clean up the temporary element
         showPopupMessage('PDF downloaded!');
     }).catch(err => {
-        document.body.removeChild(printContainer);
         showPopupMessage('Error creating PDF.');
         console.error('PDF generation error:', err);
     });
 }
 
-
+/**
+ * Downloads the current tab's content as a standalone HTML file.
+ */
 function downloadHTML() {
     const activeTab = state.tabs.find(t => t.id === state.activeTabId);
     if (!activeTab) return;
 
-    const htmlContent = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>${activeTab.name}</title>
-            <style>
-                body { 
-                    font-family: 'Sanchez', serif; 
-                    line-height: 1.6;
-                    max-width: 800px;
-                    margin: 40px auto;
-                    padding: 0 20px;
-                }
-            </style>
-        </head>
-        <body>
-            ${editor.innerHTML}
-        </body>
-        </html>
-    `;
+    const htmlContent = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${activeTab.name}</title><style>body{font-family:'Sanchez',serif;line-height:1.6;max-width:800px;margin:40px auto;padding:0 20px;}</style></head><body>${editor.innerHTML}</body></html>`;
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -754,9 +784,11 @@ function downloadHTML() {
     showPopupMessage('HTML file downloaded!');
 }
 
+/**
+ * Copies the plain text content of the editor to the clipboard.
+ */
 function copyText() {
-    const textToCopy = editor.innerText;
-    navigator.clipboard.writeText(textToCopy)
+    navigator.clipboard.writeText(editor.innerText)
         .then(() => showPopupMessage('Text copied to clipboard!'))
         .catch(err => {
             showPopupMessage('Failed to copy text.');
@@ -764,8 +796,14 @@ function copyText() {
         });
 }
 
-
 // --- POPUP & UI FEEDBACK ---
+
+/**
+ * Shows a generic popup with a set of options for the user to click.
+ * @param {string} title - The title of the popup.
+ * @param {string[]} options - An array of options to display as buttons.
+ * @param {function} callback - The function to call with the selected option.
+ */
 function showOptionsPopup(title, options, callback) {
     popup.innerHTML = `
         <h3>${title}</h3>
@@ -776,12 +814,11 @@ function showOptionsPopup(title, options, callback) {
                 }
                 return `<button data-value="${option}">${option}</button>`;
             }).join('')}
-        </div>
-    `;
+        </div>`;
     popup.className = 'popup options';
     popup.onclick = (e) => {
-        const target = e.target.closest('button');
-        if (target && target.dataset.value) {
+        const target = e.target.closest('button[data-value]');
+        if (target) {
             callback(target.dataset.value);
             hidePopup();
         }
@@ -790,6 +827,9 @@ function showOptionsPopup(title, options, callback) {
     appContent.classList.add('blurred');
 }
 
+/**
+ * Shows a popup for inserting or editing a hyperlink.
+ */
 function showLinkPopup() {
     popup.innerHTML = `
         <h3>Add Link</h3>
@@ -799,8 +839,7 @@ function showLinkPopup() {
         <div class="popup-actions">
             <button id="link-cancel-btn">Cancel</button>
             <button id="link-ok-btn">OK</button>
-        </div>
-    `;
+        </div>`;
     popup.className = 'popup input';
     popupOverlay.classList.remove('hidden');
     appContent.classList.add('blurred');
@@ -811,7 +850,7 @@ function showLinkPopup() {
     document.getElementById('link-ok-btn').onclick = () => {
         let url = input.value.trim();
         if (url) {
-            if (!/^https?:\/\//i.test(url)) {
+            if (!/^(https?:\/\/|mailto:)/i.test(url)) {
                 url = 'http://' + url;
             }
             if (currentSelection) {
@@ -820,9 +859,8 @@ function showLinkPopup() {
                 selection.addRange(currentSelection);
                 document.execCommand('createLink', false, url);
                 
-                // Set target to _blank for the new link
-                const activeLink = selection.anchorNode.parentElement;
-                if(activeLink.tagName === 'A') {
+                const activeLink = selection.anchorNode.parentElement.closest('a');
+                if(activeLink) {
                     activeLink.target = '_blank';
                     activeLink.rel = 'noopener noreferrer';
                 }
@@ -832,7 +870,6 @@ function showLinkPopup() {
     };
 
     document.getElementById('link-cancel-btn').onclick = hidePopup;
-
     input.onkeydown = (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -841,6 +878,10 @@ function showLinkPopup() {
     };
 }
 
+/**
+ * Displays a short-lived message in a popup.
+ * @param {string} message - The message to display.
+ */
 function showPopupMessage(message) {
     if (messageTimeout) clearTimeout(messageTimeout);
 
@@ -850,11 +891,12 @@ function showPopupMessage(message) {
     popupOverlay.classList.remove('hidden');
     appContent.classList.add('blurred');
 
-    messageTimeout = setTimeout(() => {
-        hidePopup();
-    }, 2000);
+    messageTimeout = setTimeout(hidePopup, 2000);
 }
 
+/**
+ * Hides the currently active popup.
+ */
 function hidePopup() {
     popupOverlay.classList.add('hidden');
     appContent.classList.remove('blurred');
