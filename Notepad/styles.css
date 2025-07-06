@@ -1,21 +1,39 @@
 :root {
     --bg-color: #ffffff;
     --text-color: #000000;
-    --menu-bg: #f0f0f0;
-    --menu-text: #333333;
+    --editor-bg: #ffffff;
+    --toolbar-bg: rgba(240, 240, 240, 0.85);
+    --toolbar-text: #333333;
+    --toolbar-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     --popup-bg: #ffffff;
     --popup-text: #333333;
     --button-hover: #e0e0e0;
+    --tab-bg: #f0f0f0;
+    --tab-active-bg: #ffffff;
+    --tab-active-text: #337fd1;
+    --tab-hover-bg: #e0e0e0;
+    --link-color: #337fd1;
+    --border-color: #cfcfcf;
+    --overlay-bg: rgba(0, 0, 0, 0.4);
 }
 
 body.dark-mode {
     --bg-color: #282c34;
     --text-color: #ffffff;
-    --menu-bg: #3a3f4b;
-    --menu-text: #ffffff;
+    --editor-bg: #282c34;
+    --toolbar-bg: rgba(58, 63, 75, 0.85);
+    --toolbar-text: #ffffff;
+    --toolbar-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     --popup-bg: #3a3f4b;
     --popup-text: #ffffff;
     --button-hover: #4a4f5b;
+    --tab-bg: #3a3f4b;
+    --tab-active-bg: #282c34;
+    --tab-active-text: #00eaff;
+    --tab-hover-bg: #4a4f5b;
+    --link-color: #00eaff;
+    --border-color: #4d525d;
+    --overlay-bg: rgba(0, 0, 0, 0.6);
 }
 
 body {
@@ -25,37 +43,165 @@ body {
     background-color: var(--bg-color);
     color: var(--text-color);
     transition: background-color 0.3s, color 0.3s;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     height: 100vh;
+    overflow: hidden;
 }
 
-#editor-container {
-    width: 100%;
-    max-width: 100%;
-    height: calc(100vh - 100px);
-    margin: 0 auto 60px auto;
+#app-container {
+    position: relative;
+    height: 100vh;
+    width: 100vw;
+}
+
+#app-content {
     display: flex;
     flex-direction: column;
+    height: 100%;
+    width: 100%;
+    transition: filter 0.3s ease;
+}
+
+#app-content.blurred {
+    filter: blur(8px);
+    transform: scale(0.99);
+    pointer-events: none;
+}
+
+/* --- Tabs --- */
+#tabs-container {
+    display: flex;
+    align-items: center;
+    padding: 2px 10px;
+    background-color: var(--tab-bg);
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border-color);
+    overflow-x: auto;
+}
+
+#tabs-list {
+    display: flex;
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    background-color: transparent;
+    margin-right: 2px;
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    position: relative;
+    color: var(--text-color);
+    white-space: nowrap;
+    border: 1px solid transparent;
+    border-bottom: none;
+}
+
+.tab:hover {
+    background-color: var(--tab-hover-bg);
+}
+
+.tab.active {
+    background-color: var(--editor-bg);
+    color: var(--tab-active-text);
+    z-index: 2;
+    border-color: var(--border-color);
+}
+
+.tab.active .tab-name {
+    color: var(--tab-active-text);
+    font-weight: 500;
+}
+
+.tab-name {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    outline: none;
+    border: none;
+    background: transparent;
+    color: inherit;
+    padding: 0 8px 0 0;
+    min-width: 50px;
+}
+
+.tab-name[contenteditable="true"] {
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--tab-active-text);
+    cursor: text;
+}
+
+.close-tab-btn {
+    font-size: 12px;
+    padding: 4px;
+    border-radius: 50%;
+    transition: color 0.2s;
+    color: #686a6e;
+}
+
+.close-tab-btn:hover {
+    color: #e9897c;
+}
+
+#add-tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 14px;
+    padding: 5px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+#add-tab-btn:hover {
+    background-color: var(--button-hover);
+}
+
+.tab.sortable-ghost {
+    background: var(--tab-hover-bg);
+    opacity: 0.7;
+}
+
+/* --- Editor --- */
+#editor-container {
+    flex-grow: 1;
+    position: relative;
+    overflow-y: auto; /* Make this container scrollable */
+    background-color: var(--editor-bg);
 }
 
 #editor {
-    flex-grow: 1;
-    border: none;
+    height: 89.5%;
     outline: none;
-    font-size: 14px;
-    resize: none;
     box-sizing: border-box;
-    background-color: var(--bg-color);
+    background-color: var(--editor-bg);
     color: var(--text-color);
     overflow-y: auto;
     font-family: 'Sanchez', serif;
-    letter-spacing: 0.5px;
-    padding: 20px;
-    line-height: 1.5;
-    font-size: 25px;
+    padding: 20px 40px 120px 40px; /* Increased bottom padding for toolbar */
+    line-height: 1.6;
+    font-size: 14px;
+    min-height: 89.5%;
 }
+
+#editor a {
+    color: var(--link-color);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+hr {
+    border: none;
+    height: 1px;
+    background-color: #606571;
+    margin: 1em 0;
+}
+
+#editor:focus { border: none; outline: none; }
+#editor-container::-webkit-scrollbar { width: 8px; }
+#editor-container::-webkit-scrollbar-track { background: transparent; }
+#editor-container::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 4px; }
+#editor-container::-webkit-scrollbar-thumb:hover { background-color: var(--button-hover); }
 
 #editor::-webkit-scrollbar {
     width: 2px;
@@ -70,22 +216,28 @@ body {
     border-radius: 4px;
 }
 
+/* --- Floating Toolbar --- */
 #toolbar {
     position: fixed;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    width: 95%;
-    max-width: 100%;
-    background-color: var(--menu-bg);
-    color: var(--menu-text);
-    padding: 10px;
-    border-radius: 100px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: auto;
+    max-width: 90vw;
+    background-color: var(--toolbar-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--toolbar-text);
+    padding: 8px;
+    box-shadow: var(--toolbar-shadow);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Inter', sans-serif;
+    z-index: 10;
+    box-sizing: border-box;
+    border-radius: 100px;
+    border: 1px solid var(--border-color);
 }
 
 #toolbar button {
@@ -93,206 +245,167 @@ body {
     border: none;
     cursor: pointer;
     font-size: 16px;
-    color: var(--menu-text);
-    margin: 0 5px;
-    padding: 5px 10px;
-    border-radius: 4px;
+    color: var(--toolbar-text);
+    margin: 0 2px;
+    padding: 6px 10px;
+    border-radius: 8px;
     transition: background-color 0.2s;
+}
+
+#toolbar button:hover { background-color: var(--button-hover); }
+#toolbar .left, #toolbar .right, #toolbar .center { display: flex; align-items: center; }
+#toolbar .center { flex-grow: 1; justify-content: center; }
+#wordCharCount, #readTime { font-size: 12px; margin: 0 8px; white-space: nowrap; font-family: 'Inter', sans-serif;}
+.toolbar-divider { border-left: 1px solid var(--border-color); height: 20px; margin: 0 5px; }
+
+/* --- Checkbox --- */
+input[type="checkbox"] {
+    appearance: none; -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border: 2px solid var(--text-color); border-radius: 3px;
+    display: inline-block; vertical-align: middle;
+    position: relative; cursor: pointer; top: -2px;
+}
+input[type="checkbox"]:checked::before {
+    content: '✔'; font-size: 12px;
+    color: var(--link-color);
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* --- Popups --- */
+#popup-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--overlay-bg);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#popup-overlay.hidden { display: none; }
+
+#popup {
+    background-color: var(--popup-bg);
+    color: var(--popup-text);
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    padding: 20px 25px;
+    min-width: 280px;
+    max-width: 90%;
+    border: 1px solid var(--border-color);
+    font-family: 'Inter', sans-serif;
+}
+
+.popup h3 { margin: 0 0 15px; font-size: 16px; font-weight: 500; text-align: center; }
+
+.popup.message .popup-message-content { text-align: center; font-size: 14px; padding: 10px; }
+
+.popup.options .options-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.popup.options button {
+    background-color: transparent;
+    border: 2px solid var(--border-color);
+    color: var(--popup-text);
+    padding: 8px 12px;
+    cursor: pointer; border-radius: 8px;
+    transition: all 0.2s;
+}
+.popup.options button:hover {
+    color: white; border-color: var(--link-color);
+}
+
+.popup.input .popup-input-container { margin-bottom: 15px; }
+.popup.input input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    box-sizing: border-box;
+    font-size: 14px;
+}
+.popup.input .popup-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.popup.input button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+#link-cancel-btn { background-color: var(--button-hover); color: var(--text-color); }
+#link-ok-btn { background-color: var(--link-color); color: white; }
+
+.popup .color-swatch {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    padding: 0;
+}
+.popup .color-swatch:hover {
+    transform: scale(1.1) translateY(-2px);
+    border-color: var(--link-color);
+}
+
+.editor-for-pdf {
+    padding: 20px 40px;
+    line-height: 1.6;
+    font-size: 14px;
+    font-family: 'Sanchez', serif;
+    color: var(--text-color);
+    background-color: var(--editor-bg);
+}
+
+/* --- Stylish Tooltips --- */
+[data-tooltip] {
     position: relative;
 }
 
-#toolbar button:hover {
-    background-color: var(--button-hover);
-}
-
-#toolbar .left, #toolbar .right {
-    display: flex;
-    align-items: center;
-    padding-left: 10px;
-}
-
-#toolbar .center {
-    display: flex;
-    justify-content: center;
-    flex-grow: 1;
-}
-
-#wordCharCount, #readTime {
-    font-size: 12px;
-    margin-right: 10px;
-}
-
-#toolbar button::after {
-    content: attr(title);
+[data-tooltip]::after {
+    content: attr(data-tooltip);
     position: absolute;
     bottom: 100%;
     left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.8);
+    transform: translateX(-50%) translateY(5px);
+    background: #333;
     color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: 'Poppins', sans-serif;
     white-space: nowrap;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s, visibility 0.3s;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    z-index: 20;
 }
 
-#toolbar button:hover::after {
+body.dark-mode [data-tooltip]::after {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+[data-tooltip]:hover::after {
     opacity: 1;
     visibility: visible;
-}   
-
-input[type="checkbox"] {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    border: 2px solid #282828;
-    border-radius: 20px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    transform: translateX(-50%) translateY(0px);
 }
 
-.dark-mode input[type="checkbox"] {border: 2px solid #ffffff;}
-
-input[type="checkbox"]::before {
-    content: "";
-    width: 10px;
-    height: 10px;
-    border-radius: 20px;
-    transform: scale(0);
-    transition: 120ms transform ease-in-out;
-    background-color: #5aabfc;
-}
-
-.dark-mode input[type="checkbox"]::before {background-color: #00eaff;}
-
-input[type="checkbox"]:checked::before {
-    transform: scale(1);
-}
-
-.tooltip {
-    position: relative;
-    display: inline-block;
-    cursor: pointer;
-}
-
-.tooltip .tooltiptext {
-    visibility: hidden;
-    width: auto;
-    background-color: rgba(16, 16, 16, 0.8);
-    color: #fff;
-    text-align: center;
-    border-radius: 4px;
-    padding: 5px 10px;
-    position: absolute;
-    z-index: 1;
-    bottom: 125%;
-    left: 50%;
-    transform: translateX(-50%);
-    opacity: 0;
-    transition: opacity 0.3s;
-    font-size: 12px;
-    white-space: nowrap;
-}
-
-.tooltip:hover .tooltiptext {
-    visibility: visible;
-    opacity: 1;
-}
-
-.toolbar-divider {
-    border-left: 2px solid #cfcfcf;
-    height: 27px;
-}
-
-.dark-mode .toolbar-divider {
-    border-left: 2px solid #4d525d;
-}
-
-.popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: var(--popup-bg);
-    color: var(--popup-text);
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-}
-
-.popup h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-}
-
-.popup button {
-    background-color: transparent;
-    border: 1px solid var(--popup-text);
-    color: var(--popup-text);
-    width: 75px;
-    padding: 5px 10px;
-    margin: 5px;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.popup button:hover {
-    background-color: var(--popup-text);
-    color: var(--popup-bg);
-}
-
-.popup button[style*="background-color"] {
-    width: 25px;
-    height: 25px;
-    border: 1px solid var(--popup-text);
-    padding: 0;
-}
-
-.popup button[style*="background-color"]:hover {
-    transform: scale(1.1);
-}
-
-#popup.message {
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-size: 14px;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-}
-
-.blur-background {
-    filter: blur(5px);
-    transition: filter 0.3s ease-in-out;
-}
 
 @media (max-width: 768px) {
-    #toolbar {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    #toolbar .left, #toolbar .right {
+    #editor { padding: 15px 15px 120px 15px; } /* more padding for smaller toolbars */
+    #toolbar { flex-wrap: wrap; justify-content: center; padding: 5px; bottom: 10px; }
+    #toolbar .left {
+        order: 3;
         width: 100%;
         justify-content: center;
-        margin-bottom: 10px;
+        margin-top: 5px;
+        display: block;
+        text-align: center;
     }
-
-    #toolbar .center {
-        width: 100%;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    #toolbar button {
-        margin: 5px;
-    }
+    #toolbar .left span { display: inline-block; }
+    #toolbar .center { order: 1; flex-wrap: wrap; justify-content: center; }
+    #toolbar .right { order: 2; }
+    #toolbar button { margin: 2px; padding: 5px 8px; font-size: 15px; }
 }
