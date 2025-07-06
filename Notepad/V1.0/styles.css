@@ -1,0 +1,298 @@
+:root {
+    --bg-color: #ffffff;
+    --text-color: #000000;
+    --menu-bg: #f0f0f0;
+    --menu-text: #333333;
+    --popup-bg: #ffffff;
+    --popup-text: #333333;
+    --button-hover: #e0e0e0;
+}
+
+body.dark-mode {
+    --bg-color: #282c34;
+    --text-color: #ffffff;
+    --menu-bg: #3a3f4b;
+    --menu-text: #ffffff;
+    --popup-bg: #3a3f4b;
+    --popup-text: #ffffff;
+    --button-hover: #4a4f5b;
+}
+
+body {
+    font-family: 'Sanchez', serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#editor-container {
+    width: 100%;
+    max-width: 100%;
+    height: calc(100vh - 100px);
+    margin: 0 auto 60px auto;
+    display: flex;
+    flex-direction: column;
+}
+
+#editor {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    resize: none;
+    box-sizing: border-box;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    overflow-y: auto;
+    font-family: 'Sanchez', serif;
+    letter-spacing: 0.5px;
+    padding: 20px;
+    line-height: 1.5;
+    font-size: 25px;
+}
+
+#editor::-webkit-scrollbar {
+    width: 2px;
+}
+
+#editor::-webkit-scrollbar-track {
+    background: var(--bg-color);
+}
+
+#editor::-webkit-scrollbar-thumb {
+    background-color: #525969;
+    border-radius: 4px;
+}
+
+#toolbar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+    max-width: 100%;
+    background-color: var(--menu-bg);
+    color: var(--menu-text);
+    padding: 10px;
+    border-radius: 100px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Poppins', sans-serif;
+}
+
+#toolbar button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--menu-text);
+    margin: 0 5px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    position: relative;
+}
+
+#toolbar button:hover {
+    background-color: var(--button-hover);
+}
+
+#toolbar .left, #toolbar .right {
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+}
+
+#toolbar .center {
+    display: flex;
+    justify-content: center;
+    flex-grow: 1;
+}
+
+#wordCharCount, #readTime {
+    font-size: 12px;
+    margin-right: 10px;
+}
+
+#toolbar button::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+#toolbar button:hover::after {
+    opacity: 1;
+    visibility: visible;
+}   
+
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #282828;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dark-mode input[type="checkbox"] {border: 2px solid #ffffff;}
+
+input[type="checkbox"]::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 20px;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    background-color: #5aabfc;
+}
+
+.dark-mode input[type="checkbox"]::before {background-color: #00eaff;}
+
+input[type="checkbox"]:checked::before {
+    transform: scale(1);
+}
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: auto;
+    background-color: rgba(16, 16, 16, 0.8);
+    color: #fff;
+    text-align: center;
+    border-radius: 4px;
+    padding: 5px 10px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+.toolbar-divider {
+    border-left: 2px solid #cfcfcf;
+    height: 27px;
+}
+
+.dark-mode .toolbar-divider {
+    border-left: 2px solid #4d525d;
+}
+
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--popup-bg);
+    color: var(--popup-text);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+}
+
+.popup h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.popup button {
+    background-color: transparent;
+    border: 1px solid var(--popup-text);
+    color: var(--popup-text);
+    width: 75px;
+    padding: 5px 10px;
+    margin: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.popup button:hover {
+    background-color: var(--popup-text);
+    color: var(--popup-bg);
+}
+
+.popup button[style*="background-color"] {
+    width: 25px;
+    height: 25px;
+    border: 1px solid var(--popup-text);
+    padding: 0;
+}
+
+.popup button[style*="background-color"]:hover {
+    transform: scale(1.1);
+}
+
+#popup.message {
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+}
+
+.blur-background {
+    filter: blur(5px);
+    transition: filter 0.3s ease-in-out;
+}
+
+@media (max-width: 768px) {
+    #toolbar {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    #toolbar .left, #toolbar .right {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    #toolbar .center {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    #toolbar button {
+        margin: 5px;
+    }
+}
