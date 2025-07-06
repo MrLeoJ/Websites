@@ -1,5 +1,4 @@
 
-
 'use strict';
 
 // --- DOM Elements ---
@@ -199,9 +198,10 @@ function initEditorSortable() {
 
 /**
  * Sets the initial dark/light mode based on the value stored in localStorage.
+ * Defaults to dark mode if no setting is found.
  */
 function initDarkMode() {
-    if (localStorage.getItem('darkMode') === 'true') {
+    if (localStorage.getItem('darkMode') !== 'false') {
         document.body.classList.add('dark-mode');
     } else {
         document.body.classList.remove('dark-mode');
