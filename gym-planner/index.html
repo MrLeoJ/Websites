@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,8 +14,6 @@
     
     <!-- SortableJS Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <!-- html2pdf Library for PDF Export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     
@@ -71,7 +70,8 @@
         .main-header-left { display: flex; align-items: center; gap: 15px; }
         .data-buttons { display: flex; align-items: center; gap: 5px; }
         .week-title-container { display: flex; align-items: center; gap: 10px; }
-        .week-title-container h1 { font-size: 1.2rem; white-space: nowrap; }
+        .week-title-container h1 { font-size: 1.2rem; white-space: nowrap; cursor: pointer; transition: color 0.2s; }
+        .week-title-container h1:hover { color: var(--primary-color); }
         #start-date-input { display: none; }
         .calendar-container { flex-grow: 1; padding: 20px; overflow-y: auto; }
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 15px; min-height: calc(100vh - var(--header-height) - 40px); max-width: 100%; }
@@ -80,12 +80,14 @@
         .calendar.day-maximized { 
             display: flex;
             justify-content: center;
+            cursor: pointer;
         }
         .calendar.day-maximized .day:not(.maximized) { display: none; }
         .day.maximized {
             flex-grow: 0;
             flex-shrink: 0;
             width: 100%;
+            cursor: default;
         }
         .day.maximized .day-header { cursor: zoom-out; }
 
@@ -105,6 +107,8 @@
         .btn-danger:hover { background-color: #b00020; color: #fff; }
         .btn-info { background-color: var(--info-color); color: #fff; }
         .btn-info:hover { background-color: #1976D2; }
+        .btn-secondary { background-color: #424242; color: var(--text-color); }
+        .btn-secondary:hover { background-color: #555555; }
         .btn-full-width { width: 100%; margin-bottom: 10px; }
         .icon-btn { background: none; border: none; color: var(--text-color-secondary); cursor: pointer; padding: 5px; font-size: 1.2rem; line-height: 1; transition: color 0.2s; }
         .icon-btn:hover { color: var(--primary-color); }
@@ -129,7 +133,8 @@
 
         /* Calendar Components */
         .day { background-color: var(--surface-color); border-radius: 8px; display: flex; flex-direction: column; }
-        .day-header { padding: 10px 15px; font-weight: bold; text-align: center; border-bottom: 1px solid var(--border-color); cursor: zoom-in; }
+        .day-header { padding: 10px 15px; font-weight: bold; border-bottom: 1px solid var(--border-color); cursor: zoom-in; display: flex; align-items: center; justify-content: center; position: relative; }
+        .download-day-btn { position: absolute; right: 10px; font-size: 1rem; padding: 5px; line-height: 1; }
         .workout-list { padding: 10px; flex-grow: 1; min-height: 150px; }
         .workout-group-header { font-size: 0.8rem; font-weight: 600; color: #555; text-transform: uppercase; margin: 10px 0 8px; }
         .workout-group-header:first-child { margin-top: 0; }
@@ -177,7 +182,7 @@
         
         /* Modals & Notifications */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal { background-color: var(--surface-color); padding: 10px; border-radius: 8px; width: 90%; max-width: 800px; position: relative; }
+        .modal { background-color: var(--surface-color); padding: 25px; border-radius: 8px; width: 90%; max-width: 500px; position: relative; }
         .modal h3 { margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; color: var(--text-color-secondary); }
@@ -201,6 +206,52 @@
         .toast-close-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 0; line-height: 1;}
         .toast-undo-btn { background: none; border: none; color: #fff; font-weight: bold; text-decoration: underline; cursor: pointer; margin-left: 10px; padding: 5px; }
         #confirm-modal .modal-body { margin-bottom: 20px; }
+        
+        /* Info Modal Styles */
+        #info-modal-overlay .modal { max-width: 600px; }
+        #info-modal-overlay .close-modal-btn { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; }
+        #info-modal ul { list-style-type: none; padding: 0; margin: 0; }
+        #info-modal li { background-color: var(--bg-color); padding: 12px; border-radius: 5px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-color); }
+        #info-modal li i { color: var(--primary-color); font-size: 1.2rem; width: 20px; text-align: center; }
+        #info-modal li strong { color: var(--primary-color); }
+
+        /* Tooltip Styles */
+        .tooltip-host {
+            position: relative;
+        }
+        .tooltip {
+            position: absolute;
+            top: 100%; /* Position below the button */
+            left: 50%;
+            transform: translateX(-50%) translateY(10px); /* Start slightly down */
+            background-color: #2c2c2c;
+            color: var(--text-color);
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            line-height: 1.4;
+            white-space: nowrap;
+            z-index: 10;
+            pointer-events: none; /* So it doesn't interfere with hover state */
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .tooltip-host:hover .tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(5px); /* Move up into place */
+        }
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: 100%; /* Position arrow at the top of the tooltip */
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent #2c2c2c transparent; /* Arrow points up */
+        }
 
         /* Utility & Mobile */
         .hidden { display: none !important; }
@@ -216,10 +267,6 @@
                 width: 40%;
             }
         }
-        
-        /* PDF Print Styles */
-        @media print { body * { visibility: hidden; } #pdf-content, #pdf-content * { visibility: visible; } #pdf-content { position: absolute; left: 0; top: 0; width: 100%; } }
-        .pdf-print-area { display: none; }
     </style>
 </head>
 <body>
@@ -247,16 +294,27 @@
                     <button class="icon-btn" id="sidebar-open-btn" aria-label="Open sidebar"><i class="fa-solid fa-bars"></i></button>
                     <div class="week-title-container">
                         <h1 id="week-title">Week: </h1>
-                        <button class="icon-btn" id="date-picker-btn" aria-label="Select Week Start"><i class="fa-regular fa-calendar"></i></button>
                         <input type="date" id="start-date-input" aria-label="Week start date">
                     </div>
                 </div>
                 <div class="data-buttons">
-                    <button class="icon-btn" id="clear-plan-btn" aria-label="Clear Week"><i class="fa-solid fa-trash-can"></i></button>
-                    <button class="icon-btn" id="export-pdf-btn" aria-label="Save as PDF"><i class="fa-solid fa-file-pdf"></i></button>
+                    <button class="icon-btn tooltip-host" id="info-btn" aria-label="Information">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span class="tooltip">Instructions</span>
+                    </button>
+                    <button class="icon-btn tooltip-host" id="clear-plan-btn" aria-label="Clear Week">
+                        <i class="fa-solid fa-trash-can"></i>
+                        <span class="tooltip">Clear Plan</span>
+                    </button>
                     <span>|</span>
-                    <button class="icon-btn" id="import-plan-btn" aria-label="Upload"><i class="fa-solid fa-cloud-arrow-up"></i></button>
-                    <button class="icon-btn" id="export-plan-btn" aria-label="Download"><i class="fa-solid fa-cloud-arrow-down"></i></button>
+                    <button class="icon-btn tooltip-host" id="import-plan-btn" aria-label="Upload">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span class="tooltip">Upload</span>
+                    </button>
+                    <button class="icon-btn tooltip-host" id="export-plan-btn" aria-label="Download">
+                        <i class="fa-solid fa-cloud-arrow-down"></i>
+                        <span class="tooltip">Download</span>
+                    </button>
                     <input type="file" id="import-file-input" accept=".json">
                 </div>
             </header>
@@ -266,9 +324,6 @@
             </div>
         </main>
     </div>
-
-    <!-- Hidden PDF staging area -->
-    <div id="pdf-print-area" class="pdf-print-area"></div>
 
     <!-- Modals & Toasts -->
     <div id="toast-container"></div>
@@ -284,6 +339,26 @@
     </div>
     <div class="modal-overlay" id="exercise-modal-overlay"></div>
     <div class="modal-overlay" id="video-modal-overlay"></div>
+    <div class="modal-overlay" id="info-modal-overlay">
+        <div class="modal" id="info-modal">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin:0;">How to Use This App</h3>
+                <button class="icon-btn close-modal-btn" aria-label="Close" id="info-close-btn">×</button>
+            </div>
+            <ul id="info-list">
+                <li><i class="fa-solid fa-calendar-days"></i> Click the week's date to pick a new week</li>
+                <li><i class="fa-solid fa-hand-pointer"></i> Drag & Drop exercises from the sidebar library onto any day in the calendar</li>
+                <li><i class="fa-solid fa-trash-can"></i> Double-click o a workout card in the calendar to delete it</li>
+                <li><i class="fa-solid fa-copy"></i> Hold <b>Ctrl</b> and drag a workout to copy it to another day</li>
+                <li><i class="fa-solid fa-maximize"></i> Click on a day's header (e.g., "MONDAY") to zoom in for a focused view</li>
+                <li><i class="fa-solid fa-file-arrow-down"></i> In the maximized day view, click the download icon to save that day as a portable HTML file</li>
+            </ul>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-primary" id="info-ok-btn">Got it!</button>
+            </div>
+        </div>
+    </div>
+
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -295,8 +370,8 @@
         const daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
         const muscleGroups = ['N/A', 'Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Legs', 'Abs', 'Calves', 'Forearms', 'Full Body'];
         const difficultyLevels = ['Beginner', 'Intermediate', 'Advanced'];
-        const exerciseTypes = ['Cardio', 'Powerlifting', 'Stretching'];
-        const typeOrder = ['Cardio', 'Powerlifting', 'Stretching'];
+        const exerciseTypes = ['Cardio', 'Gym', 'Stretching'];
+        const typeOrder = ['Cardio', 'Gym', 'Stretching'];
 
         const getEl = (id) => document.getElementById(id);
         const calendarEl = getEl('calendar'), sidebar = getEl('sidebar'), mainContent = getEl('main-content'), searchInput = getEl('search-exercise');
@@ -333,7 +408,7 @@
                     }
                 } catch (error) {
                     console.info('Data.json not found or invalid. Initializing with default sample data.', error.message);
-                    appData.exercises = [{ id: 'ex1', type: 'Powerlifting', name: 'Barbell Bench Press', description: 'Chest press with a barbell.', url: 'https://www.youtube.com/watch?v=rT7DgCr-3pg', muscleGroup: 'Chest', level: 'Intermediate', color: '#bb86fc' }];
+                    appData.exercises = [{ id: 'ex1', type: 'Gym', name: 'Barbell Bench Press', description: 'Chest press with a barbell.', url: 'https://www.youtube.com/watch?v=rT7DgCr-3pg', muscleGroup: 'Chest', level: 'Intermediate', color: '#bb86fc' }];
                     appData.weeklyPlan = { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [] };
                 }
             }
@@ -341,8 +416,8 @@
             // --- Data Normalization (run this regardless of source) ---
             appData.exercises.forEach(ex => {
                 if (!ex.level) ex.level = 'Beginner';
-                if (!ex.type) ex.type = 'Powerlifting';
-                if (ex.type === 'Strength') ex.type = 'Powerlifting';
+                if (!ex.type) ex.type = 'Gym';
+                if (ex.type === 'Strength' || ex.type === 'Powerlifting') ex.type = 'Gym';
             });
             daysOfWeek.forEach(day => {
                 const dayKey = day.toLowerCase();
@@ -425,7 +500,7 @@
                 <div class="exercise-item-details">
                     <span class="exercise-name" style="color: ${exercise.color || 'var(--secondary-color)'};">${exercise.name}</span>
                     <div class="exercise-badges">
-                        <span class="type-badge">${exercise.type || 'Powerlifting'}</span>
+                        <span class="type-badge">${exercise.type || 'Gym'}</span>
                         ${(exercise.muscleGroup && exercise.muscleGroup !== 'N/A') ? `<span class="muscle-group-badge">${exercise.muscleGroup}</span>` : ''}
                         ${exercise.level ? `<span class="level-badge">${exercise.level}</span>` : ''}
                     </div>
@@ -452,10 +527,10 @@
                 ex.type.toLowerCase().includes(searchTerm)
             );
 
-            const groups = { Powerlifting: {}, Stretching: {}, Cardio: { list: [] } };
+            const groups = { Gym: {}, Stretching: {}, Cardio: { list: [] } };
             filteredExercises.forEach(ex => {
-                const type = ex.type || 'Powerlifting';
-                if (type === 'Powerlifting' || type === 'Stretching') {
+                const type = ex.type || 'Gym';
+                if (type === 'Gym' || type === 'Stretching') {
                     const mg = ex.muscleGroup || 'N/A';
                     if (!groups[type][mg]) groups[type][mg] = [];
                     groups[type][mg].push(ex);
@@ -467,7 +542,7 @@
             const renderHeader = (text) => { const header = document.createElement('h3'); header.textContent = text; header.style.cssText = 'color: #6e6e6e; margin-top: 20px; font-size: 1.1rem; margin-bottom: 5px;'; exerciseListEl.appendChild(header); };
             
             typeOrder.forEach(type => {
-                if ((type === 'Powerlifting' || type === 'Stretching') && Object.keys(groups[type]).length > 0) {
+                if ((type === 'Gym' || type === 'Stretching') && Object.keys(groups[type]).length > 0) {
                     renderHeader(type);
                     const sortedMuscleGroups = Object.keys(groups[type]).sort((a, b) => { if (a === 'N/A') return 1; if (b === 'N/A') return -1; return a.localeCompare(b); });
                     sortedMuscleGroups.forEach(mg => {
@@ -544,7 +619,7 @@
             if (options.onUndo) {
                 const undoBtn = document.createElement('button');
                 undoBtn.className = 'toast-undo-btn';
-                undoBtn.textContent = 'Undo';
+                undoBtn.textContent = 'UNDO';
                 undoBtn.onclick = () => { options.onUndo(); closeToast(); };
                 contentWrapper.appendChild(undoBtn);
             }
@@ -574,6 +649,16 @@
             cancelBtn.addEventListener('click', cleanup, { once: true });
             confirmModal.addEventListener('click', handleOverlayClick, { once: true });
         }
+        
+        function minimizeDayView() {
+            if (!calendarEl.classList.contains('day-maximized')) return;
+            calendarEl.classList.remove('day-maximized');
+            calendarEl.querySelectorAll('.day.maximized').forEach(d => {
+                d.classList.remove('maximized');
+                const btn = d.querySelector('.download-day-btn');
+                if (btn) btn.remove();
+            });
+        }
 
         // ===================================================================
         // ===================== 4. EVENT LISTENERS ==========================
@@ -592,14 +677,15 @@
                 if (duplicateBtn) duplicateExerciseFromList(duplicateBtn.dataset.id);
             });
 
-            getEl('date-picker-btn').addEventListener('click', () => getEl('start-date-input').showPicker());
+            getEl('week-title').addEventListener('click', () => getEl('start-date-input').showPicker());
             getEl('start-date-input').addEventListener('change', (e) => { appData.week_start_date = e.target.value; saveData(); renderWeekTitle(); });
             getEl('clear-plan-btn').addEventListener('click', () => showConfirm('Are you sure you want to clear all exercises from the current week?', clearWeeklyPlan));
 
             getEl('import-plan-btn').addEventListener('click', () => getEl('import-file-input').click());
             getEl('import-file-input').addEventListener('change', importPlan);
             getEl('export-plan-btn').addEventListener('click', exportPlan);
-            getEl('export-pdf-btn').addEventListener('click', exportPlanAsPDF);
+
+            getEl('info-btn').addEventListener('click', () => getEl('info-modal-overlay').style.display = 'flex');
 
             getEl('add-exercise-btn').addEventListener('click', () => openExerciseModal());
             getEl('delete-all-exercises-btn').addEventListener('click', () => showConfirm('DELETE all exercises? This is irreversible and will also clear your weekly plan!', deleteAllExercises));
@@ -618,7 +704,6 @@
             backToTopBtn.addEventListener('click', () => sidebarContent.scrollTo({ top: 0, behavior: 'smooth' }));
             
             document.body.addEventListener('click', handleBodyClick);
-            calendarEl.addEventListener('click', handleDayHeaderClick);
             calendarEl.addEventListener('input', handleCalendarInput);
             calendarEl.addEventListener('dblclick', handleWorkoutDblClick);
             
@@ -637,23 +722,45 @@
                 }
                 lastTapTime = currentTime;
             });
-        }
-
-        function handleDayHeaderClick(e) {
-            const header = e.target.closest('.day-header');
-            if (!header) return;
-
-            const dayEl = header.closest('.day');
-            const isCurrentlyMaximized = dayEl.classList.contains('maximized');
-
-            calendarEl.querySelectorAll('.day').forEach(d => d.classList.remove('maximized'));
             
-            if (isCurrentlyMaximized) {
-                calendarEl.classList.remove('day-maximized');
-            } else {
-                calendarEl.classList.add('day-maximized');
-                dayEl.classList.add('maximized');
-            }
+            // Listener for maximizing/minimizing day view
+            calendarEl.addEventListener('click', e => {
+                // Click on background to minimize
+                if (calendarEl.classList.contains('day-maximized') && e.target === calendarEl) {
+                    minimizeDayView();
+                    return;
+                }
+
+                const header = e.target.closest('.day-header');
+                if (!header) return;
+
+                const dayEl = header.closest('.day');
+                const isCurrentlyMaximized = dayEl.classList.contains('maximized');
+
+                minimizeDayView(); // Always clear previous state first.
+
+                if (!isCurrentlyMaximized) { // If it wasn't the maximized day, maximize it now.
+                    calendarEl.classList.add('day-maximized');
+                    dayEl.classList.add('maximized');
+                    
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.className = 'icon-btn download-day-btn';
+                    downloadBtn.innerHTML = '<i class="fa-solid fa-file-arrow-down"></i>';
+                    downloadBtn.title = 'Download Day as HTML';
+                    downloadBtn.onclick = (event) => {
+                        event.stopPropagation();
+                        exportDayAsHTML(dayEl);
+                    };
+                    header.appendChild(downloadBtn);
+                }
+            });
+            
+            // Listener for Esc key to minimize day view
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && calendarEl.classList.contains('day-maximized')) {
+                    minimizeDayView();
+                }
+            });
         }
         
         function handleWorkoutDblClick(e) {
@@ -674,11 +781,16 @@
         function handleBodyClick(e) {
             const videoBtn = e.target.closest('.workout-video-btn');
             const completeBtn = e.target.closest('.complete-workout-btn');
+            const closeInfoBtn = e.target.closest('#info-close-btn, #info-ok-btn');
+            const infoModalOverlay = getEl('info-modal-overlay');
 
             if (e.target.closest('.modal-cancel-btn')) closeExerciseModal();
             if (e.target.closest('.close-modal-btn')) closeVideoModal();
             if (e.target === getEl('exercise-modal-overlay')) closeExerciseModal();
             if (e.target === getEl('video-modal-overlay')) closeVideoModal();
+            if (closeInfoBtn || e.target === infoModalOverlay) {
+                infoModalOverlay.style.display = 'none';
+            }
             if (videoBtn) { const exerciseId = videoBtn.closest('.workout-card').dataset.exerciseId; const exercise = appData.exercises.find(ex => ex.id === exerciseId); if (exercise?.url) openVideoModal(exercise.url); }
             if (completeBtn) {
                 const card = completeBtn.closest('.workout-card');
@@ -712,29 +824,140 @@
             showToast('Exercise duplicated!', 'success');
         }
 
-        function exportPlanAsPDF() {
-            const printArea = getEl('pdf-print-area');
-            const calendarClone = calendarEl.cloneNode(true);
-            const weekTitle = getEl('week-title').textContent;
-            const safeFilename = weekTitle.replace(/\s-\s/g, '_').replace(/\s/g, '-');
+        function exportDayAsHTML(dayEl) {
+            const dayId = dayEl.dataset.day;
+            const dayName = dayId.charAt(0).toUpperCase() + dayId.slice(1);
+            const dailyWorkouts = appData.weeklyPlan[dayId];
+            if (dailyWorkouts.length === 0) {
+                showToast('Nothing to export for this day.', 'info');
+                return;
+            }
 
-            printArea.innerHTML = '';
-            const pdfHeader = document.createElement('h1'); pdfHeader.textContent = 'Workout Plan'; pdfHeader.style.cssText = 'text-align: center; margin-bottom: 10px;';
-            const pdfSubHeader = document.createElement('h2'); pdfSubHeader.textContent = weekTitle; pdfSubHeader.style.cssText = 'text-align: center; margin-bottom: 20px; color: #555; font-size: 1.2rem;';
-            printArea.append(pdfHeader, pdfSubHeader, calendarClone);
+            const workoutCardsHTML = dailyWorkouts.map(workout => {
+                const exercise = appData.exercises.find(ex => ex.id === workout.exerciseId);
+                if (!exercise) return '';
+                
+                let detailsHTML = '';
+                if (exercise.type === 'Cardio') {
+                    detailsHTML = `<span>Time: <strong>${workout.time || 'N/A'} min</strong></span> <span>Distance: <strong>${workout.distance || 'N/A'} Km</strong></span> <span>Intensity: <strong>${workout.intensity || 'N/A'}</strong></span>`;
+                } else {
+                    detailsHTML = `<span>Sets: <strong>${workout.sets || 'N/A'}</strong></span> <span>Reps: <strong>${workout.reps || 'N/A'}</strong></span> <span>Rest: <strong>${workout.rest || 'N/A'} s</strong></span>`;
+                }
+
+                return `
+                    <div class="workout-card" style="border-left-color: ${exercise.color || '#03dac6'};">
+                        <div class="workout-header">
+                            <h4>${exercise.name}</h4>
+                            <div class="checkbox-container">
+                                <input type="checkbox" class="complete-checkbox" id="check-${workout.planId}" ${workout.completed ? 'checked' : ''}>
+                                <label for="check-${workout.planId}"></label>
+                            </div>
+                        </div>
+                        <div class="workout-body">
+                            <div class="badges">
+                                <span class="badge type">${exercise.type}</span>
+                                ${(exercise.muscleGroup && exercise.muscleGroup !== 'N/A') ? `<span class="badge muscle">${exercise.muscleGroup}</span>` : ''}
+                                <span class="badge level">${exercise.level}</span>
+                            </div>
+                            ${exercise.description ? `<p class="description">${exercise.description}</p>` : ''}
+                            <div class="details">${detailsHTML}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${dayName}'s Workout</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
+                h1 { text-align: center; color: #03dac6; }
+                .container { max-width: 600px; margin: auto; }
+                .workout-card { background-color: #1e1e1e; border: 1px solid #333; border-left-width: 5px; border-radius: 8px; margin-bottom: 15px; padding: 15px; transition: opacity 0.3s; }
+                .workout-card.completed { opacity: 0.6; }
+                .workout-card.completed h4 { text-decoration: line-through; color: #777; }
+                .workout-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 10px; }
+                h4 { margin: 0; font-size: 1.2rem; }
+                .description { font-style: italic; color: #a0a0a0; font-size: 0.9rem; margin: 10px 0; }
+                
+                /* Badge Styles */
+                .badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 15px; }
+                .badge { font-size: 0.6rem; color: #a0a0a0; padding: 2px 6px; border-radius: 10px; display: inline-block; text-transform: capitalize; }
+                .badge.type { background-color: #444; color: #e0e0e0; }
+                .badge.muscle { border: 1px solid #555; }
+                .badge.level { border: 1px solid #555; }
+                
+                /* Details Styles */
+                .details { display: flex; justify-content: space-around; background-color: #2a2a2a; border-radius: 5px; padding: 10px; margin-top: 15px; text-align: center;}
+                .details span { font-size: 0.9rem; }
+                .details strong { color: #fff; }
+
+                /* Custom Checkbox Styles */
+                .checkbox-container { position: relative; width: 30px; height: 30px; flex-shrink: 0; }
+                .complete-checkbox { display: none; }
+                .complete-checkbox + label {
+                    box-sizing: border-box;
+                    display: inline-block;
+                    width: 30px;
+                    height: 30px;
+                    background-color: #393939;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    position: relative;
+                    transition: all 0.2s ease-in-out;
+                }
+                .complete-checkbox + label:hover { background-color: #52d6ce; }
+                .complete-checkbox + label::after {
+                    content: '\\2714'; /* Checkmark character */
+                    font-size: 18px;
+                    line-height: 1;
+                    color: #e0e0e0;
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    transition: color 0.2s;
+                }
+                .complete-checkbox + label:hover::after { color: #393939; }
+                .complete-checkbox:checked + label { background: none; border: 2px solid #52d6ce; }
+                .complete-checkbox:checked + label::after { color: #52d6ce; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>${dayName}'s Workout</h1>
+                <div id="workout-container">${workoutCardsHTML}</div>
+            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.querySelectorAll('.complete-checkbox').forEach(checkbox => {
+                        const card = checkbox.closest('.workout-card');
+                        if(checkbox.checked) {
+                            card.classList.add('completed');
+                        }
+                        checkbox.addEventListener('change', (e) => {
+                            card.classList.toggle('completed', e.target.checked);
+                        });
+                    });
+                });
+            <\/script>
+        </body>
+        </html>`;
             
-            printArea.style.cssText = 'display: block; background: #ffffff; color: #000000; padding: 20px;';
-            calendarClone.style.gridTemplateColumns = '1fr';
-            calendarClone.querySelectorAll('.workout-list').forEach(list => list.style.minHeight = 'auto');
-            calendarClone.querySelectorAll('.day, .workout-card, .workout-details input, .workout-details select').forEach(el => { el.style.backgroundColor = '#f9f9f9'; el.style.color = '#000'; el.style.border = '1px solid #ddd'; });
-            calendarClone.querySelectorAll('.workout-card').forEach(el => { el.style.cursor = 'default'; el.classList.remove('completed'); });
-            calendarClone.querySelectorAll('.workout-video-btn, .icon-btn, .exercise-actions, .workout-group-header, .complete-workout-btn').forEach(btn => { if(btn.classList.contains('workout-group-header')) { btn.style.color = '#333'; } else { btn.style.display = 'none'; } });
-            calendarClone.querySelectorAll('.workout-card-header h4').forEach(h4 => h4.style.color = '#000');
-            calendarClone.querySelectorAll('input, select').forEach(input => { input.setAttribute('readonly', true); input.style.textAlign = 'center'; if(input.tagName === 'SELECT') { input.style.appearance = 'none'; } });
-            
-            const options = { margin: 0.5, filename: `${safeFilename}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
-            html2pdf().from(printArea).set(options).save().then(() => { printArea.style.display = 'none'; printArea.innerHTML = ''; });
-            showToast('Generating PDF...', 'info');
+            const blob = new Blob([htmlContent.trim()], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${dayName} Plan.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(`${dayName} plan exported as HTML`, 'success');
         }
 
         function clearWeeklyPlan() { for (const day in appData.weeklyPlan) { appData.weeklyPlan[day] = []; } saveData(); renderWeeklyPlan(); showToast('Weekly plan has been cleared.', 'success'); }
@@ -871,11 +1094,11 @@
             } else {
                 modalTitle.textContent = 'Add New Exercise';
                 getEl('exercise-id').value = '';
-                document.querySelector('input[name="exercise-type"][value="Powerlifting"]').checked = true;
+                document.querySelector('input[name="exercise-type"][value="Gym"]').checked = true;
                 getEl('exercise-level-input').value = 'Beginner';
                 colorPicker.value = '#bb86fc';
                 colorHex.value = '#bb86fc';
-                updateExerciseFormVisibility('Powerlifting');
+                updateExerciseFormVisibility('Gym');
             }
             getEl('exercise-modal-overlay').style.display = 'flex';
         }
