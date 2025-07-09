@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Thursday's Workout</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
+                h1 { text-align: center; color: #03dac6; }
+                .container { max-width: 600px; margin: auto; }
+                .workout-card { display: flex; flex-direction: column; background-color: #1e1e1e; border: 1px solid #333; border-left-width: 5px; border-radius: 8px; margin-bottom: 15px; overflow: hidden; transition: opacity 0.3s; }
+                .workout-card.completed { opacity: 0.6; }
+                .workout-card.completed h4 { text-decoration: line-through; color: #777; }
+                .workout-body { padding: 15px; }
+                .workout-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 10px; }
+                h4 { margin: 0; font-size: 1.2rem; }
+                .description { font-style: italic; color: #a0a0a0; font-size: 0.9rem; margin: 10px 0; }
+                
+                /* Badge Styles */
+                .badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 15px; }
+                .badge { font-size: 0.6rem; color: #a0a0a0; padding: 2px 6px; border-radius: 10px; display: inline-block; text-transform: capitalize; }
+                .badge.type { background-color: #444; color: #e0e0e0; }
+                .badge.muscle { border: 1px solid #555; }
+                .badge.level { border: 1px solid #555; }
+                
+                /* Details Styles */
+                .details { display: flex; justify-content: space-around; background-color: #2a2a2a; border-radius: 5px; padding: 10px; margin-top: 15px; text-align: center;}
+                .details span { font-size: 0.9rem; }
+                .details strong { color: #fff; }
+
+                /* Custom Checkbox Styles */
+                .checkbox-container { position: relative; width: 30px; height: 30px; flex-shrink: 0; }
+                .complete-checkbox { display: none; }
+                .complete-checkbox + label { box-sizing: border-box; display: inline-block; width: 30px; height: 30px; background-color: #393939; border-radius: 10px; cursor: pointer; position: relative; transition: all 0.2s ease-in-out; }
+                .complete-checkbox + label:hover { background-color: #52d6ce; }
+                .complete-checkbox + label::after { content: '\2714'; font-size: 18px; line-height: 1; color: #e0e0e0; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: color 0.2s; }
+                .complete-checkbox + label:hover::after { color: #393939; }
+                .complete-checkbox:checked + label { background: none; border: 2px solid #52d6ce; }
+                .complete-checkbox:checked + label::after { color: #52d6ce; }
+                
+                /* Video Button Style */
+                .workout-video-btn { background-color: #393939; color: #e0e0e0; border: none; width: 100%; padding: 8px 0; cursor: pointer; transition: background-color 0.2s, color 0.2s; font-size: 1rem; }
+                .workout-video-btn:hover { background-color: #03dac6; color: #121212; }
+
+                /* Video Modal Styles */
+                .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
+                .modal-content { position: relative; width: 90%; max-width: 854px; background: #000; }
+                .close-modal-btn { position: absolute; top: -35px; right: 0; font-size: 2rem; color: #fff; background: none; border: none; cursor: pointer; z-index: 1001; }
+                .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; }
+                .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>Thursday's Workout</h1>
+                <div id="workout-container">
+                    <div class="workout-card" style="border-left-color: #f2f55c;">
+                        <div class="workout-body">
+                            <div class="workout-header">
+                                <h4>Jogging</h4>
+                                <div class="checkbox-container">
+                                    <input type="checkbox" class="complete-checkbox" id="check-plan_1751999660280" >
+                                    <label for="check-plan_1751999660280"></label>
+                                </div>
+                            </div>
+                            <div class="badges">
+                                <span class="badge type">Cardio</span>
+                                
+                                <span class="badge level">Beginner</span>
+                            </div>
+                            
+                            <div class="details"><span>Time: <strong>N/A min</strong></span> <span>Distance: <strong>N/A Km</strong></span> <span>Intensity: <strong>🟨 Medium</strong></span></div>
+                        </div>
+                        
+                    </div>
+                
+                    <div class="workout-card" style="border-left-color: #f2f55c;">
+                        <div class="workout-body">
+                            <div class="workout-header">
+                                <h4>Skipping Rope</h4>
+                                <div class="checkbox-container">
+                                    <input type="checkbox" class="complete-checkbox" id="check-plan_1751997059993" >
+                                    <label for="check-plan_1751997059993"></label>
+                                </div>
+                            </div>
+                            <div class="badges">
+                                <span class="badge type">Cardio</span>
+                                
+                                <span class="badge level">Intermediate</span>
+                            </div>
+                            
+                            <div class="details"><span>Time: <strong>N/A min</strong></span> <span>Distance: <strong>N/A Km</strong></span> <span>Intensity: <strong>🟨 Medium</strong></span></div>
+                        </div>
+                        
+                    </div>
+                
+                    <div class="workout-card" style="border-left-color: #ffb8f9;">
+                        <div class="workout-body">
+                            <div class="workout-header">
+                                <h4>Childs Pose</h4>
+                                <div class="checkbox-container">
+                                    <input type="checkbox" class="complete-checkbox" id="check-plan_1752050409264" >
+                                    <label for="check-plan_1752050409264"></label>
+                                </div>
+                            </div>
+                            <div class="badges">
+                                <span class="badge type">Stretching</span>
+                                
+                                <span class="badge level">Beginner</span>
+                            </div>
+                            
+                            <div class="details"><span>Sets: <strong>N/A</strong></span> <span>Reps: <strong>N/A</strong></span> <span>Rest: <strong>N/A s</strong></span></div>
+                        </div>
+                        <button class="workout-video-btn" data-url="https://youtu.be/LNpensmaCDw?list=TLGGU_LuUq08mygzMDA2MjAyNQ" aria-label="Watch video"><i class="fa-solid fa-play"></i></button>
+                    </div>
+                
+                    <div class="workout-card" style="border-left-color: #ff8160;">
+                        <div class="workout-body">
+                            <div class="workout-header">
+                                <h4>Push-Ups</h4>
+                                <div class="checkbox-container">
+                                    <input type="checkbox" class="complete-checkbox" id="check-plan_1751998705171" >
+                                    <label for="check-plan_1751998705171"></label>
+                                </div>
+                            </div>
+                            <div class="badges">
+                                <span class="badge type">Home Workout</span>
+                                <span class="badge muscle">Chest</span>
+                                <span class="badge level">Beginner</span>
+                            </div>
+                            
+                            <div class="details"><span>Sets: <strong>3</strong></span> <span>Reps: <strong>3</strong></span> <span>Rest: <strong>10 s</strong></span></div>
+                        </div>
+                        <button class="workout-video-btn" data-url="https://youtu.be/Xdzfcn2XgNs?list=TLGGfN7eQ0H1wR0wMzA3MjAyNQ" aria-label="Watch video"><i class="fa-solid fa-play"></i></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-overlay" id="video-modal-overlay">
+                <div class="modal-content">
+                    <button class="close-modal-btn" aria-label="Close video">&times;</button>
+                    <div class="video-wrapper">
+                        <iframe id="youtube-iframe" width="854" height="480" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    // --- Checkbox logic ---
+                    document.querySelectorAll('.complete-checkbox').forEach(checkbox => {
+                        const card = checkbox.closest('.workout-card');
+                        if(checkbox.checked) card.classList.add('completed');
+                        checkbox.addEventListener('change', (e) => card.classList.toggle('completed', e.target.checked));
+                    });
+
+                    // --- Video Modal Logic ---
+                    const videoModalOverlay = document.getElementById('video-modal-overlay');
+                    const youtubeIframe = document.getElementById('youtube-iframe');
+                    const closeModalBtn = videoModalOverlay.querySelector('.close-modal-btn');
+
+                    function openVideoModal(url) {
+                        const videoIdMatch = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/);
+                        if (videoIdMatch && videoIdMatch.pop) {
+                            const videoId = videoIdMatch.pop();
+                            youtubeIframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+                            videoModalOverlay.style.display = 'flex';
+                        } else {
+                            alert('Could not open video. Invalid YouTube URL.');
+                        }
+                    }
+
+                    function closeVideoModal() {
+                        videoModalOverlay.style.display = 'none';
+                        youtubeIframe.src = '';
+                    }
+
+                    document.querySelectorAll('.workout-video-btn').forEach(button => {
+                        button.addEventListener('click', () => openVideoModal(button.dataset.url));
+                    });
+                    
+                    closeModalBtn.addEventListener('click', closeVideoModal);
+                    videoModalOverlay.addEventListener('click', (e) => {
+                        if (e.target === videoModalOverlay) closeVideoModal();
+                    });
+                    document.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape' && videoModalOverlay.style.display === 'flex') closeVideoModal();
+                    });
+                });
+            </script>
+        </body>
+        </html>
