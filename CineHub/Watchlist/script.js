@@ -1056,6 +1056,25 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.appendChild(contentWrapper);
         modalContainer.innerHTML = '';
         modalContainer.appendChild(modal);
+        
+        // Handle scroll position persistence for filmography modal
+        const filmographyContent = contentWrapper.querySelector('[data-filmography-person-id]');
+        if (filmographyContent) {
+            const personId = filmographyContent.dataset.filmographyPersonId;
+            const scrollKey = `filmography-scroll-${personId}`;
+            
+            const savedScrollTop = sessionStorage.getItem(scrollKey);
+            if (savedScrollTop) {
+                setTimeout(() => {
+                    contentWrapper.scrollTop = parseInt(savedScrollTop, 10);
+                }, 0);
+            }
+    
+            contentWrapper.addEventListener('scroll', () => {
+                sessionStorage.setItem(scrollKey, contentWrapper.scrollTop);
+            });
+        }
+        
         document.documentElement.classList.add('is-modal-open');
     };
 
@@ -1199,7 +1218,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.showCast = async (id, type) => {
         let content;
         try {
-            const { cast } = await fetchFromApi(`${type}/${id}/credits?language=en-US`);
+            const [{ cast }, mediaDetails] = await Promise.all([
+                fetchFromApi(`${type}/${id}/credits?language=en-US`),
+                fetchFromApi(`${type}/${id}?language=en-US`)
+            ]);
+    
+            const releaseDateStr = mediaDetails.release_date || mediaDetails.first_air_date;
+            const releaseDate = releaseDateStr ? new Date(releaseDateStr) : null;
+    
             const castToDisplay = (cast || []).slice(0, 15);
             const personDetailsPromises = castToDisplay.map(member => fetchFromApi(`person/${member.id}?language=en-US`));
             const personDetails = await Promise.all(personDetailsPromises);
@@ -1208,17 +1234,31 @@ document.addEventListener('DOMContentLoaded', () => {
             castToDisplay.forEach((member, index) => {
                 const details = personDetails[index];
                 const profileUrl = member.profile_path ? `https://image.tmdb.org/t/p/w200${member.profile_path}` : UNAVAILABLE_IMAGE_URL;
-                const age = calculateAge(details.birthday);
+                const currentAge = calculateAge(details.birthday);
+                
+                let ageDisplay = currentAge;
+                if (releaseDate && details.birthday) {
+                    const birthDate = new Date(details.birthday);
+                    let ageAtRelease = releaseDate.getFullYear() - birthDate.getFullYear();
+                    const monthDiff = releaseDate.getMonth() - birthDate.getMonth();
+                    if (monthDiff < 0 || (monthDiff === 0 && releaseDate.getDate() < birthDate.getDate())) {
+                        ageAtRelease--;
+                    }
+                    if (ageAtRelease >= 0) {
+                        ageDisplay += ` (${ageAtRelease})`;
+                    }
+                }
+    
                 const nationality = details.place_of_birth ? details.place_of_birth.split(',').pop().trim() : 'N/A';
                 const escapedName = member.name.replace(/'/g, "\\'");
-
+    
                 castGridHTML += `
                     <div class="cast-member" onclick="showFilmography(${member.id}, '${escapedName}')">
                         <img src="${profileUrl}" alt="${member.name}" class="cast-member-image" />
                         <p class="cast-member-name">${member.name}</p>
                         <p class="cast-member-character"><i class="fa-solid fa-masks-theater"></i> ${member.character}</p>
                         <p class="cast-member-meta"><i class="fa-solid fa-location-dot"></i> ${nationality}</p>
-                        <p class="cast-member-meta"><i class="fa-solid fa-cake-candles"></i> ${age}</p>
+                        <p class="cast-member-meta"><i class="fa-solid fa-cake-candles"></i> ${ageDisplay}</p>
                     </div>`;
             });
             content = `<h2 class="modal-title">Cast</h2><div class="cast-grid">${castGridHTML}</div>`;
@@ -1234,9 +1274,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.showFilmography = async (personId, name) => {
         let content;
         try {
-            const { cast } = await fetchFromApi(`person/${personId}/combined_credits?language=en-US`);
-    
-            const excludedFilmographyGenreIds = await Promise.all([getExcludedGenreIds('movie'), getExcludedGenreIds('tv')]).then(res => [...new Set(res.flat())]);
+            const [{ cast }, personDetails, excludedFilmographyGenreIds] = await Promise.all([
+                fetchFromApi(`person/${personId}/combined_credits?language=en-US`),
+                fetchFromApi(`person/${personId}?language=en-US`),
+                Promise.all([getExcludedGenreIds('movie'), getExcludedGenreIds('tv')]).then(res => [...new Set(res.flat())])
+            ]);
     
             const filteredCredits = (cast || []).filter(item => {
                 if (item.media_type !== 'movie' && item.media_type !== 'tv') return false;
@@ -1260,17 +1302,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 items.forEach(item => {
                     const posterUrl = `https://image.tmdb.org/t/p/w200${item.poster_path}`;
                     const title = (item.title || item.name || '').replace(/'/g, "\\'");
+                    const releaseYear = (item.release_date || item.first_air_date || 'N/A').substring(0, 4);
+                    const voteAverage = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+                    
                     gridHTML += `
                          <div class="filmography-item" onclick="showFilmographyItemDetails(${item.id}, '${item.media_type}')">
                             <img src="${posterUrl}" alt="${title}" class="filmography-item-poster"/>
+                            <div class="filmography-item-overlay">
+                                <div class="filmography-item-meta">
+                                    <span>${releaseYear}</span>
+                                    <div class="filmography-item-rating">
+                                        <i class="fas fa-star"></i>
+                                        <span>${voteAverage}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     `;
                 });
                 gridHTML += '</div>';
                 return gridHTML;
             };
-    
-            let finalHTML = `<h2 class="modal-title">Filmography of ${name}</h2>`;
+            
+            const encodedName = encodeURIComponent(name);
+            const imdbId = personDetails.imdb_id;
+
+            let finalHTML = `<div class="modal-title-container">
+                                 <h2 class="modal-title">Filmography of ${name}</h2>
+                                 <a href="https://www.google.com/search?q=${encodedName}" target="_blank" class="external-link-btn" title="Search for ${name} on Google">
+                                     <i class="fab fa-google"></i>
+                                 </a>`;
+
+            if (imdbId) {
+                finalHTML += `<a href="https://www.imdb.com/name/${imdbId}/" target="_blank" class="external-link-btn" title="View ${name} on IMDb">
+                                  <i class="fab fa-imdb"></i>
+                              </a>`;
+            }
+            finalHTML += '</div>';
     
             if (films.length > 0) {
                 finalHTML += `<h4 style="font-size: 1.25rem; font-weight: 600; color: #3c4148; margin-top: 1.5rem;">Films</h4>`;
@@ -1286,12 +1354,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 finalHTML += `<p class="modal-body-text" style="text-align: center; margin-top: 1rem;">No filmography found.</p>`;
             }
     
-            content = finalHTML;
+            content = `<div data-filmography-person-id="${personId}">${finalHTML}</div>`;
+
         } catch (error) {
              content = `<h2 class="modal-title">Filmography of ${name}</h2><p class="modal-body-text" style="text-align: center;">Could not load filmography.</p>`;
         }
+        
         const options = { isNavigable: modalHistory.length > 0 };
         _setModalContent(content, options);
+    
         modalHistory.push({ content, options });
     };
 
