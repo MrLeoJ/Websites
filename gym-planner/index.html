@@ -138,7 +138,7 @@
         .workout-list { padding: 10px; flex-grow: 1; min-height: 150px; }
         .workout-group-header { font-size: 0.8rem; font-weight: 600; color: #555; text-transform: uppercase; margin: 10px 0 8px; }
         .workout-group-header:first-child { margin-top: 0; }
-        .workout-card { background-color: #2c2c2c; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid var(--primary-color); display: flex; flex-direction: column; cursor: pointer; transition: opacity 0.2s; }
+        .workout-card { background-color: #2c2c2c; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid var(--primary-color); display: flex; flex-direction: column; cursor: pointer; transition: opacity 0.2s; overflow: hidden; }
         .workout-card.completed { opacity: 0.6; }
         .workout-card.completed .workout-card-header h4 { text-decoration: line-through; }
         .workout-card-content { padding: 12px; }
@@ -149,10 +149,29 @@
         .workout-details .input-group { display: flex; flex-direction: column; }
         .workout-details label { font-size: 0.6rem; color: var(--text-color-secondary); margin-bottom: 2px; text-align: center; }
         .workout-details input, .workout-details select { width: 100%; padding: 5px; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 3px; color: var(--text-color); font-size: 0.8rem; text-align: center; }
-        .workout-video-btn { background-color: #393939; color: #1f1f1f; border: none; width: 100%; padding: 8px 0; cursor: pointer; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; transition: background-color 0.2s, color 0.2s; }
+        .workout-video-btn { background-color: #393939; color: #1f1f1f; border: none; width: 100%; padding: 8px 0; cursor: pointer; transition: background-color 0.2s, color 0.2s; }
         .workout-video-btn:hover { background-color: #5f5f5f; color: var(--video-icon-color, #03dac6); }
         
-        /* New styles for complete button */
+        /* Intensity input styles */
+        .intensity-select-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .intensity-icon {
+            position: absolute;
+            left: 8px;
+            pointer-events: none;
+            z-index: 1;
+            font-size: 0.9em;
+            transition: color 0.2s ease;
+        }
+        .intensity-select-wrapper select.workout-input {
+            padding-left: 24px;
+            width: 100%;
+        }
+        
         .complete-workout-btn {
             background-color: #393939;
             border-radius: 10px;
@@ -348,8 +367,8 @@
             <ul id="info-list">
                 <li><i class="fa-solid fa-calendar-days"></i> Click the week's date to pick a new week</li>
                 <li><i class="fa-solid fa-hand-pointer"></i> Drag & Drop exercises from the sidebar library onto any day in the calendar</li>
-                <li><i class="fa-solid fa-trash-can"></i> Double-click o a workout card in the calendar to delete it</li>
-                <li><i class="fa-solid fa-copy"></i> Hold <b>Ctrl</b> and drag a workout to copy it to another day</li>
+                <li><i class="fa-solid fa-trash-can"></i> Double-click on a workout card in the calendar to delete it</li>
+                <li><i class="fa-solid fa-copy"></i> Hold Ctrl/Cmd and drag a workout to copy it to another day</li>
                 <li><i class="fa-solid fa-maximize"></i> Click on a day's header (e.g., "MONDAY") to zoom in for a focused view</li>
                 <li><i class="fa-solid fa-file-arrow-down"></i> In the maximized day view, click the download icon to save that day as a portable HTML file</li>
             </ul>
@@ -370,8 +389,10 @@
         const daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
         const muscleGroups = ['N/A', 'Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Legs', 'Abs', 'Calves', 'Forearms', 'Full Body'];
         const difficultyLevels = ['Beginner', 'Intermediate', 'Advanced'];
-        const exerciseTypes = ['Cardio', 'Gym', 'Stretching'];
-        const typeOrder = ['Cardio', 'Gym', 'Stretching'];
+        const exerciseTypes = ['Cardio', 'Gym', 'Home Workout', 'Stretching'];
+        const typeOrder = ['Cardio', 'Gym', 'Home Workout', 'Stretching'];
+        const intensityColors = { Low: '#8aedff', Medium: '#fbd05b', High: '#ff2e6d' };
+        const intensities = ['Low', 'Medium', 'High'];
 
         const getEl = (id) => document.getElementById(id);
         const calendarEl = getEl('calendar'), sidebar = getEl('sidebar'), mainContent = getEl('main-content'), searchInput = getEl('search-exercise');
@@ -424,6 +445,15 @@
                 if (!appData.weeklyPlan[dayKey]) appData.weeklyPlan[dayKey] = [];
                 appData.weeklyPlan[dayKey].forEach(item => {
                     if (item.completed === undefined) item.completed = false;
+                    // Migration for intensity values
+                    if (item.intensity) {
+                        if (item.intensity.includes('Low')) item.intensity = 'Low';
+                        else if (item.intensity.includes('Medium')) item.intensity = 'Medium';
+                        else if (item.intensity.includes('High')) item.intensity = 'High';
+                        else if (!intensities.includes(item.intensity)) {
+                            item.intensity = 'Medium'; // Default for any other invalid value
+                        }
+                    }
                 });
             });
 
@@ -465,10 +495,9 @@
 
             let detailsHTML = '';
             if (exercise.type === 'Cardio') {
-                const intensities = ['🟦 Low', '🟨 Medium', '🟥 High'];
-                detailsHTML = `<div class="input-group"> <label>Time</label> <input type="text" inputmode="numeric" class="workout-input" data-field="time" value="${workout.time || ''}" placeholder="min"> </div> <div class="input-group"> <label>Dist.</label> <input type="text" inputmode="numeric" class="workout-input" data-field="distance" value="${workout.distance || ''}" placeholder="Km"> </div> <div class="input-group"> <label>Intensity</label> <select class="workout-input" data-field="intensity"> ${intensities.map(i => `<option value="${i}" ${workout.intensity === i ? 'selected' : ''}>${i}</option>`).join('')} </select> </div>`;
+                detailsHTML = `<div class="input-group"> <label>Time</label> <input type="text" inputmode="numeric" class="workout-input" data-field="time" value="${workout.time || ''}" placeholder="min"> </div> <div class="input-group"> <label>Dist.</label> <input type="text" inputmode="numeric" class="workout-input" data-field="distance" value="${workout.distance || ''}" placeholder="Km"> </div> <div class="input-group"> <label>Intensity</label> <div class="intensity-select-wrapper"> <i class="fa-solid fa-square intensity-icon"></i> <select class="workout-input" data-field="intensity"> ${intensities.map(i => `<option value="${i}" ${workout.intensity === i ? 'selected' : ''}>${i}</option>`).join('')} </select> </div> </div>`;
             } else {
-                detailsHTML = `<div class="input-group"><label>Sets</label><input type="text" inputmode="numeric" class="workout-input" data-field="sets" value="${workout.sets || ''}" placeholder="3"></div> <div class="input-group"><label>Reps</label><input type="text" inputmode="numeric" class="workout-input" data-field="reps" value="${workout.reps || ''}" placeholder="15"></div> <div class="input-group"><label>Rest</label><input type="text" inputmode="numeric" class="workout-input" data-field="rest" value="${workout.rest || ''}" placeholder="60"></div>`;
+                detailsHTML = `<div class="input-group"><label>Sets</label><input type="text" inputmode="numeric" class="workout-input" data-field="sets" value="${workout.sets || ''}" placeholder="3"></div> <div class="input-group"><label>Reps</label><input type="text" inputmode="numeric" class="workout-input" data-field="reps" value="${workout.reps || ''}" placeholder="15"></div> <div class="input-group"><label>Rest</label><input type="text" inputmode="numeric" class="workout-input" data-field="rest" value="${workout.rest || ''}" placeholder="60s"></div>`;
             }
             
             card.innerHTML = `
@@ -486,6 +515,13 @@
                 </div>
                 ${exercise.url ? `<button class="workout-video-btn" aria-label="Watch video"><i class="fa-solid fa-play"></i></button>` : ''}
             `;
+            
+            const intensityIcon = card.querySelector('.intensity-icon');
+            if (intensityIcon) {
+                const currentIntensity = workout.intensity || 'Medium';
+                intensityIcon.style.color = intensityColors[currentIntensity];
+            }
+            
             return card;
         }
 
@@ -527,11 +563,12 @@
                 ex.type.toLowerCase().includes(searchTerm)
             );
 
-            const groups = { Gym: {}, Stretching: {}, Cardio: { list: [] } };
+            const groups = { Gym: {}, 'Home Workout': {}, Stretching: {}, Cardio: { list: [] } };
             filteredExercises.forEach(ex => {
                 const type = ex.type || 'Gym';
-                if (type === 'Gym' || type === 'Stretching') {
+                if (type === 'Gym' || type === 'Home Workout' || type === 'Stretching') {
                     const mg = ex.muscleGroup || 'N/A';
+                    if (!groups[type]) groups[type] = {};
                     if (!groups[type][mg]) groups[type][mg] = [];
                     groups[type][mg].push(ex);
                 } else if (type === 'Cardio') {
@@ -542,7 +579,7 @@
             const renderHeader = (text) => { const header = document.createElement('h3'); header.textContent = text; header.style.cssText = 'color: #6e6e6e; margin-top: 20px; font-size: 1.1rem; margin-bottom: 5px;'; exerciseListEl.appendChild(header); };
             
             typeOrder.forEach(type => {
-                if ((type === 'Gym' || type === 'Stretching') && Object.keys(groups[type]).length > 0) {
+                if ((type === 'Gym' || type === 'Home Workout' || type === 'Stretching') && groups[type] && Object.keys(groups[type]).length > 0) {
                     renderHeader(type);
                     const sortedMuscleGroups = Object.keys(groups[type]).sort((a, b) => { if (a === 'N/A') return 1; if (b === 'N/A') return -1; return a.localeCompare(b); });
                     sortedMuscleGroups.forEach(mg => {
@@ -800,11 +837,20 @@
             }
         }
 
-        function handleCalendarInput(e) { 
-            if (e.target.classList.contains('workout-input')) { 
+        function handleCalendarInput(e) {
+            if (e.target.classList.contains('workout-input')) {
                 const card = e.target.closest('.workout-card');
-                updateWorkoutDetails(card.closest('.day').dataset.day, card.dataset.planId, e.target.dataset.field, e.target.value);
-            } 
+                const field = e.target.dataset.field;
+                const value = e.target.value;
+                updateWorkoutDetails(card.closest('.day').dataset.day, card.dataset.planId, field, value);
+
+                if (field === 'intensity') {
+                    const icon = card.querySelector('.intensity-icon');
+                    if (icon) {
+                        icon.style.color = intensityColors[value];
+                    }
+                }
+            }
         }
 
         // ===================================================================
@@ -833,27 +879,56 @@
                 return;
             }
 
+            const detailItem = (label, value) => {
+                // Return empty string if value is null, undefined, or an empty/whitespace string.
+                if (value == null || String(value).trim() === '') {
+                    return '';
+                }
+
+                const displayValue = String(value).trim();
+                let valueHTML = displayValue;
+                
+                if (label === 'Intensity') {
+                    // Intensity value is a clean string from a select, so no need to trim for key lookup
+                    const color = intensityColors[value] || '#a0a0a0';
+                    valueHTML = `<i class="fa-solid fa-square" style="color:${color}; margin-right: 5px;"></i>${displayValue}`;
+                }
+                return `<div class="detail-item"><span class="detail-label">${label}</span><strong class="detail-value">${valueHTML}</strong></div>`;
+            };
+
             const workoutCardsHTML = dailyWorkouts.map(workout => {
                 const exercise = appData.exercises.find(ex => ex.id === workout.exerciseId);
                 if (!exercise) return '';
                 
                 let detailsHTML = '';
-                if (exercise.type === 'Cardio') {
-                    detailsHTML = `<span>Time: <strong>${workout.time || 'N/A'} min</strong></span> <span>Distance: <strong>${workout.distance || 'N/A'} Km</strong></span> <span>Intensity: <strong>${workout.intensity || 'N/A'}</strong></span>`;
+                 if (exercise.type === 'Cardio') {
+                    detailsHTML = [
+                        detailItem('Time', workout.time),
+                        detailItem('Distance', workout.distance),
+                        detailItem('Intensity', workout.intensity)
+                    ].join('');
                 } else {
-                    detailsHTML = `<span>Sets: <strong>${workout.sets || 'N/A'}</strong></span> <span>Reps: <strong>${workout.reps || 'N/A'}</strong></span> <span>Rest: <strong>${workout.rest || 'N/A'} s</strong></span>`;
+                    detailsHTML = [
+                        detailItem('Sets', workout.sets),
+                        detailItem('Reps', workout.reps),
+                        detailItem('Rest', workout.rest)
+                    ].join('');
                 }
+
+                const videoButtonHTML = exercise.url 
+                    ? `<button class="workout-video-btn" data-url="${exercise.url}" aria-label="Watch video"><i class="fa-solid fa-play"></i></button>`
+                    : '';
 
                 return `
                     <div class="workout-card" style="border-left-color: ${exercise.color || '#03dac6'};">
-                        <div class="workout-header">
-                            <h4>${exercise.name}</h4>
-                            <div class="checkbox-container">
-                                <input type="checkbox" class="complete-checkbox" id="check-${workout.planId}" ${workout.completed ? 'checked' : ''}>
-                                <label for="check-${workout.planId}"></label>
-                            </div>
-                        </div>
                         <div class="workout-body">
+                            <div class="workout-header">
+                                <h4>${exercise.name}</h4>
+                                <div class="checkbox-container">
+                                    <input type="checkbox" class="complete-checkbox" id="check-${workout.planId}" ${workout.completed ? 'checked' : ''}>
+                                    <label for="check-${workout.planId}"><i class="fa-solid fa-check"></i></label>
+                                </div>
+                            </div>
                             <div class="badges">
                                 <span class="badge type">${exercise.type}</span>
                                 ${(exercise.muscleGroup && exercise.muscleGroup !== 'N/A') ? `<span class="badge muscle">${exercise.muscleGroup}</span>` : ''}
@@ -862,6 +937,7 @@
                             ${exercise.description ? `<p class="description">${exercise.description}</p>` : ''}
                             <div class="details">${detailsHTML}</div>
                         </div>
+                        ${videoButtonHTML}
                     </div>
                 `;
             }).join('');
@@ -873,13 +949,15 @@
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>${dayName}'s Workout</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
             <style>
                 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
-                h1 { text-align: center; color: #03dac6; }
+                h1 { text-align: center; color: #393939; }
                 .container { max-width: 600px; margin: auto; }
-                .workout-card { background-color: #1e1e1e; border: 1px solid #333; border-left-width: 5px; border-radius: 8px; margin-bottom: 15px; padding: 15px; transition: opacity 0.3s; }
+                .workout-card { display: flex; flex-direction: column; background-color: #1e1e1e; border: 1px solid #333; border-left-width: 5px; border-radius: 8px; margin-bottom: 15px; overflow: hidden; transition: opacity 0.3s; }
                 .workout-card.completed { opacity: 0.6; }
                 .workout-card.completed h4 { text-decoration: line-through; color: #777; }
+                .workout-body { padding: 15px; }
                 .workout-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 10px; }
                 h4 { margin: 0; font-size: 1.2rem; }
                 .description { font-style: italic; color: #a0a0a0; font-size: 0.9rem; margin: 10px 0; }
@@ -892,39 +970,31 @@
                 .badge.level { border: 1px solid #555; }
                 
                 /* Details Styles */
-                .details { display: flex; justify-content: space-around; background-color: #2a2a2a; border-radius: 5px; padding: 10px; margin-top: 15px; text-align: center;}
-                .details span { font-size: 0.9rem; }
-                .details strong { color: #fff; }
+                .details { display: flex; justify-content: space-around; background-color: #2a2a2a; border-radius: 5px; padding: 10px; margin-top: 15px; text-align: center; }
+                .detail-item { display: flex; flex-direction: column; align-items: center; line-height: 1.3; }
+                .detail-label { font-size: 0.7rem; color: #a0a0a0; margin-bottom: 2px; text-transform: uppercase; }
+                .detail-value { font-size: 1.1rem; font-weight: bold; color: #fff; display: flex; align-items: center; }
 
                 /* Custom Checkbox Styles */
                 .checkbox-container { position: relative; width: 30px; height: 30px; flex-shrink: 0; }
                 .complete-checkbox { display: none; }
-                .complete-checkbox + label {
-                    box-sizing: border-box;
-                    display: inline-block;
-                    width: 30px;
-                    height: 30px;
-                    background-color: #393939;
-                    border-radius: 10px;
-                    cursor: pointer;
-                    position: relative;
-                    transition: all 0.2s ease-in-out;
-                }
+                .complete-checkbox + label { box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; background-color: #393939; border-radius: 10px; cursor: pointer; transition: all 0.2s ease-in-out; }
                 .complete-checkbox + label:hover { background-color: #52d6ce; }
-                .complete-checkbox + label::after {
-                    content: '\\2714'; /* Checkmark character */
-                    font-size: 18px;
-                    line-height: 1;
-                    color: #e0e0e0;
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    transition: color 0.2s;
-                }
-                .complete-checkbox + label:hover::after { color: #393939; }
+                .complete-checkbox + label i { color: #52d6ce; font-size: 18px; opacity: 0; transition: opacity 0.2s ease-in-out; }
+                .complete-checkbox:checked + label i { opacity: 1; }
                 .complete-checkbox:checked + label { background: none; border: 2px solid #52d6ce; }
-                .complete-checkbox:checked + label::after { color: #52d6ce; }
+                .complete-checkbox:checked + label:hover { background: none; }
+                
+                /* Video Button Style */
+                .workout-video-btn { background-color: #393939; color: #e0e0e0; border: none; width: 100%; padding: 8px 0; cursor: pointer; transition: background-color 0.2s, color 0.2s; font-size: 1rem; }
+                .workout-video-btn:hover { background-color: #03dac6; color: #121212; }
+
+                /* Video Modal Styles */
+                .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
+                .modal-content { position: relative; width: 90%; max-width: 854px; background: #000; }
+                .close-modal-btn { position: absolute; top: -35px; right: 0; font-size: 2rem; color: #fff; background: none; border: none; cursor: pointer; z-index: 1001; }
+                .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; }
+                .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
             </style>
         </head>
         <body>
@@ -932,16 +1002,56 @@
                 <h1>${dayName}'s Workout</h1>
                 <div id="workout-container">${workoutCardsHTML}</div>
             </div>
+            
+            <div class="modal-overlay" id="video-modal-overlay">
+                <div class="modal-content">
+                    <button class="close-modal-btn" aria-label="Close video">&times;</button>
+                    <div class="video-wrapper">
+                        <iframe id="youtube-iframe" width="854" height="480" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+
             <script>
                 document.addEventListener('DOMContentLoaded', () => {
+                    // --- Checkbox logic ---
                     document.querySelectorAll('.complete-checkbox').forEach(checkbox => {
                         const card = checkbox.closest('.workout-card');
-                        if(checkbox.checked) {
-                            card.classList.add('completed');
+                        if(checkbox.checked) card.classList.add('completed');
+                        checkbox.addEventListener('change', (e) => card.classList.toggle('completed', e.target.checked));
+                    });
+
+                    // --- Video Modal Logic ---
+                    const videoModalOverlay = document.getElementById('video-modal-overlay');
+                    const youtubeIframe = document.getElementById('youtube-iframe');
+                    const closeModalBtn = videoModalOverlay.querySelector('.close-modal-btn');
+
+                    function openVideoModal(url) {
+                        const videoIdMatch = url.match(/(?:v=|\\/)([a-zA-Z0-9_-]{11})/);
+                        if (videoIdMatch && videoIdMatch.pop) {
+                            const videoId = videoIdMatch.pop();
+                            youtubeIframe.src = \`https://www.youtube.com/embed/\${videoId}?autoplay=1&mute=1\`;
+                            videoModalOverlay.style.display = 'flex';
+                        } else {
+                            alert('Could not open video. Invalid YouTube URL.');
                         }
-                        checkbox.addEventListener('change', (e) => {
-                            card.classList.toggle('completed', e.target.checked);
-                        });
+                    }
+
+                    function closeVideoModal() {
+                        videoModalOverlay.style.display = 'none';
+                        youtubeIframe.src = '';
+                    }
+
+                    document.querySelectorAll('.workout-video-btn').forEach(button => {
+                        button.addEventListener('click', () => openVideoModal(button.dataset.url));
+                    });
+                    
+                    closeModalBtn.addEventListener('click', closeVideoModal);
+                    videoModalOverlay.addEventListener('click', (e) => {
+                        if (e.target === videoModalOverlay) closeVideoModal();
+                    });
+                    document.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape' && videoModalOverlay.style.display === 'flex') closeVideoModal();
                     });
                 });
             <\/script>
@@ -1015,7 +1125,7 @@
                         if (!exercise) return;
                         
                         const newWorkout = { exerciseId: exercise.id, planId: `plan_${Date.now()}`, completed: false };
-                        if (exercise.type === 'Cardio') { Object.assign(newWorkout, { time: '', distance: '', intensity: '🟨 Medium' }); } 
+                        if (exercise.type === 'Cardio') { Object.assign(newWorkout, { time: '', distance: '', intensity: 'Medium' }); } 
                         else { Object.assign(newWorkout, { sets: '', reps: '', rest: '' }); }
                         
                         const newIndex = Array.from(evt.to.children).indexOf(itemEl);
@@ -1103,11 +1213,11 @@
             getEl('exercise-modal-overlay').style.display = 'flex';
         }
         function closeExerciseModal() { getEl('exercise-modal-overlay').style.display = 'none'; }
-        function openVideoModal(url) { const videoIdMatch = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/); if (videoIdMatch?.pop) { const videoId = videoIdMatch.pop(); getEl('youtube-iframe').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`; getEl('video-modal-overlay').style.display = 'flex'; } else { showToast('Invalid YouTube URL.', 'error'); } }
+        function openVideoModal(url) { const videoIdMatch = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/); if (videoIdMatch?.pop) { const videoId = videoIdMatch.pop(); getEl('youtube-iframe').src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`; getEl('video-modal-overlay').style.display = 'flex'; } else { showToast('Invalid YouTube URL.', 'error'); } }
         function closeVideoModal() { getEl('video-modal-overlay').style.display = 'none'; getEl('youtube-iframe').src = ''; }
         
         function injectModalHTML() {
-            getEl('exercise-modal-overlay').innerHTML = `<div class="modal"> <h3 id="modal-title">Add New Exercise</h3> <form id="exercise-form"> <input type="hidden" id="exercise-id"> <div class="form-group"> <label>Exercise Type</label> <div class="radio-group"> ${exerciseTypes.map(type => `<input type="radio" id="type-${type.toLowerCase()}" name="exercise-type" value="${type}"><label for="type-${type.toLowerCase()}">${type}</label>`).join('')} </div> </div> <div class="form-group"><label for="exercise-name-input">Exercise Name</label><input type="text" id="exercise-name-input" required></div> <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"> <div class="form-group" id="muscle-group-form-group"><label for="exercise-muscle-group-input">Muscle Group</label><select id="exercise-muscle-group-input" required></select></div> <div class="form-group" id="level-form-group"><label for="exercise-level-input">Difficulty Level</label><select id="exercise-level-input" required></select></div> </div> <div class="form-group"><label for="exercise-desc-input">Description (Optional)</label><textarea id="exercise-desc-input" rows="3"></textarea></div> <div class="form-group"><label for="exercise-url-input">YouTube URL (Optional)</label><input type="url" id="exercise-url-input" placeholder="https://www.youtube.com/watch?v=..."></div> <div class="form-group"><label for="exercise-color-picker">Card Color</label><div style="display:flex;align-items:center;gap:10px;"><input type="color" id="exercise-color-picker" value="#bb86fc" style="padding:0;border:none;width:50px;height:40px;background:none;"><input type="text" id="exercise-color-hex" maxlength="7" placeholder="#bb86fc" style="flex-grow:1;"></div></div> <div class="modal-actions"> <button type="button" class="btn btn-secondary modal-cancel-btn">Cancel</button> <button type="submit" class="btn btn-primary">Save Exercise</button> </div> </form> </div>`;
+            getEl('exercise-modal-overlay').innerHTML = `<div class="modal"> <h3 id="modal-title">Add New Exercise</h3> <form id="exercise-form"> <input type="hidden" id="exercise-id"> <div class="form-group"> <label>Exercise Type</label> <div class="radio-group"> ${exerciseTypes.map(type => `<input type="radio" id="type-${type.toLowerCase().replace(' ', '-')}" name="exercise-type" value="${type}"><label for="type-${type.toLowerCase().replace(' ', '-')}">${type}</label>`).join('')} </div> </div> <div class="form-group"><label for="exercise-name-input">Exercise Name</label><input type="text" id="exercise-name-input" required></div> <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"> <div class="form-group" id="muscle-group-form-group"><label for="exercise-muscle-group-input">Muscle Group</label><select id="exercise-muscle-group-input" required></select></div> <div class="form-group" id="level-form-group"><label for="exercise-level-input">Difficulty Level</label><select id="exercise-level-input" required></select></div> </div> <div class="form-group"><label for="exercise-desc-input">Description (Optional)</label><textarea id="exercise-desc-input" rows="3"></textarea></div> <div class="form-group"><label for="exercise-url-input">YouTube URL (Optional)</label><input type="url" id="exercise-url-input" placeholder="https://www.youtube.com/watch?v=..."></div> <div class="form-group"><label for="exercise-color-picker">Card Color</label><div style="display:flex;align-items:center;gap:10px;"><input type="color" id="exercise-color-picker" value="#bb86fc" style="padding:0;border:none;width:50px;height:40px;background:none;"><input type="text" id="exercise-color-hex" maxlength="7" placeholder="#bb86fc" style="flex-grow:1;"></div></div> <div class="modal-actions"> <button type="button" class="btn btn-secondary modal-cancel-btn">Cancel</button> <button type="submit" class="btn btn-primary">Save Exercise</button> </div> </form> </div>`;
             getEl('video-modal-overlay').innerHTML = `<div class="modal modal-content" id="video-modal"><button class="icon-btn close-modal-btn">×</button><div class="video-wrapper"><iframe id="youtube-iframe" width="854" height="480" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
             
             const colorPicker = getEl('exercise-color-picker');
