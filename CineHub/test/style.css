@@ -191,7 +191,7 @@ html.is-modal-open {
 
 /* --- HERO BANNER --- */
 .hero-banner {
-    height: 85vh;
+    height: 100vh;
     min-height: 400px;
     max-height: 550px;
     position: relative;
@@ -370,7 +370,7 @@ html.is-modal-open {
     transform-origin: left;
 }
 .hero-countdown-bar.animate {
-    animation: heroCountdown 7s linear forwards;
+    animation: heroCountdown 8s linear forwards;
 }
 
 @keyframes heroCountdown {
@@ -383,7 +383,7 @@ html.is-modal-open {
     background-color: var(--surface-color);
     padding: 1rem;
     border-radius: 0.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -478,6 +478,53 @@ html.is-modal-open {
 .reset-button .fas {
     margin-right: 0.25rem;
 }
+
+
+/* --- SORT CONTROLS --- */
+.sort-controls {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.sort-controls.hidden {
+    display: none;
+}
+
+.sort-btn {
+    border: 1px solid var(--border-color);
+    background-color: transparent;
+    padding: 0.375rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    transition: color 0.3s, background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
+    color: var(--text-secondary-color);
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.sort-btn:hover {
+    color: var(--text-primary-color);
+    border-color: var(--primary-color);
+}
+.sort-btn.active {
+    background-color: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 0 10px var(--shadow-color-primary);
+    border-color: var(--primary-color);
+}
+
+.sort-btn .sort-icon {
+    display: none;
+}
+.sort-btn.active .sort-icon {
+    display: inline-block;
+}
+
 
 /* --- MEDIA GRID & CARDS --- */
 .media-grid {
@@ -1169,4 +1216,26 @@ html.is-modal-open {
     .search-controls {
         max-width: 480px;
     }
+}
+
+/* --- SORTABLEJS DRAG & DROP STYLES --- */
+.media-grid.sortable-active .media-card-wrapper {
+    cursor: grab;
+}
+
+.sortable-ghost {
+    opacity: 0.4;
+    background: var(--surface-color);
+    border-radius: 0.5rem;
+    border: 2px dashed var(--primary-color);
+}
+.sortable-ghost * {
+    visibility: hidden;
+}
+
+.sortable-chosen {
+    cursor: grabbing !important;
+    transform: scale(1.02);
+    box-shadow: 0 0 25px var(--shadow-color-primary);
+    z-index: 10;
 }
