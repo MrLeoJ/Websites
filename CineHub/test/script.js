@@ -187,20 +187,24 @@ document.addEventListener('DOMContentLoaded', () => {
     
             if (validItems.length < 1) {
                 heroBanner.classList.add('hidden');
+                header.classList.remove('header-with-hero');
                 return;
             }
             
             heroItems = shuffleArray(validItems).slice(0, 10);
             
             if (heroItems.length > 0) {
+                header.classList.add('header-with-hero');
                 setupHeroCarousel();
             } else {
                  heroBanner.classList.add('hidden');
+                 header.classList.remove('header-with-hero');
             }
     
         } catch (error) {
             console.error("Failed to fetch hero banner:", error);
             heroBanner.classList.add('hidden');
+            header.classList.remove('header-with-hero');
         }
     };
     
@@ -212,13 +216,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="hero-overlay"></div>
             <div id="hero-content-wrapper" class="container"></div>
             <div class="hero-controls">
-                <div class="hero-nav-buttons">
-                    <button id="hero-prev-btn" class="hero-nav-btn" title="Previous"><i class="fas fa-chevron-left"></i></button>
-                    <button id="hero-next-btn" class="hero-nav-btn" title="Next"><i class="fas fa-chevron-right"></i></button>
-                </div>
+                <button id="hero-prev-btn" class="hero-nav-btn" title="Previous"><i class="fas fa-chevron-left"></i></button>
                 <div class="hero-countdown">
                     <div class="hero-countdown-bar animate"></div>
                 </div>
+                <button id="hero-next-btn" class="hero-nav-btn" title="Next"><i class="fas fa-chevron-right"></i></button>
             </div>
         `;
         
@@ -248,8 +250,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const backdropUrl = `https://image.tmdb.org/t/p/original${details.backdrop_path}`;
         const title = details.title || details.name;
         const overview = details.overview;
+        const genres = details.genres?.map(g => g.name).slice(0, 2).join(' • ');
+        const releaseYear = (details.release_date || details.first_air_date || '').substring(0, 4);
         const escapedTitle = title.replace(/'/g, "\\'");
         const truncatedOverview = overview.length > 250 ? overview.substring(0, 250) + '...' : overview;
+
+        const heroMetaParts = [];
+        if (releaseYear) heroMetaParts.push(releaseYear);
+        if (genres) heroMetaParts.push(genres);
+        const heroMeta = heroMetaParts.join(' | ');
     
         const contentWrapper = document.getElementById('hero-content-wrapper');
         const newSlide = document.createElement('div');
@@ -257,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         newSlide.innerHTML = `
             <h2 class="hero-title">${title}</h2>
+            <p class="hero-genres">${heroMeta}</p>
             <p class="hero-description">${truncatedOverview}</p>
             <div class="hero-buttons">
                 <button class="hero-btn trailer-btn"><i class="fas fa-play"></i> Play Trailer</button>
@@ -701,7 +711,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const mediaTypeToggleContainer = movieTypeBtn.parentElement;
         const mainElement = document.querySelector('main.container');
 
-        if(heroBanner) heroBanner.classList.toggle('hidden', !isDiscover);
+        if(heroBanner) {
+            heroBanner.classList.toggle('hidden', !isDiscover);
+            header.classList.toggle('header-with-hero', isDiscover);
+        }
         if (mainElement) mainElement.style.paddingTop = isDiscover ? '2rem' : '8rem';
         
         mediaTypeToggleContainer.classList.toggle('hidden', isWatchingMode);
