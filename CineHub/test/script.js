@@ -167,6 +167,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- CORE LOGIC ---
     const fetchAndDisplayHeroBanner = async () => {
+        if (window.innerWidth < 1024) {
+            heroBanner.classList.add('hidden');
+            header.classList.remove('header-with-hero');
+            if (heroTimeoutId) clearTimeout(heroTimeoutId);
+            heroItems = [];
+            return;
+        }
+
         try {
             if (heroTimeoutId) clearTimeout(heroTimeoutId);
             const excludedIds = await getExcludedGenreIds(mediaType);
@@ -708,14 +716,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateFiltersUI = () => {
         const isDiscover = !isActorSearchMode && !isWatchlistMode && !isWatchingMode;
+        const canShowHero = window.innerWidth >= 1024;
+        const showHero = isDiscover && canShowHero;
+
         const mediaTypeToggleContainer = movieTypeBtn.parentElement;
         const mainElement = document.querySelector('main.container');
 
         if(heroBanner) {
-            heroBanner.classList.toggle('hidden', !isDiscover);
-            header.classList.toggle('header-with-hero', isDiscover);
+            heroBanner.classList.toggle('hidden', !showHero);
+            header.classList.toggle('header-with-hero', showHero);
         }
-        if (mainElement) mainElement.style.paddingTop = isDiscover ? '2rem' : '8rem';
+        if (mainElement) mainElement.style.paddingTop = showHero ? '2rem' : '8rem';
         
         mediaTypeToggleContainer.classList.toggle('hidden', isWatchingMode);
         
@@ -1639,7 +1650,21 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const debouncedSearch = debounce(handleSearch, 1000);
 
+    const handleResize = debounce(() => {
+        updateFiltersUI();
+        
+        const canShowHero = window.innerWidth >= 1024;
+        const isDiscover = !isActorSearchMode && !isWatchlistMode && !isWatchingMode;
+        const heroHasContent = heroItems.length > 0;
+
+        if (canShowHero && isDiscover && !heroHasContent) {
+            fetchAndDisplayHeroBanner();
+        }
+    }, 250);
+
     // --- EVENT LISTENERS ---
+    window.addEventListener('resize', handleResize);
+    
     watchingBtn.addEventListener('click', () => {
         // Toggling 'Watching' mode
         isWatchingMode = !isWatchingMode;
