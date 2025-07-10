@@ -6,10 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const ACCOUNT_ID = '16613298';
     const API_BASE_URL = 'https://api.themoviedb.org/3';
     const UNAVAILABLE_IMAGE_URL = 'https://i.postimg.cc/3wmgc5fd/Image-Unavailable.png';
-    const EXCLUDED_GENRE_NAMES = ['Reality', 'Talk', 'Soap', 'Kids', 'News', 'Documentary'];
+    const EXCLUDED_GENRE_NAMES = ['Reality', 'Talk', 'Soap', 'Kids', 'Animation', 'News', 'Documentary'];
     const EXCLUDED_KEYWORDS = ['wwe', 'award', 'awards', 'oscar', 'emmy', 'grammy', 'golden globe'];
     const EXCLUDED_TITLES = [
-        "the jonathan ross show", "loose women", "the jeremy kyle show", "the graham norton show", "big brother", "love island", "the great british bake off", "strictly come dancing", "the apprentice", "i'm a celebrity... get me out of here!", "the only way is essex", "gogglebox", "rupaul’s drag race uk", "made in chelsea", "britain's got talent", "the masked singer", "the voice", "america's next top model", "top chef", "shark tank", "keeping up with the kardashians", "american idol", "the bachelor", "the bachelorette", "survivor", "good morning america", "live with kelly and mark", "the today show", "the drew barrymore show", "dr. phil", "the tonight show starring jimmy fallon", "jimmy kimmel live", "late night with seth meyers", "the late show with stephen colbert", "the daily show", "real time with bill maher", "judge judy", "mock the week", "a league of their own", "taskmaster", "never mind the buzzcocks", "8 out of 10 cats", "would i lie to you", "meet the richardsons", "big fat quiz", "hypothetical", "the danny kaye show", "deal or no deal"
+        "the jonathan ross show", "Good Mythical Morning", "Would I Lie to You?", "", "loose women", "the jeremy kyle show", "the graham norton show", "big brother", "love island", "the great british bake off", "strictly come dancing", "the apprentice", "i'm a celebrity... get me out of here!", "the only way is essex", "gogglebox", "rupaul’s drag race uk", "made in chelsea", "britain's got talent", "the masked singer", "the voice", "america's next top model", "top chef", "shark tank", "keeping up with the kardashians", "american idol", "the bachelor", "the bachelorette", "survivor", "good morning america", "live with kelly and mark", "the today show", "the drew barrymore show", "dr. phil", "the tonight show starring jimmy fallon", "jimmy kimmel live", "late night with seth meyers", "the late show with stephen colbert", "the daily show", "real time with bill maher", "judge judy", "mock the week", "a league of their own", "taskmaster", "never mind the buzzcocks", "8 out of 10 cats", "would i lie to you", "meet the richardsons", "big fat quiz", "hypothetical", "the danny kaye show", "deal or no deal"
     ].map(t => t.toLowerCase());
 
     let mediaType = 'movie';
@@ -31,6 +31,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let heroItems = [];
     let currentHeroIndex = 0;
     let heroTimeoutId = null;
+    let heroSlideStartTime = 0;
+    let heroTimeRemaining = 8000;
+    let isHeroPausedByModal = false;
+    const heroCarouselController = { resume: null };
+    
+    // Sort state
+    let activeSort = 'default';
+    let sortOrder = 'desc';
+    let sortableInstance = null; // For SortableJS instance
 
     // Filter states
     let selectedGenre = '';
@@ -93,6 +102,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const yearFilterWrapper = document.getElementById('year-filter-wrapper');
     const countryFilterWrapper = document.getElementById('country-filter-wrapper');
     const languageFilterWrapper = document.getElementById('language-filter-wrapper');
+
+    const sortControls = document.getElementById('sort-controls');
+    const sortDefaultBtn = document.getElementById('sort-default-btn');
+    const sortYearBtn = document.getElementById('sort-year-btn');
+    const sortRateBtn = document.getElementById('sort-rate-btn');
+    const sortPopularityBtn = document.getElementById('sort-popularity-btn');
     
     // --- HELPERS ---
     const calculateAge = (birthday) => {
@@ -167,7 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- CORE LOGIC ---
     const fetchAndDisplayHeroBanner = async () => {
-        if (window.innerWidth < 1024) {
+        const isDiscover = !isActorSearchMode && !isWatchlistMode && !isWatchingMode;
+        if (window.innerWidth < 1024 || !isDiscover) {
             heroBanner.classList.add('hidden');
             header.classList.remove('header-with-hero');
             if (heroTimeoutId) clearTimeout(heroTimeoutId);
@@ -209,7 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
                  header.classList.remove('header-with-hero');
             }
     
-        } catch (error) {
+        } catch (error)
+        {
             console.error("Failed to fetch hero banner:", error);
             heroBanner.classList.add('hidden');
             header.classList.remove('header-with-hero');
@@ -278,9 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <p class="hero-description">${truncatedOverview}</p>
             <div class="hero-buttons">
                 <button class="hero-btn trailer-btn"><i class="fas fa-play"></i> Play Trailer</button>
+                <button class="hero-btn watchlist-btn" title="Add to Watchlist"><i class="fas fa-bookmark"></i> Watchlist</button>
                 <button class="hero-btn info-btn"><i class="fas fa-info-circle"></i> More Info</button>
                 <button class="hero-btn cast-btn"><i class="fa-solid fa-user-group"></i> View Cast</button>
-                <button class="hero-btn watchlist-btn" title="Add to Watchlist"><i class="fas fa-bookmark"></i> Watchlist</button>
             </div>
         `;
     
@@ -295,37 +312,103 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activeBg) activeBg.style.opacity = '0';
         
         // Handle content transition
-        const currentContent = contentWrapper.querySelector('.hero-content');
-        if (currentContent) {
-            currentContent.classList.add('fade-out');
-            currentContent.addEventListener('animationend', () => currentContent.remove(), { once: true });
-        }
+        // First, clean up any slides that are already animating out to prevent buildup from rapid clicks.
+        contentWrapper.querySelectorAll('.hero-content.fade-out').forEach(el => el.remove());
+
+        // Now, find the single currently active (visible) slide.
+        const currentSlide = contentWrapper.querySelector('.hero-content');
         
+        // Add the new slide to the DOM.
         newSlide.classList.add('fade-in');
         contentWrapper.appendChild(newSlide);
+        
+        // Animate out the old slide if it existed.
+        if (currentSlide) {
+            currentSlide.classList.remove('fade-in'); // Prevent classes from fighting.
+            currentSlide.classList.add('fade-out');
+            currentSlide.addEventListener('animationend', () => {
+                // Final check to prevent errors if it was already removed.
+                if (currentSlide.parentNode) {
+                    currentSlide.remove();
+                }
+            }, { once: true });
+        }
     
         const watchlistBtnEl = newSlide.querySelector('.hero-btn.watchlist-btn');
-        newSlide.querySelector('.trailer-btn').onclick = () => showTrailer(details.id, itemMediaType);
-        newSlide.querySelector('.info-btn').onclick = () => showSynopsis(details.id, itemMediaType, escapedTitle);
-        newSlide.querySelector('.cast-btn').onclick = () => showCast(details.id, itemMediaType);
+    
+        // Carousel Timer Logic
+        const countdownBar = heroBanner.querySelector('.hero-countdown-bar');
+
+        const advanceSlide = () => {
+            const nextIndex = (currentHeroIndex + 1) % heroItems.length;
+            displayHeroSlide(nextIndex, 'next');
+        };
+
+        const pauseCarousel = () => {
+            if (heroTimeoutId) {
+                clearTimeout(heroTimeoutId);
+                heroTimeoutId = null; // Mark as paused
+                heroTimeRemaining -= (Date.now() - heroSlideStartTime);
+                if (countdownBar) {
+                    countdownBar.style.animationPlayState = 'paused';
+                }
+            }
+        };
+
+        const performResume = () => {
+            if (heroTimeoutId === null && heroTimeRemaining > 0) {
+                heroSlideStartTime = Date.now();
+                if (countdownBar) {
+                    countdownBar.style.animationPlayState = 'running';
+                }
+                heroTimeoutId = setTimeout(advanceSlide, heroTimeRemaining);
+            }
+        };
+
+        const resumeCarousel = () => {
+            if (isHeroPausedByModal) return;
+            performResume();
+        };
+        
+        heroCarouselController.resume = performResume;
+
+        newSlide.querySelector('.trailer-btn').onclick = () => {
+            isHeroPausedByModal = true;
+            pauseCarousel();
+            showTrailer(details.id, itemMediaType);
+        };
+        newSlide.querySelector('.info-btn').onclick = () => {
+            isHeroPausedByModal = true;
+            pauseCarousel();
+            showSynopsis(details.id, itemMediaType, escapedTitle);
+        };
+        newSlide.querySelector('.cast-btn').onclick = () => {
+            isHeroPausedByModal = true;
+            pauseCarousel();
+            showCast(details.id, itemMediaType);
+        };
         watchlistBtnEl.onclick = (e) => toggleWatchlistAction(details.id, itemMediaType, e.currentTarget);
     
         const isInWatchlist = watchlistItems.some(item => item.id == details.id);
         watchlistBtnEl.classList.toggle('in-watchlist', isInWatchlist);
         watchlistBtnEl.title = isInWatchlist ? "Remove from Watchlist" : "Add to Watchlist";
     
-        // Restart countdown
-        const countdownBar = heroBanner.querySelector('.hero-countdown-bar');
+        // Attach hover listeners for pausing
+        const heroButtonsContainer = newSlide.querySelector('.hero-buttons');
+        heroButtonsContainer.addEventListener('mouseenter', pauseCarousel);
+        heroButtonsContainer.addEventListener('mouseleave', resumeCarousel);
+
+        // Restart countdown for the new slide
         if (countdownBar) {
+            countdownBar.style.animationPlayState = 'running'; // Ensure it's not paused from a previous slide
             countdownBar.classList.remove('animate');
             void countdownBar.offsetWidth; // Trigger reflow
             countdownBar.classList.add('animate');
         }
         
-        heroTimeoutId = setTimeout(() => {
-            const nextIndex = (currentHeroIndex + 1) % heroItems.length;
-            displayHeroSlide(nextIndex, 'next');
-        }, 7000);
+        heroTimeRemaining = 8000;
+        heroSlideStartTime = Date.now();
+        heroTimeoutId = setTimeout(advanceSlide, heroTimeRemaining);
     };
 
     const fetchAndDisplayMedia = async (page = 1, append = false) => {
@@ -359,15 +442,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 endpoint = `search/${mediaType}?${params.toString()}`;
             } else { // Discover mode
                 const excludedIds = await getExcludedGenreIds(mediaType);
+
+                let sortByParam;
+                if (activeSort !== 'default') {
+                    let sortKey;
+                    if (activeSort === 'year') {
+                        sortKey = mediaType === 'movie' ? 'primary_release_date' : 'first_air_date';
+                        const today = new Date().toISOString().split('T')[0];
+                        params.append(mediaType === 'movie' ? 'primary_release_date.lte' : 'first_air_date.lte', today);
+                    } else if (activeSort === 'rate') {
+                        sortKey = 'vote_average';
+                        params.append('vote_count.gte', '50'); // Minimum 100 votes
+                    } else { // popularity
+                        sortKey = 'popularity';
+                    }
+                    sortByParam = `${sortKey}.${sortOrder}`;
+                } else {
+                    sortByParam = 'popularity.desc';
+                }
+                params.append('sort_by', sortByParam);
                 
-                params.append('sort_by', 'popularity.desc');
                 if (excludedIds.length > 0) params.append('without_genres', excludedIds.join(','));
 
                 // Apply general filters
                 if (selectedGenre) params.append('with_genres', selectedGenre);
                 if (selectedYear) params.append(mediaType === 'movie' ? 'primary_release_year' : 'first_air_date_year', selectedYear);
                 if (selectedCountry) params.append('with_origin_country', selectedCountry);
-                if (selectedLanguage) params.append('with_original_language', selectedLanguage);
+                
+                if (selectedLanguage) {
+                    params.append('with_original_language', selectedLanguage);
+                } else {
+                    // For the main collection, default to a curated list of languages
+                    params.append('with_original_language', 'en|pt|es|it|fr');
+                }
 
                 // Apply network/provider filter
                 if (selectedNetwork) {
@@ -391,11 +498,17 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (!append) mediaContainer.innerHTML = '';
             
-            const excludedIds = await getExcludedGenreIds(mediaType);
-            let results = (data.results || []).filter(item => !isItemExcluded(item, excludedIds));
+            let results = data.results || [];
+
+            // Only apply exclusion filters if not in search mode.
+            if (searchTerm.length <= 2) {
+                const excludedIds = await getExcludedGenreIds(mediaType);
+                results = results.filter(item => !isItemExcluded(item, excludedIds));
+            }
             
+            // Only shuffle if it's the 'default' sort and no other filters are active.
             const areAnyFiltersActive = searchTerm.length > 2 || selectedNetwork || selectedGenre || selectedYear || selectedCountry || selectedLanguage;
-            if (!append && !areAnyFiltersActive) {
+            if (activeSort === 'default' && !append && !areAnyFiltersActive) {
                 for (let i = results.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [results[i], results[j]] = [results[j], results[i]];
@@ -708,10 +821,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const destroySortable = () => {
+        if (sortableInstance) {
+            sortableInstance.destroy();
+            sortableInstance = null;
+        }
+        mediaContainer.classList.remove('sortable-active');
+    };
+
     const resetAndFetch = () => {
+        destroySortable();
         currentPage = 1;
         totalPages = 1;
         fetchAndDisplayMedia(1, false);
+    };
+
+    const updateSortButtonsUI = () => {
+        const buttons = [
+            { el: sortDefaultBtn, key: 'default' },
+            { el: sortYearBtn, key: 'year' },
+            { el: sortRateBtn, key: 'rate' },
+            { el: sortPopularityBtn, key: 'popularity' }
+        ];
+    
+        buttons.forEach(btn => {
+            btn.el.classList.remove('active');
+            const oldIcon = btn.el.querySelector('.sort-icon');
+            if (oldIcon) oldIcon.remove();
+    
+            if (btn.key === activeSort) {
+                btn.el.classList.add('active');
+                if (activeSort !== 'default') {
+                    const icon = document.createElement('i');
+                    icon.className = `fas fa-arrow-${sortOrder === 'desc' ? 'down' : 'up'} sort-icon`;
+                    btn.el.appendChild(icon);
+                }
+            }
+        });
     };
 
     const updateFiltersUI = () => {
@@ -736,6 +882,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const showNetworkFilter = (isDiscover || isWatchlistMode) && mediaType === 'tv';
         networkFilterWrapper.classList.toggle('hidden', !showNetworkFilter);
 
+        sortControls.classList.toggle('hidden', !isDiscover);
+
         if (isActorSearchMode) {
             searchInput.placeholder = 'Search for Actors...';
         } else if (mediaType === 'tv') {
@@ -747,6 +895,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     // --- WATCHLIST LOGIC ---
+    const initSortable = () => {
+        destroySortable();
+        if (!isWatchlistMode && !isWatchingMode) return;
+
+        // Disable drag-drop if any filters are active to prevent complex reordering logic
+        const areAnyFiltersActive = searchTerm.length > 2 || selectedNetwork || selectedGenre || selectedYear || selectedCountry || selectedLanguage;
+        if (areAnyFiltersActive) {
+            return;
+        }
+
+        mediaContainer.classList.add('sortable-active');
+        const storageKey = isWatchingMode ? 'watchingOrder' : 'watchlistOrder';
+
+        sortableInstance = new Sortable(mediaContainer, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            handle: '.media-card-wrapper',
+            onEnd: (evt) => {
+                // Get the new order of IDs from the DOM
+                const newOrderIds = Array.from(evt.to.children)
+                    .map(child => child.querySelector('.media-card')?.dataset.id)
+                    .filter(Boolean); // Filter out any potential nulls
+
+                // Save the new order to localStorage
+                localStorage.setItem(storageKey, JSON.stringify(newOrderIds));
+
+                // Re-order the master watchlistItems array in memory to match the new custom order
+                const orderMap = new Map(newOrderIds.map((id, index) => [id, index]));
+                watchlistItems.sort((a, b) => {
+                    const indexA = orderMap.get(String(a.id));
+                    const indexB = orderMap.get(String(b.id));
+                    if (indexA === undefined) return 1;
+                    if (indexB === undefined) return -1;
+                    return indexA - indexB;
+                });
+            }
+        });
+    };
+
     const calculateNextEpisode = (item, watchedProgress) => {
         const itemProgress = watchedProgress[item.id];
         let nextUp = { season: 1, episode: 1 };
@@ -849,20 +1037,36 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectedNetwork && item.media_type === 'tv' && !item.networks?.some(n => n.id == selectedNetwork)) return false;
             return true;
         });
+        
+        // Sorting logic: custom order from localStorage takes precedence
+        const storageKey = isWatchingMode ? 'watchingOrder' : 'watchlistOrder';
+        const savedOrder = JSON.parse(localStorage.getItem(storageKey) || 'null');
 
-        filtered.sort((a, b) => {
-            const titleA = (a.title || a.name || '').toLowerCase();
-            const titleB = (b.title || b.name || '').toLowerCase();
-            switch (selectedSort) {
-                case 'date_added_desc': return new Date(b.date_added) - new Date(a.date_added);
-                case 'date_added_asc': return new Date(a.date_added) - new Date(b.date_added);
-                case 'popularity_desc': return b.popularity - a.popularity;
-                case 'rating_desc': return b.vote_average - a.vote_average;
-                case 'release_date_desc': return new Date(b.release_date || b.first_air_date) - new Date(a.release_date || a.first_air_date);
-                case 'alphabetical_asc': return titleA.localeCompare(titleB);
-                default: return 0;
-            }
-        });
+        if (savedOrder && Array.isArray(savedOrder)) {
+            const orderMap = new Map(savedOrder.map((id, index) => [id, index]));
+            filtered.sort((a, b) => {
+                const indexA = orderMap.get(String(a.id));
+                const indexB = orderMap.get(String(b.id));
+                if (indexA === undefined) return 1; // Items not in custom order go to the end
+                if (indexB === undefined) return -1;
+                return indexA - indexB;
+            });
+        } else {
+            // Fallback to default sorting if no custom order exists
+            filtered.sort((a, b) => {
+                const titleA = (a.title || a.name || '').toLowerCase();
+                const titleB = (b.title || b.name || '').toLowerCase();
+                switch (selectedSort) {
+                    case 'date_added_desc': return new Date(b.date_added) - new Date(a.date_added);
+                    case 'date_added_asc': return new Date(a.date_added) - new Date(b.date_added);
+                    case 'popularity_desc': return b.popularity - a.popularity;
+                    case 'rating_desc': return b.vote_average - a.vote_average;
+                    case 'release_date_desc': return new Date(b.release_date || b.first_air_date) - new Date(a.release_date || a.first_air_date);
+                    case 'alphabetical_asc': return titleA.localeCompare(titleB);
+                    default: return 0;
+                }
+            });
+        }
         
         loader.classList.add('hidden');
         if (filtered.length === 0) {
@@ -874,6 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
              updateAllCardWatchlistIcons();
         }
+        initSortable();
     };
 
     const updateAllCardWatchlistIcons = () => {
@@ -1267,6 +1472,13 @@ document.addEventListener('DOMContentLoaded', () => {
         modalContainer.innerHTML = '';
         document.documentElement.classList.remove('is-modal-open');
         modalHistory = [];
+
+        if (isHeroPausedByModal) {
+            if (heroCarouselController.resume) {
+                heroCarouselController.resume();
+            }
+            isHeroPausedByModal = false;
+        }
     }
     
     const goBackInModal = () => {
@@ -1662,6 +1874,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 250);
 
+    const handleSortChange = (newSort) => {
+        if (isActorSearchMode || isWatchlistMode || isWatchingMode) return;
+    
+        if (activeSort === newSort && newSort !== 'default') {
+            sortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
+        } else {
+            sortOrder = 'desc';
+        }
+        activeSort = newSort;
+    
+        updateSortButtonsUI();
+        resetAndFetch();
+    };
+
     // --- EVENT LISTENERS ---
     window.addEventListener('resize', handleResize);
     
@@ -1684,6 +1910,7 @@ document.addEventListener('DOMContentLoaded', () => {
             displayWatchlist();
         } else {
             // If turning off, revert to discover view
+            destroySortable();
             resetAndFetch();
         }
         updateFiltersUI();
@@ -1708,6 +1935,7 @@ document.addEventListener('DOMContentLoaded', () => {
             displayWatchlist();
         } else {
             // If turning off, revert to discover view
+            destroySortable();
             resetAndFetch();
         }
         updateFiltersUI();
@@ -1728,6 +1956,7 @@ document.addEventListener('DOMContentLoaded', () => {
             watchingBtn.classList.remove('active');
             movieTypeBtn.classList.remove('active');
             tvTypeBtn.classList.remove('active');
+            destroySortable();
             
             if (searchTerm) {
                 handleSearch();
@@ -1791,31 +2020,44 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     resetBtn.addEventListener('click', () => {
-        isWatchlistMode = false;
-        isWatchingMode = false;
-        isActorSearchMode = false;
-        mediaType = 'movie';
+        // Clear filter states
         searchTerm = '';
         selectedGenre = '';
         selectedYear = '';
         selectedCountry = '';
         selectedLanguage = '';
         selectedNetwork = '';
+
+        // Reset sort state
+        activeSort = 'default';
+        sortOrder = 'desc';
+        updateSortButtonsUI();
+        
+        // Reset pagination
         currentPage = 1;
         totalPages = 1;
 
-        watchlistBtn.classList.remove('active');
-        watchingBtn.classList.remove('active');
-        actorSearchToggle.classList.remove('active');
-        movieTypeBtn.classList.add('active');
-        tvTypeBtn.classList.remove('active');
+        // Reset UI elements for filters
         searchInput.value = '';
-        
         Object.values(customSelects).forEach(s => s.reset());
-        fetchAndDisplayHeroBanner();
-        updateFiltersUI();
-        resetAndFetch();
+
+        // Re-fetch data for the current view without changing the view itself.
+        // The display functions will handle fetching and re-rendering the grid.
+        if (isWatchlistMode || isWatchingMode) {
+            displayWatchlist();
+        } else if (isActorSearchMode) {
+            // When resetting actor search (clearing term), show popular actors
+            fetchAndDisplayPopularActors();
+        } else {
+            // This handles the default discover view for films or TV series
+            resetAndFetch();
+        }
     });
+
+    sortDefaultBtn.addEventListener('click', () => handleSortChange('default'));
+    sortYearBtn.addEventListener('click', () => handleSortChange('year'));
+    sortRateBtn.addEventListener('click', () => handleSortChange('rate'));
+    sortPopularityBtn.addEventListener('click', () => handleSortChange('popularity'));
     
     mediaContainer.addEventListener('mouseover', handleCardHover);
     
@@ -1927,6 +2169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INITIALIZATION ---
     fetchFilterOptions();
     updateFiltersUI();
+    updateSortButtonsUI();
     resetAndFetch();
     fetchWatchlist().then(() => {
         fetchAndDisplayHeroBanner();
