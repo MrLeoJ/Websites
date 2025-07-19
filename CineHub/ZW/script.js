@@ -3,7 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- STATE ---
     const API_V3_KEY = '0ffcf20ea2937287d83cb36c4972993b';
     const API_READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwZmZjZjIwZWEyOTM3Mjg3ZDgzY2IzNmM0OTcyOTkzYiIsIm5iZiI6MTc1MjkyMzQxNS43ODEsInN1YiI6IjY4N2I3ZDE3N2IwMWYxMDkyNjE2OThkZSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.u2oqHqquzDyFnajiFmzPla6J1pfEHKpJYvBhlDjFeDE';
-    const ACCOUNT_ID = '16613298';
+    let ACCOUNT_ID = null;
+    let accountIdPromise = null;
     const API_BASE_URL = 'https://api.themoviedb.org/3';
     const UNAVAILABLE_IMAGE_URL = 'https://i.postimg.cc/3wmgc5fd/Image-Unavailable.png';
     const EXCLUDED_GENRE_NAMES = ['Reality', 'Talk', 'Soap', 'Kids', 'Animation', 'News', 'Documentary'];
@@ -139,6 +140,36 @@ document.addEventListener('DOMContentLoaded', () => {
             [array[i], array[j]] = [array[j], array[i]];
         }
         return array;
+    };
+
+    const ensureAccountId = () => {
+        if (ACCOUNT_ID) return Promise.resolve(ACCOUNT_ID);
+        if (accountIdPromise) return accountIdPromise;
+
+        accountIdPromise = (async () => {
+            try {
+                const accountDetails = await fetchFromApi('account', {}, true);
+                if (accountDetails && accountDetails.id) {
+                    ACCOUNT_ID = accountDetails.id;
+                    return ACCOUNT_ID;
+                } else {
+                    throw new Error("Could not retrieve Account ID from API.");
+                }
+            } catch (error) {
+                console.error("Could not fetch Account ID. Watchlist features will be disabled.", error);
+                showToast("Watchlist disabled: Could not connect to your account.");
+                // Disable UI elements that require ACCOUNT_ID
+                watchingBtn.disabled = true;
+                watchlistBtn.disabled = true;
+                watchingBtn.style.opacity = '0.5';
+                watchingBtn.style.cursor = 'not-allowed';
+                watchlistBtn.style.opacity = '0.5';
+                watchlistBtn.style.cursor = 'not-allowed';
+                accountIdPromise = null; // Allow retry on next call
+                throw error; // re-throw to be caught by callers
+            }
+        })();
+        return accountIdPromise;
     };
 
     // --- API SERVICE ---
@@ -963,6 +994,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fetchWatchlist = async () => {
         try {
+            await ensureAccountId();
+        } catch (error) {
+            return; // Error handled in ensureAccountId
+        }
+
+        try {
             const fetchPage = async (type, page) => fetchFromApi(`account/${ACCOUNT_ID}/watchlist/${type}?page=${page}`, {}, true);
             
             const fetchAll = async (type) => {
@@ -1096,6 +1133,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const toggleWatchlistAction = async (id, type, button) => {
+        try {
+            await ensureAccountId();
+        } catch (error) {
+            showToast("Cannot update watchlist. Account not available.");
+            return;
+        }
+
         const isInWatchlist = watchlistItems.some(item => item.id == id);
         const options = {
             method: 'POST',
