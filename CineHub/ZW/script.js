@@ -1,8 +1,8 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- STATE ---
-    const API_V3_KEY = '329f898e5642c90715fd2b4a81f0e2d6';
-    const API_READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzMjlmODk4ZTU2NDJjOTA3MTVmZDJiNGE4MWYwZTJkNiIsIm5iZiI6MTcyODkxNTY1OS42NTAyMTksInN1YiI6IjYzYTRkNWQ3MzM0NGM2MDA3ZGMwYzRlOSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.7JRz28RfwmrRWR058vIiUztw_4L-FbBfL8BICq73-vc';
+    const API_V3_KEY = '0ffcf20ea2937287d83cb36c4972993b';
+    const API_READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwZmZjZjIwZWEyOTM3Mjg3ZDgzY2IzNmM0OTcyOTkzYiIsIm5iZiI6MTc1MjkyMzQxNS43ODEsInN1YiI6IjY4N2I3ZDE3N2IwMWYxMDkyNjE2OThkZSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.u2oqHqquzDyFnajiFmzPla6J1pfEHKpJYvBhlDjFeDE';
     const ACCOUNT_ID = '16613298';
     const API_BASE_URL = 'https://api.themoviedb.org/3';
     const UNAVAILABLE_IMAGE_URL = 'https://i.postimg.cc/3wmgc5fd/Image-Unavailable.png';
