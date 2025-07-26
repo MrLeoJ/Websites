@@ -1,8 +1,8 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- STATE ---
-    const API_V3_KEY = '0ffcf20ea2937287d83cb36c4972993b';
-    const API_READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwZmZjZjIwZWEyOTM3Mjg3ZDgzY2IzNmM0OTcyOTkzYiIsIm5iZiI6MTc1MjkyMzQxNS43ODEsInN1YiI6IjY4N2I3ZDE3N2IwMWYxMDkyNjE2OThkZSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.u2oqHqquzDyFnajiFmzPla6J1pfEHKpJYvBhlDjFeDE';
+    const API_V3_KEY = '59b525e4fae54020de6a2004b2b204d1';
+    const API_READ_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1OWI1MjVlNGZhZTU0MDIwZGU2YTIwMDRiMmIyMDRkMSIsIm5iZiI6MTc1MzUxMDM4OS4wMjgsInN1YiI6IjY4ODQ3MWY1MTAwOTNhNTA5NThhNjY5ZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.tm0PMvwGG19Twv0iggA6hHd9ft0nmRFsy19UBxjYEWQ';
     let ACCOUNT_ID = null;
     let accountIdPromise = null;
     const API_BASE_URL = 'https://api.themoviedb.org/3';
