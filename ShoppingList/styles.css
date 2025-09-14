@@ -4,7 +4,7 @@ body {
     background-color: #f4f4f4;
     color: #333;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: flex-start;
     min-height: 100vh;
     padding-top: 20px;
@@ -92,8 +92,15 @@ body {
 }
 
 .editable-list li.dragging {
-    opacity: 0.5;
+    opacity: 0.8;
+    transform: rotate(2deg);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
+
+.drop-indicator {
+    border-top: 1px solid #666666 !important;
+}
+
 
 .editable-list li .list-item-text {
     flex-grow: 1;
@@ -362,30 +369,122 @@ body {
     padding: 0;
 }
 
+/* Pantry Item Styles with Swipe */
 .pantry-item {
     background-color: #f9f9f9;
-    padding: 12px;
     margin-bottom: 8px;
     border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10+ and Edge */
+    user-select: none; /* Standard */
+}
+
+.pantry-item.dragging {
+    opacity: 0.8;
+    transform: rotate(2deg);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.pantry-item-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background-color: #f9f9f9;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s ease-out;
+    cursor: pointer;
+}
+
+.pantry-item.is-swiped .pantry-item-content {
+    transform: translateX(-150px);
+}
+
+.pantry-item-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0; /* Prevents the image from shrinking */
+}
+
+.pantry-item-main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.pantry-item-main small {
+    font-size: 0.8em;
+    color: #888;
+}
+
+.pantry-item-main small a {
+    color: #007aff;
+    text-decoration: none;
+    margin-left: 5px;
+}
+
+.pantry-item-main small a:hover {
+    text-decoration: underline;
+}
+
+.stock-input {
+    width: 60px;
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 600;
+    -moz-appearance: textfield;
+}
+.stock-input.low-stock {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+.stock-input::-webkit-outer-spin-button,
+.stock-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+
+.pantry-item-actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    z-index: 0;
 }
 
 .pantry-item-actions button {
     background: none;
     border: none;
-    color: #777;
+    color: white;
     cursor: pointer;
-    margin-left: 5px;
-    font-size: 14px;
+    height: 100%;
+    width: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    transition: background-color 0.2s ease;
 }
 
-.pantry-item-actions button:hover {
-    color: #333;
-}
+.pantry-item-actions .edit-item-btn { background-color: #007aff; }
+.pantry-item-actions .edit-item-btn:hover { background-color: #0056b3; }
+.pantry-item-actions .duplicate-item-btn { background-color: #ff9500; }
+.pantry-item-actions .duplicate-item-btn:hover { background-color: #c77400; }
+.pantry-item-actions .delete-item-btn { background-color: #dc3545; }
+.pantry-item-actions .delete-item-btn:hover { background-color: #b02a37; }
 
 
 .shopping-item {
@@ -481,7 +580,7 @@ body {
     position: relative; /* For close button positioning */
 }
 
-.modal-input, .modal-input select {
+.modal-input, .modal-input-group select {
     width: 100%;
     padding: 10px;
     margin-bottom: 15px;
