@@ -100,12 +100,25 @@
             <span class="close-button" id="close-edit-modal">×</span>
             <h3>Edit Item</h3>
             <input type="text" id="edit-item-name-input" placeholder="Item Name" class="modal-input">
+            <input type="url" id="edit-item-url-input" placeholder="Product URL" class="modal-input">
+            <input type="url" id="edit-item-image-input" placeholder="Image URL" class="modal-input">
             <select id="edit-item-category-select" class="modal-input">
                 <!-- Category options for edit will be loaded here -->
             </select>
+            <select id="edit-item-store-select" class="modal-input">
+                <!-- Store options for edit will be loaded here -->
+            </select>
+            <div class="modal-input-group" style="flex-direction: row; gap: 10px;">
+                <input type="number" id="edit-item-stock-input" placeholder="Stock" class="modal-input" min="0" step="any">
+                <input type="number" id="edit-item-min-input" placeholder="Min Stock" class="modal-input" min="0" step="any">
+            </div>
+            <div class="modal-input-group" style="flex-direction: row; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="edit-item-min-unit-input" placeholder="Unit" class="modal-input">
+                <input type="number" id="edit-item-price-input" placeholder="Price (£)" class="modal-input" min="0" step="0.01">
+            </div>
             <div class="modal-actions">
-                <button id="save-item-button" class="store-button">Save</button>
-                <button id="cancel-item-button" class="remove-button">Cancel</button>
+                <button id="save-item-button" class="store-button" title="Save"><i class="fas fa-save"></i></button>
+                <button id="cancel-item-button" class="remove-button" title="Cancel"><i class="fas fa-times"></i></button>
             </div>
         </div>
     </div>
@@ -118,11 +131,24 @@
                 <select id="pantry-category-select" class="modal-input">
                     <!-- Category options will be loaded here -->
                 </select>
+                <select id="new-pantry-item-store-select" class="modal-input">
+                    <!-- Store options will be loaded here -->
+                </select>
                 <input type="text" id="new-pantry-item-name" placeholder="Item Name" class="modal-input">
+                <input type="url" id="new-pantry-item-url" placeholder="Product URL" class="modal-input">
+                <input type="url" id="new-pantry-item-image" placeholder="Image URL" class="modal-input">
+                <div class="modal-input-group" style="flex-direction: row; gap: 10px;">
+                    <input type="number" id="new-pantry-item-stock" placeholder="Stock" class="modal-input" min="0" step="any">
+                    <input type="number" id="new-pantry-item-min" placeholder="Min Qty" class="modal-input" value="1" min="0" step="any">
+                </div>
+                 <div class="modal-input-group" style="flex-direction: row; gap: 10px;">
+                    <input type="text" id="new-pantry-item-min-unit" placeholder="Unit" class="modal-input" value="units">
+                    <input type="number" id="new-pantry-item-price" placeholder="Price (£)" class="modal-input" min="0" step="0.01">
+                </div>
             </div>
             <div class="modal-actions">
-                <button id="add-pantry-item-confirm-button" class="store-button">Add Item</button>
-                <button id="cancel-add-pantry-item-button" class="remove-button">Cancel</button>
+                <button id="add-pantry-item-confirm-button" class="store-button" title="Add Item"><i class="fas fa-plus"></i></button>
+                <button id="cancel-add-pantry-item-button" class="remove-button" title="Cancel"><i class="fas fa-times"></i></button>
             </div>
         </div>
     </div>
