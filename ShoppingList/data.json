@@ -3,124 +3,730 @@
     {
       "name": "Breakfast",
       "items": [
-        "Milk",
-        "Muesli",
-        "Coffee",
-        "Tea Bags",
-        "Honey"
+        {
+          "name": "Milk",
+          "stock": 0,
+          "min": 6,
+          "minUnit": "Litres",
+          "defaultStore": "Asda",
+          "url": "https://tinyurl.com/29867ohw",
+          "price": 0.69,
+          "image": "https://ui.assets-asda.com/dm/asdagroceries/5057172783137_T1"
+        },
+        {
+          "name": "Muesli",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Bag",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/harvest-morn-original-swiss-style-muesli-000000000336499001",
+          "price": 2.25,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/6d488e62-b202-4a74-b0c8-bdff3b58f73c/Original%20Swiss%20Style%20Muesli"
+        },
+        {
+          "name": "Coffee (Instant)",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Jar",
+          "defaultStore": "Aldi",
+          "url": "https://tinyurl.com/2b3b5wy8",
+          "price": 2.09,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/d5077190-bca1-4791-bba9-bb20e6df6502/Rich%20Roast%20Instant%20Coffee%20Granules"
+        },
+        {
+          "name": "Tea (Eng. Breakfast)",
+          "stock": 0,
+          "min": 5,
+          "minUnit": "Tea Bags",
+          "defaultStore": "Asda",
+          "url": "https://www.asda.com/groceries/product/everyday-tea/asda-english-breakfast-classic-black-50-tea-bags/5474314",
+          "price": 0.9,
+          "image": "https://ui.assets-asda.com/dm/asdagroceries/5054781217206_T1"
+        },
+        {
+          "name": "Tea (Berry Fruits)",
+          "stock": 0,
+          "min": 10,
+          "minUnit": "Tea Bags",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/diplomat-vibrant-fruity-berry-fruits-infusion-bags-40-pack-000000000335850004",
+          "price": 1.19,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/0d3f3af3-2efc-49b8-9e4d-dd2a634fbebc/Vibrant%20%20Fruity%20Berry%20Fruits%20Infusion%20Bags%2040%20Pack"
+        },
+        {
+          "name": "Honey",
+          "stock": 0,
+          "min": 0.25,
+          "minUnit": "Jar",
+          "defaultStore": "Lidl",
+          "url": "https://www.aldi.co.uk/product/everyday-essentials-honey-000000000000335820",
+          "price": 0.79,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/66b610d6-e927-4c55-a96f-5194f679c1ef/Clear%20Honey"
+        }
       ]
     },
     {
       "name": "Snacks",
-      "items": [
-        "Cereal Bars"
-      ]
+      "items": []
     },
     {
       "name": "Lunch & Dinner",
       "items": [
-        "Rice",
-        "Pasta",
-        "Eggs",
-        "Pancetta",
-        "Chickpeas",
-        "Soup (work)"
+        {
+          "name": "Rice (Brown)",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Bag",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/worldwide-foods-brown-rice-000000000000467442",
+          "price": 1.39,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/0b086c40-97e7-43a3-9fd2-79de35942b6e/Brown%20Rice"
+        },
+        {
+          "name": "Pasta (Penne)",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Bag",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/everyday-essentials-penne-pasta-000000000000336142",
+          "price": 0.41,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/87760642-a86c-41fe-932e-69c6d3526a2d/Penne%20Pasta"
+        },
+        {
+          "name": "Soup (work)",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Pack",
+          "defaultStore": "Sainsbury's",
+          "url": "https://www.sainsburys.co.uk/gol-ui/product/sainsburys-chicken-vegetable-broth-600g-serves-2-",
+          "price": 1.49,
+          "image": "https://assets.sainsburys-groceries.co.uk/gol/7511479/1/640x640.jpg"
+        }
       ]
     },
     {
       "name": "Meat & Fish",
       "items": [
-        "Soya Chunks",
-        "Chicken Breats",
-        "Salmon"
+        {
+          "name": "Chicken Breats",
+          "stock": 0,
+          "min": 5,
+          "minUnit": "Units",
+          "defaultStore": "Asda",
+          "url": "https://www.asda.com/groceries/product/breasts-drumsticks-portions/asda-chicken-breast-fillets-1kg/2725330",
+          "price": 6.98,
+          "image": "https://ui.assets-asda.com/dm/asdagroceries/27462126_T1"
+        },
+        {
+          "name": "Soya Chunks",
+          "stock": 0,
+          "min": 2,
+          "minUnit": "Bags",
+          "defaultStore": "Online",
+          "url": "https://jalpurmillersonline.com/products/jalpur-soya-chunks?variant=40160010338499",
+          "price": 2.39,
+          "image": "https://jalpurmillersonline.com/cdn/shop/files/3dfront_bd528268-95cc-4b8d-965b-35c1ee8ecdb5_700x.jpg?v=1716901411"
+        },
+        {
+          "name": "Eggs",
+          "stock": 0,
+          "min": 2,
+          "minUnit": "Eggs",
+          "defaultStore": "Asda",
+          "url": "https://www.asda.com/groceries/product/caged-eggs/just-essentials-by-asda-15-eggs-805g/448718",
+          "price": 2.15,
+          "image": "https://ui.assets-asda.com/dm/asdagroceries/0000020408466_T1"
+        }
       ]
     },
     {
       "name": "Seasoning",
       "items": [
-        "Salt",
-        "Black Pepper",
-        "Chicken Seasoning",
-        "Garlic (granules)",
-        "Mixed Hebs",
-        "Oregons",
-        "Parsley",
-        "Olive Oil"
+        {
+          "name": "Salt",
+          "stock": 0,
+          "min": 0.25,
+          "minUnit": "Pack",
+          "defaultStore": "Asda",
+          "url": "https://www.asda.com/groceries/product/salt-pepper/asda-table-salt-750g/11123",
+          "price": 0.68,
+          "image": "https://ui.assets-asda.com/dm/asdagroceries/21002885_T1"
+        },
+        {
+          "name": "Black Pepper",
+          "stock": 0,
+          "min": 0.25,
+          "minUnit": "Pack",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/ready-set-cook-ground-black-pepper-000000000335929003",
+          "price": 1.59,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/5d92c4c8-d51f-4ac4-bcd9-28fac06a1c7e/Ground%20Black%20Pepper"
+        },
+        {
+          "name": "Chicken Seasoning",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Jar",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/ready-set-cook-chicken-seasonings-000000000000336095",
+          "price": 0.85,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/beef3c38-dbb7-4363-8a1f-38c0764770ca/Chicken%20Seasoning"
+        },
+        {
+          "name": "Mixed Hebs",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Jar",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/ready-set-cook-mixed-herbs-000000000000335977",
+          "price": 0.59,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/55d6eea4-8ebb-40a2-8623-60ffa69a4b82/Mixed%20Herbs"
+        },
+        {
+          "name": "Oregons",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Jar",
+          "defaultStore": "Aldi",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Parsley",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Jar",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/ready-set-cook-parsley-000000000000335730",
+          "price": 0.65,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/c0eed44b-14ae-426b-9879-7a4cb9f31579/Parsley"
+        },
+        {
+          "name": "Garlic (granules)",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Jar",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/ready-set-cook-garlic-granules-000000000000335924",
+          "price": 0.69,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/1662e928-04c2-4ad1-a75b-6407b9f342b1/Garlic%20Granules"
+        },
+        {
+          "name": "Oil (Rapeseed)",
+          "stock": 0,
+          "min": 0.25,
+          "minUnit": "Bottle",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/specially-selected-british-rapeseed-oil-000000000000335573",
+          "price": 0,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/36c3a082-a303-4d38-8cac-8a2e20b0629d/British%20Rapeseed%20Oil"
+        }
       ]
     },
     {
       "name": "Fresh Fruit",
       "items": [
-        "Apples",
-        "Pears",
-        "Bananas",
-        "Limes",
-        "Kiwis"
+        {
+          "name": "Bananas",
+          "stock": 0,
+          "min": 2,
+          "minUnit": "Bananas",
+          "defaultStore": "Asda",
+          "url": "https://www.asda.com/groceries/product/bananas/asda-6-sweet-creamy-bananas/9084493",
+          "price": 0.94,
+          "image": "https://ui.assets-asda.com/dm/asdagroceries/5063089466438_T1"
+        },
+        {
+          "name": "Apples",
+          "stock": 0,
+          "min": 2,
+          "minUnit": "Apples",
+          "defaultStore": "Asda",
+          "url": "https://www.asda.com/groceries/product/apples/asda-sweet-juicy-royal-gala-apples/5648295",
+          "price": 1.67,
+          "image": "https://ui.assets-asda.com/dm/asdagroceries/5054781401285_T1"
+        },
+        {
+          "name": "Pears",
+          "stock": 0,
+          "min": 2,
+          "minUnit": "Pears",
+          "defaultStore": "Asda",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        }
       ]
     },
     {
       "name": "Dried Fruit",
       "items": [
-        "Goji Berries",
-        "Almonds",
-        "Chia Seeds",
-        "Walnuts",
-        "Pumpkin Seeds"
+        {
+          "name": "Goji Berries",
+          "stock": 0,
+          "min": 0.25,
+          "minUnit": "Bag",
+          "defaultStore": "Online",
+          "url": "https://realfoodsource.co.uk/products/dried-goji-berries?variant=47556644405585",
+          "price": 9.99,
+          "image": "https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Frealfoodsource.co.uk%2Fcdn%2Fshop%2Fproducts%2F039-EXPORT-1.jpg%3Fcrop%3Dcenter%26height%3D1200%26v%3D1706088026%26width%3D1200&f=1&nofb=1&ipt=18d5cddef476c3bf7e92d8042403198a2bf63800e981a3e4926bb73e3fdea351"
+        },
+        {
+          "name": "Almonds",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Bag",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/the-foodie-market-almonds-000000000000384091",
+          "price": 1.75,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/608e8668-b435-44b2-878e-7c24001f5be7/Whole%20Almonds"
+        },
+        {
+          "name": "Walnuts",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Bags",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/the-foodie-market-walnuts-000000000000384093",
+          "price": 1.75,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/2b7eff67-15a0-442b-a9ce-219545569ce5/Walnut%20Halves"
+        },
+        {
+          "name": "Pumpkin Seeds",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Bag",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/the-foodie-market-kuerbiskerne-pumpkin-seeds-000000000309975001",
+          "price": 1.69,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/59c888fc-b769-4b07-b58c-ac9211917f1b/Pumpkin%20Seeds"
+        },
+        {
+          "name": "Chia Seeds",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Bag",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/the-foodie-market-whole-chia-000000000386021001",
+          "price": 1.49,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/6c2c0d48-988a-4d45-a46c-2734646b81f6/Whole%20Chia%20Seeds"
+        },
+        {
+          "name": "Banana Chips",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Bag",
+          "defaultStore": "Aldi",
+          "url": "https://www.aldi.co.uk/product/the-foodie-market-banana-chips-000000000384089003",
+          "price": 1.39,
+          "image": "https://dm.emea.cms.aldi.cx/is/image/aldiprodeu/product/jpg/scaleWidth/432/883cc3fc-e942-44ad-b86c-bb246fd71755/Banana%20Chips"
+        }
       ]
     },
     {
       "name": "Frozen Veggies",
       "items": [
-        "Peas",
-        "Sweetcorn",
-        "Carrots",
-        "Green Beans",
-        "Mixed Peppers",
-        "Mushrooms",
-        "Onions (chopped)",
-        "Spinach"
+        {
+          "name": "Peas",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Sweetcorn",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Carrots",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Green Beans",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Mixed Peppers",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Mushrooms",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Spinach",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        }
       ]
     },
     {
       "name": "Toiletries",
       "items": [
-        "Shower Gel",
-        "Toothpaste",
-        "Toothbrush",
-        "Mouthwash",
-        "Deodorant",
-        "Cotton Buds",
-        "Tissues",
-        "Exfoliant",
-        "Face Wash",
-        "Moisturiser"
+        {
+          "name": "Shower Gel",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Deodorant",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Toothbrush",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Toothpaste",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Mouthwash",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Cotton Buds",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Face Scrub",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Moisturiser",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Toilet Paper",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Tissues",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        }
       ]
     },
     {
       "name": "Cleaning Products",
       "items": [
-        "Toilet Paper",
-        "Air Freshener",
-        "Laundry Liquid",
-        "Bin Bags",
-        "Freezing Bags",
-        "Sponges (washing up)",
-        "Washing Up Liquid",
-        "Kitchen Cleaner (spray)",
-        "Yellow Cloths",
-        "Bleach (spray)",
-        "WC Cleaner (spray)",
-        "Wet Wipes",
-        "Handwash"
+        {
+          "name": "Air Freshener",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Laundry Liquid",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Bin Bags (big)",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Bin Bags (small)",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Freezing Bags",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Sponge Scourers",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Washing Up Liquid",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Kitchen Cleaner (spray)",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Sponge Cloths",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Bleach (spray)",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "WC Cleaner (spray)",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Wet Wipes",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Handwash",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Toilet Blocks",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "Packs",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        }
       ]
     },
     {
       "name": "Pharmacy",
       "items": [
-        "Lemsip",
-        "Ibuprofen",
-        "Paracetamol",
-        "Plasters"
+        {
+          "name": "Lemsip",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Ibuprofen",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Paracetamol",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Plasters",
+          "stock": 0,
+          "min": 1,
+          "minUnit": "units",
+          "defaultStore": "",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        }
+      ]
+    },
+    {
+      "name": "Miscellaneous",
+      "items": [
+        {
+          "name": "Chewing Gum",
+          "stock": 0,
+          "min": 2,
+          "minUnit": "Packs",
+          "defaultStore": "B&M",
+          "url": "https://www.bmstores.co.uk/products/wrigley-s-extra-chewing-gum-spearmint-3pk-230889",
+          "price": 1.4,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Batteries (AA)",
+          "stock": 0,
+          "min": 2,
+          "minUnit": "units",
+          "defaultStore": "Poundland",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        },
+        {
+          "name": "Batteries (AAA)",
+          "stock": 0,
+          "min": 2,
+          "minUnit": "units",
+          "defaultStore": "Poundland",
+          "url": "",
+          "price": 0,
+          "image": "https://i.postimg.cc/MGCRmthH/No-Image.jpg"
+        }
       ]
     }
   ],
@@ -151,11 +757,6 @@
       "items": []
     },
     {
-      "store": "ASDA",
-      "color": "#74b820",
-      "items": []
-    },
-    {
       "store": "Online",
       "color": "#36f2dc",
       "items": []
@@ -163,6 +764,14 @@
   ],
   "removedItems": [],
   "stores": [
+    {
+      "name": "Lidl",
+      "color": "#fdf001"
+    },
+    {
+      "name": "Asda",
+      "color": "#74b820"
+    },
     {
       "name": "Aldi",
       "color": "#f7b943"
@@ -176,6 +785,18 @@
       "color": "#cb202d"
     },
     {
+      "name": "Tesco",
+      "color": "#00509a"
+    },
+    {
+      "name": "B&M",
+      "color": "#ef7125"
+    },
+    {
+      "name": "Home Bargains",
+      "color": "#98e6fd"
+    },
+    {
       "name": "Poundland",
       "color": "#018f9f"
     },
@@ -186,14 +807,6 @@
     {
       "name": "Boots",
       "color": "#050549"
-    },
-    {
-      "name": "Tesco",
-      "color": "#00509a"
-    },
-    {
-      "name": "ASDA",
-      "color": "#74b820"
     },
     {
       "name": "Online",
