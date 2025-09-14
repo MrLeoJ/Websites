@@ -22,18 +22,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainContainer = document.getElementById('main-container');
     const pantryCategorySelect = document.getElementById('pantry-category-select');
     const newPantryItemNameInput = document.getElementById('new-pantry-item-name');
+    const newPantryItemUrlInput = document.getElementById('new-pantry-item-url');
+    const newPantryItemImageInput = document.getElementById('new-pantry-item-image');
     const newPantryItemStockInput = document.getElementById('new-pantry-item-stock');
     const newPantryItemMinInput = document.getElementById('new-pantry-item-min');
     const newPantryItemMinUnitInput = document.getElementById('new-pantry-item-min-unit');
+    const newPantryItemPriceInput = document.getElementById('new-pantry-item-price');
     const addPantryItemConfirmButton = document.getElementById('add-pantry-item-confirm-button');
     const cancelAddPantryItemButton = document.getElementById('cancel-add-pantry-item-button');
     const editItemModal = document.getElementById('edit-item-modal');
     const closeEditModalButton = document.getElementById('close-edit-modal');
     const editItemNameInput = document.getElementById('edit-item-name-input');
+    const editItemUrlInput = document.getElementById('edit-item-url-input');
+    const editItemImageInput = document.getElementById('edit-item-image-input');
     const editItemCategorySelect = document.getElementById('edit-item-category-select');
     const editItemStockInput = document.getElementById('edit-item-stock-input');
     const editItemMinInput = document.getElementById('edit-item-min-input');
     const editItemMinUnitInput = document.getElementById('edit-item-min-unit-input');
+    const editItemPriceInput = document.getElementById('edit-item-price-input');
     const saveItemButton = document.getElementById('save-item-button');
     const cancelItemButton = document.getElementById('cancel-item-button');
     const addItemFab = document.getElementById('add-item-fab');
@@ -82,8 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 ...category,
                 items: (category.items || []).map(item =>
                     typeof item === 'string'
-                        ? { name: item, stock: 1, min: 1, minUnit: 'units', defaultStore: '' }
-                        : { ...item, minUnit: item.minUnit || 'units', defaultStore: item.defaultStore || '' }
+                        ? { name: item, stock: 1, min: 1, minUnit: 'units', defaultStore: '', url: '', price: 0, image: '' }
+                        : { ...item, minUnit: item.minUnit || 'units', defaultStore: item.defaultStore || '', url: item.url || '', price: item.price || 0, image: item.image || '' }
                 )
             }));
 
@@ -149,8 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     ...category,
                     items: (category.items || []).map(item =>
                         typeof item === 'string'
-                            ? { name: item, stock: 1, min: 1, minUnit: 'units', defaultStore: '' }
-                            : { ...item, minUnit: item.minUnit || 'units', defaultStore: item.defaultStore || '' }
+                            ? { name: item, stock: 1, min: 1, minUnit: 'units', defaultStore: '', url: '', price: 0, image: '' }
+                            : { ...item, minUnit: item.minUnit || 'units', defaultStore: item.defaultStore || '', url: item.url || '', price: item.price || 0, image: item.image || '' }
                     )
                 }));
                 shoppingList = jsonData.shoppingList || [];
@@ -210,6 +216,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderPantryCategories() {
         pantryCategoriesContainer.innerHTML = '';
         pantryData.forEach(category => {
+            if (category.items.length === 0) {
+                return;
+            }
             const categoryDiv = document.createElement('div');
             categoryDiv.classList.add('category');
             const categoryTitle = document.createElement('h3');
@@ -230,12 +239,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 listItem.innerHTML = `
                     <div class="pantry-item-content">
+                        ${item.image ? `<img src="${item.image}" alt="${item.name}" class="pantry-item-image">` : ''}
                         <div class="pantry-item-main">
                             <span>${item.name}</span>
-                            <small>Min: ${item.min} ${item.minUnit} ${item.defaultStore ? `| Store: ${item.defaultStore}` : ''}</small>
+                            <small>Min: ${item.min} ${item.minUnit}${item.defaultStore ? ` | Store: ${item.defaultStore}` : ''}${item.price > 0 ? ` | £${item.price.toFixed(2)}` : ''}${item.url ? ` | <a href="${item.url}" target="_blank" rel="noopener noreferrer">See Product</a>` : ''}</small>
                         </div>
                         <div class="pantry-item-quantity">
-                             <input type="number" class="stock-input ${stockStatusClass}" value="${item.stock}" min="0" data-category-name="${category.name}" data-item-index="${index}" />
+                             <input type="number" class="stock-input ${stockStatusClass}" value="${item.stock}" min="0" data-category-name="${category.name}" data-item-index="${index}" step="any" />
                         </div>
                     </div>
                     <div class="pantry-item-actions">
@@ -258,10 +268,13 @@ document.addEventListener('DOMContentLoaded', () => {
         shoppingListContainer.innerHTML = '';
         shoppingList.forEach((storeData, storeIndex) => {
             if (storeData.items.length > 0) {
+                const storeGroup = document.createElement('div');
+                storeGroup.className = 'store-group';
+
                 const storeHeader = document.createElement('h3');
                 storeHeader.textContent = storeData.store;
                 storeHeader.classList.add('category-title');
-                shoppingListContainer.appendChild(storeHeader);
+                storeGroup.appendChild(storeHeader);
 
                 const itemList = document.createElement('ul');
                 itemList.classList.add('item-list', 'shopping-item-list');
@@ -320,7 +333,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     listItem.appendChild(removeButton);
                     itemList.appendChild(listItem);
                 });
-                shoppingListContainer.appendChild(itemList);
+                storeGroup.appendChild(itemList);
+                shoppingListContainer.appendChild(storeGroup);
             }
         });
         addItemDragAndDropShoppingList();
@@ -571,6 +585,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function addPantryItem() {
         const selectedCategoryName = pantryCategorySelect.value;
         const newItemName = newPantryItemNameInput.value.trim();
+        const newUrl = newPantryItemUrlInput.value.trim();
+        const newImage = newPantryItemImageInput.value.trim();
+        const newPrice = parseFloat(newPantryItemPriceInput.value) || 0;
         const newPantryItemStoreSelect = document.getElementById('new-pantry-item-store-select');
         const newDefaultStore = newPantryItemStoreSelect.value;
         if (selectedCategoryName && newItemName) {
@@ -578,17 +595,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if (category) {
                 const newItem = {
                     name: newItemName,
-                    stock: parseInt(newPantryItemStockInput.value) || 0,
-                    min: parseInt(newPantryItemMinInput.value) || 0,
+                    stock: parseFloat(newPantryItemStockInput.value) || 0,
+                    min: parseFloat(newPantryItemMinInput.value) || 0,
                     minUnit: newPantryItemMinUnitInput.value.trim() || 'units',
-                    defaultStore: newDefaultStore
+                    defaultStore: newDefaultStore,
+                    url: newUrl,
+                    price: newPrice,
+                    image: newImage
                 };
                 category.items.push(newItem);
                 renderPantryCategories();
                 newPantryItemNameInput.value = '';
+                newPantryItemUrlInput.value = '';
+                newPantryItemImageInput.value = '';
                 newPantryItemStockInput.value = '';
                 newPantryItemMinInput.value = '1';
                 newPantryItemMinUnitInput.value = 'units';
+                newPantryItemPriceInput.value = '';
                 newPantryItemStoreSelect.value = '';
                 addPantryItemModal.style.display = 'none';
                 showMessage('Item added to pantry!');
@@ -1002,26 +1025,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners ---
     pantrySearchInput.addEventListener('input', (e) => {
-        filterItems(e.target.value, document.querySelectorAll('#pantry-categories .pantry-item'));
+        const searchTerm = e.target.value.toLowerCase();
+        document.querySelectorAll('#pantry-categories .category').forEach(category => {
+            let hasVisibleItems = false;
+            category.querySelectorAll('.pantry-item').forEach(item => {
+                const itemText = item.querySelector('.pantry-item-main span').textContent.toLowerCase();
+                if (itemText.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                    hasVisibleItems = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+    
+            if (hasVisibleItems) {
+                category.style.display = 'block';
+            } else {
+                category.style.display = 'none';
+            }
+        });
     });
 
     shoppingSearchInput.addEventListener('input', (e) => {
-        filterItems(e.target.value, document.querySelectorAll('#shopping-list .shopping-item'));
-    });
-
-    function filterItems(searchText, items) {
-        const searchTerm = searchText.toLowerCase();
-        items.forEach(item => {
-            const itemSpan = item.querySelector('span');
-            if (itemSpan) {
-                const itemText = itemSpan.textContent.toLowerCase().trim();
-                item.style.display = itemText.includes(searchTerm) ? 'flex' : 'none';
+        const searchTerm = e.target.value.toLowerCase();
+        document.querySelectorAll('#shopping-list .store-group').forEach(storeGroup => {
+            let hasVisibleItems = false;
+            storeGroup.querySelectorAll('.shopping-item').forEach(item => {
+                const itemText = item.querySelector('span').textContent.toLowerCase();
+                if (itemText.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                    hasVisibleItems = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+    
+            if (hasVisibleItems) {
+                storeGroup.style.display = 'block';
             } else {
-                item.style.display = 'none';
+                storeGroup.style.display = 'none';
             }
         });
-    }
-
+    });
 
 
     pantryTab.addEventListener('click', () => {
@@ -1193,9 +1238,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = pantryData.find(cat => cat.name === categoryName).items[itemIndex];
             const editItemStoreSelect = document.getElementById('edit-item-store-select');
             editItemNameInput.value = item.name;
+            editItemUrlInput.value = item.url || '';
+            editItemImageInput.value = item.image || '';
             editItemStockInput.value = item.stock;
             editItemMinInput.value = item.min;
             editItemMinUnitInput.value = item.minUnit;
+            editItemPriceInput.value = item.price > 0 ? item.price : '';
             populateEditCategorySelect();
             editItemCategorySelect.value = categoryName;
             populateAllStoreSelects();
@@ -1210,7 +1258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target.classList.contains('stock-input')) {
             const categoryName = target.dataset.categoryName;
             const itemIndex = parseInt(target.dataset.itemIndex, 10);
-            const newStock = parseInt(target.value, 10) || 0;
+            const newStock = parseFloat(target.value) || 0;
             updateStock(categoryName, itemIndex, newStock);
         }
     });
@@ -1231,13 +1279,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const editItemStoreSelect = document.getElementById('edit-item-store-select');
             const newItemName = editItemNameInput.value.trim();
             const newCategoryName = editItemCategorySelect.value;
-            const newStock = parseInt(editItemStockInput.value) || 0;
-            const newMin = parseInt(editItemMinInput.value) || 0;
+            const newStock = parseFloat(editItemStockInput.value) || 0;
+            const newMin = parseFloat(editItemMinInput.value) || 0;
             const newMinUnit = editItemMinUnitInput.value.trim() || 'units';
             const newDefaultStore = editItemStoreSelect.value;
+            const newUrl = editItemUrlInput.value.trim();
+            const newImage = editItemImageInput.value.trim();
+            const newPrice = parseFloat(editItemPriceInput.value) || 0;
 
             if (newItemName && newCategoryName) {
-                const newItemData = {name: newItemName, stock: newStock, min: newMin, minUnit: newMinUnit, defaultStore: newDefaultStore};
+                const newItemData = {name: newItemName, stock: newStock, min: newMin, minUnit: newMinUnit, defaultStore: newDefaultStore, url: newUrl, price: newPrice, image: newImage};
                 saveEditedItem(currentEditItem.categoryName, currentEditItem.itemIndex, newCategoryName, newItemData);
                 editItemModal.style.display = 'none';
                 currentEditItem = null;
@@ -1299,14 +1350,17 @@ document.addEventListener('DOMContentLoaded', () => {
                  if (currentEditItem) {
                     const newItemName = editItemNameInput.value.trim();
                     const newCategoryName = editItemCategorySelect.value;
-                    const newStock = parseInt(editItemStockInput.value) || 0;
-                    const newMin = parseInt(editItemMinInput.value) || 0;
+                    const newStock = parseFloat(editItemStockInput.value) || 0;
+                    const newMin = parseFloat(editItemMinInput.value) || 0;
                     const newMinUnit = editItemMinUnitInput.value.trim() || 'units';
                     const editItemStoreSelect = document.getElementById('edit-item-store-select');
                     const newDefaultStore = editItemStoreSelect.value;
+                    const newUrl = editItemUrlInput.value.trim();
+                    const newImage = editItemImageInput.value.trim();
+                    const newPrice = parseFloat(editItemPriceInput.value) || 0;
 
                     if (newItemName && newCategoryName) {
-                        const newItemData = {name: newItemName, stock: newStock, min: newMin, minUnit: newMinUnit, defaultStore: newDefaultStore };
+                        const newItemData = {name: newItemName, stock: newStock, min: newMin, minUnit: newMinUnit, defaultStore: newDefaultStore, url: newUrl, price: newPrice, image: newImage };
                         saveEditedItem(currentEditItem.categoryName, currentEditItem.itemIndex, newCategoryName, newItemData);
                         editItemModal.style.display = 'none';
                         currentEditItem = null;
