@@ -22,12 +22,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainContainer = document.getElementById('main-container');
     const pantryCategorySelect = document.getElementById('pantry-category-select');
     const newPantryItemNameInput = document.getElementById('new-pantry-item-name');
+    const newPantryItemUrlInput = document.getElementById('new-pantry-item-url');
+    const newPantryItemImageInput = document.getElementById('new-pantry-item-image');
+    const newPantryItemStockInput = document.getElementById('new-pantry-item-stock');
+    const newPantryItemMinInput = document.getElementById('new-pantry-item-min');
+    const newPantryItemMinUnitInput = document.getElementById('new-pantry-item-min-unit');
+    const newPantryItemPriceInput = document.getElementById('new-pantry-item-price');
     const addPantryItemConfirmButton = document.getElementById('add-pantry-item-confirm-button');
     const cancelAddPantryItemButton = document.getElementById('cancel-add-pantry-item-button');
     const editItemModal = document.getElementById('edit-item-modal');
     const closeEditModalButton = document.getElementById('close-edit-modal');
     const editItemNameInput = document.getElementById('edit-item-name-input');
+    const editItemUrlInput = document.getElementById('edit-item-url-input');
+    const editItemImageInput = document.getElementById('edit-item-image-input');
     const editItemCategorySelect = document.getElementById('edit-item-category-select');
+    const editItemStockInput = document.getElementById('edit-item-stock-input');
+    const editItemMinInput = document.getElementById('edit-item-min-input');
+    const editItemMinUnitInput = document.getElementById('edit-item-min-unit-input');
+    const editItemPriceInput = document.getElementById('edit-item-price-input');
     const saveItemButton = document.getElementById('save-item-button');
     const cancelItemButton = document.getElementById('cancel-item-button');
     const addItemFab = document.getElementById('add-item-fab');
@@ -36,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageModal = document.getElementById('message-modal');
     const messageText = document.getElementById('message-text');
     const okButton = document.getElementById('ok-button');
-    const scrollToTopButton = document.getElementById('scroll-to-top'); // Scroll to top button
+    const scrollToTopButton = document.getElementById('scroll-to-top');
 
 
     // Sidebar Elements - Categories and Stores
@@ -62,50 +74,57 @@ document.addEventListener('DOMContentLoaded', () => {
     let editModeStore = null;
     let currentEditItem = null;
     let currentMessageTimeout = null;
+    let currentlySwipedItem = null;
+    let lastDropTarget = null;
 
 
     // --- Data Loading and Saving Functions ---
     async function loadData() {
+        const savedData = localStorage.getItem('shoppingListData');
+
+        if (savedData) {
+            // If data exists in local storage, use it
+            try {
+                const data = JSON.parse(savedData);
+                pantryData = data.pantryCategories || [];
+                shoppingList = data.shoppingList || [];
+                removedItems = data.removedItems || [];
+                stores = data.stores || [];
+            } catch (error) {
+                console.error('Error parsing data from local storage:', error);
+                await loadInitialData(); // Fallback to initial data if parsing fails
+            }
+        } else {
+            // If no local storage data, fetch the initial JSON file
+            await loadInitialData();
+        }
+
+        renderAll();
+    }
+
+    async function loadInitialData() {
         try {
             const response = await fetch('data.json');
             const data = await response.json();
-            pantryData = data.pantryCategories;
-            shoppingList = data.shoppingList;
-            removedItems = data.removedItems;
-            stores = data.stores;
-            renderSidebarCategories();
-            renderPantryCategories();
-            renderShoppingList();
-            renderRemovedItems();
-            renderStoreButtons();
-            renderSidebarStores();
-            populatePantryCategorySelect();
-            populateEditCategorySelect();
-
+            pantryData = (data.pantryCategories || []).map(category => ({
+                ...category,
+                items: (category.items || []).map(item =>
+                    typeof item === 'string'
+                        ? { name: item, stock: 1, min: 1, minUnit: 'units', defaultStore: '', url: '', price: 0, image: '' }
+                        : { ...item, minUnit: item.minUnit || 'units', defaultStore: item.defaultStore || '', url: item.url || '', price: item.price || 0, image: item.image || '' }
+                )
+            }));
+            shoppingList = data.shoppingList || [];
+            removedItems = data.removedItems || [];
+            stores = data.stores || [];
+            saveData(); // Save the initial data to local storage
         } catch (error) {
-            console.error('Error loading data:', error);
+            console.error('Error loading initial data.json:', error);
+            // Initialize with empty arrays if fetching fails
             pantryData = [];
             shoppingList = [];
             removedItems = [];
-            stores = [
-                { name: "Aldi", color: '#f7c201' },
-                { name: "Sainsbury's", color: '#e68701' },
-                { name: "Iceland", color: '#cb202d' },
-                { name: "Poundland", color: '#018f9f' },
-                { name: "SuperDrugs", color: '#e4048a' },
-                { name: "Boots", color: '#050549' },
-                { name: "Tesco", color: '#00509a' },
-                { name: "ASDA", color: '#74b820' },
-                { name: "Online", color: '#000000' }
-            ];
-            renderSidebarCategories();
-            renderPantryCategories();
-            renderShoppingList();
-            renderRemovedItems();
-            renderStoreButtons();
-            renderSidebarStores();
-            populatePantryCategorySelect();
-            populateEditCategorySelect();
+            stores = [];
         }
     }
 
@@ -116,11 +135,28 @@ document.addEventListener('DOMContentLoaded', () => {
             removedItems: removedItems,
             stores: stores
         };
-        return JSON.stringify(dataToSave, null, 2);
+        localStorage.setItem('shoppingListData', JSON.stringify(dataToSave, null, 2));
+    }
+
+    function renderAll() {
+        renderSidebarCategories();
+        renderPantryCategories();
+        renderShoppingList();
+        renderRemovedItems();
+        renderStoreButtons();
+        renderSidebarStores();
+        populatePantryCategorySelect();
+        populateEditCategorySelect();
+        populateAllStoreSelects();
     }
 
     function downloadData() {
-        const dataStr = saveData();
+        const dataStr = JSON.stringify({
+            pantryCategories: pantryData,
+            shoppingList: shoppingList,
+            removedItems: removedItems,
+            stores: stores
+        }, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
 
         const exportFileDefaultName = 'shopping-list-data.json';
@@ -136,18 +172,19 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = function(event) {
             try {
                 const jsonData = JSON.parse(event.target.result);
-                pantryData = jsonData.pantryCategories || [];
+                pantryData = (jsonData.pantryCategories || []).map(category => ({
+                    ...category,
+                    items: (category.items || []).map(item =>
+                        typeof item === 'string'
+                            ? { name: item, stock: 1, min: 1, minUnit: 'units', defaultStore: '', url: '', price: 0, image: '' }
+                            : { ...item, minUnit: item.minUnit || 'units', defaultStore: item.defaultStore || '', url: item.url || '', price: item.price || 0, image: item.image || '' }
+                    )
+                }));
                 shoppingList = jsonData.shoppingList || [];
                 removedItems = jsonData.removedItems || [];
                 stores = jsonData.stores || [];
-                renderSidebarCategories();
-                renderPantryCategories();
-                renderShoppingList();
-                renderRemovedItems();
-                renderStoreButtons();
-                renderSidebarStores();
-                populatePantryCategorySelect();
-                populateEditCategorySelect();
+                saveData(); // Save uploaded data to local storage
+                renderAll(); // Re-render the entire UI
                 showMessage('Data uploaded successfully!');
             } catch (e) {
                 showError('Error parsing JSON file.');
@@ -193,6 +230,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderPantryCategories() {
         pantryCategoriesContainer.innerHTML = '';
         pantryData.forEach(category => {
+            if (category.items.length === 0) {
+                return;
+            }
             const categoryDiv = document.createElement('div');
             categoryDiv.classList.add('category');
             const categoryTitle = document.createElement('h3');
@@ -202,25 +242,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemList = document.createElement('ul');
             itemList.classList.add('item-list');
             itemList.setAttribute('data-category', category.name.toLowerCase().replace(/ /g, '-'));
-            category.items.forEach((itemText, index) => {
+            category.items.forEach((item, index) => {
                 const listItem = document.createElement('li');
                 listItem.classList.add('pantry-item', 'list-item-draggable');
                 listItem.draggable = true;
                 listItem.dataset.categoryName = category.name;
                 listItem.dataset.itemIndex = index;
+
+                const stockStatusClass = item.stock < item.min ? 'low-stock' : '';
+
                 listItem.innerHTML = `
-                    <span>${itemText}</span>
+                    <div class="pantry-item-content">
+                        ${item.image ? `<img src="${item.image}" alt="${item.name}" class="pantry-item-image">` : ''}
+                        <div class="pantry-item-main">
+                            <span>${item.name}</span>
+                            <small>Min: ${item.min} ${item.minUnit}${item.defaultStore ? ` | Store: ${item.defaultStore}` : ''}${item.price > 0 ? ` | £${item.price.toFixed(2)}` : ''}${item.url ? ` | <a href="${item.url}" target="_blank" rel="noopener noreferrer">See Product</a>` : ''}</small>
+                        </div>
+                        <div class="pantry-item-quantity">
+                             <input type="number" class="stock-input ${stockStatusClass}" value="${item.stock}" min="0" data-category-name="${category.name}" data-item-index="${index}" step="any" />
+                        </div>
+                    </div>
                     <div class="pantry-item-actions">
                         <button class="edit-item-btn" data-action="edit-item" data-category-name="${category.name}" data-item-index="${index}" title="Edit Item"><i class="fas fa-edit"></i></button>
                         <button class="duplicate-item-btn" data-action="duplicate-item" data-category-name="${category.name}" data-item-index="${index}" title="Duplicate Item"><i class="fas fa-copy"></i></button>
                         <button class="delete-item-btn" data-action="delete-item" data-category-name="${category.name}" data-item-index="${index}" title="Delete Item"><i class="fas fa-trash"></i></button>
                     </div>`;
-
-                listItem.addEventListener('click', (e) => {
-                    if (e.target !== e.currentTarget) return;
-                    selectedPantryItem = itemText;
-                    storeModal.style.display = "block";
-                });
+                
+                addSwipeFunctionality(listItem);
                 itemList.appendChild(listItem);
             });
             categoryDiv.appendChild(itemList);
@@ -234,10 +282,13 @@ document.addEventListener('DOMContentLoaded', () => {
         shoppingListContainer.innerHTML = '';
         shoppingList.forEach((storeData, storeIndex) => {
             if (storeData.items.length > 0) {
+                const storeGroup = document.createElement('div');
+                storeGroup.className = 'store-group';
+
                 const storeHeader = document.createElement('h3');
                 storeHeader.textContent = storeData.store;
                 storeHeader.classList.add('category-title');
-                shoppingListContainer.appendChild(storeHeader);
+                storeGroup.appendChild(storeHeader);
 
                 const itemList = document.createElement('ul');
                 itemList.classList.add('item-list', 'shopping-item-list');
@@ -296,7 +347,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     listItem.appendChild(removeButton);
                     itemList.appendChild(listItem);
                 });
-                shoppingListContainer.appendChild(itemList);
+                storeGroup.appendChild(itemList);
+                shoppingListContainer.appendChild(storeGroup);
             }
         });
         addItemDragAndDropShoppingList();
@@ -408,6 +460,54 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function populateStoreSelects(selectElement) {
+        if (!selectElement) return;
+        const currentValue = selectElement.value;
+        selectElement.innerHTML = '<option value="">No Default Store</option>';
+        stores.forEach(store => {
+            const option = document.createElement('option');
+            option.value = store.name;
+            option.textContent = store.name;
+            selectElement.appendChild(option);
+        });
+        selectElement.value = currentValue;
+    }
+
+    function populateAllStoreSelects() {
+        populateStoreSelects(document.getElementById('new-pantry-item-store-select'));
+        populateStoreSelects(document.getElementById('edit-item-store-select'));
+    }
+
+
+    // --- Pantry Item Stock Control ---
+    function updateStock(categoryName, itemIndex, newStock) {
+        const category = pantryData.find(cat => cat.name === categoryName);
+        if (category && category.items[itemIndex]) {
+            category.items[itemIndex].stock = newStock;
+            saveData();
+            renderPantryCategories();
+            checkStockLevels(categoryName, itemIndex);
+        }
+    }
+
+    function checkStockLevels(categoryName, itemIndex) {
+        const category = pantryData.find(cat => cat.name === categoryName);
+        if (!category) return;
+        const item = category.items[itemIndex];
+        if (!item) return;
+
+        if (item.stock < item.min) {
+            const isAlreadyInShoppingList = shoppingList.some(store => store.items.includes(item.name));
+            if (!isAlreadyInShoppingList) {
+                if (item.defaultStore) {
+                    addItemToShoppingList(item.name, item.defaultStore);
+                    showMessage(`${item.name} is low and has been added to the shopping list for ${item.defaultStore}.`);
+                } else {
+                    showMessage(`${item.name} is low on stock, but no default store is set. Please set one to add it automatically.`);
+                }
+            }
+        }
+    }
 
 
     // --- Shopping List Manipulation Functions ---
@@ -430,6 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         storeData.items.push(itemText);
+        saveData();
         renderShoppingList();
     }
 
@@ -441,9 +542,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (storeData.items.length === 0) {
                 shoppingList = shoppingList.filter((s, index) => index !== storeIndex);
             }
-            renderShoppingList();
-
+            
             removedItems.push({ item: itemText, store: storeName });
+            saveData();
+            renderShoppingList();
             renderRemovedItems();
         }
     }
@@ -451,12 +553,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function bringBackItem(itemText, originalStore) {
         removedItems = removedItems.filter(item => item.item !== itemText);
-        renderRemovedItems();
         addItemToShoppingList(itemText, originalStore);
+        saveData();
+        renderRemovedItems();
     }
 
     function clearAllRemovedItems() {
         removedItems = [];
+        saveData();
         renderRemovedItems();
         showMessage('Removed items cleared!');
     }
@@ -467,6 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newCategoryName = newCategoryNameInput.value.trim();
         if (newCategoryName) {
             pantryData.push({ name: newCategoryName, items: [] });
+            saveData();
             renderSidebarCategories();
             renderPantryCategories();
             populatePantryCategorySelect();
@@ -480,6 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function deleteCategory(index) {
         pantryData.splice(index, 1);
+        saveData();
         renderSidebarCategories();
         renderPantryCategories();
         populatePantryCategorySelect();
@@ -489,6 +595,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function editCategoryName(index, newName) {
         pantryData[index].name = newName;
+        saveData();
         renderSidebarCategories();
         renderPantryCategories();
         populatePantryCategorySelect();
@@ -500,12 +607,35 @@ document.addEventListener('DOMContentLoaded', () => {
     function addPantryItem() {
         const selectedCategoryName = pantryCategorySelect.value;
         const newItemName = newPantryItemNameInput.value.trim();
+        const newUrl = newPantryItemUrlInput.value.trim();
+        const newImage = newPantryItemImageInput.value.trim();
+        const newPrice = parseFloat(newPantryItemPriceInput.value) || 0;
+        const newPantryItemStoreSelect = document.getElementById('new-pantry-item-store-select');
+        const newDefaultStore = newPantryItemStoreSelect.value;
         if (selectedCategoryName && newItemName) {
             const category = pantryData.find(cat => cat.name === selectedCategoryName);
             if (category) {
-                category.items.push(newItemName);
+                const newItem = {
+                    name: newItemName,
+                    stock: parseFloat(newPantryItemStockInput.value) || 0,
+                    min: parseFloat(newPantryItemMinInput.value) || 0,
+                    minUnit: newPantryItemMinUnitInput.value.trim() || 'units',
+                    defaultStore: newDefaultStore,
+                    url: newUrl,
+                    price: newPrice,
+                    image: newImage
+                };
+                category.items.push(newItem);
+                saveData();
                 renderPantryCategories();
                 newPantryItemNameInput.value = '';
+                newPantryItemUrlInput.value = '';
+                newPantryItemImageInput.value = '';
+                newPantryItemStockInput.value = '';
+                newPantryItemMinInput.value = '1';
+                newPantryItemMinUnitInput.value = 'units';
+                newPantryItemPriceInput.value = '';
+                newPantryItemStoreSelect.value = '';
                 addPantryItemModal.style.display = 'none';
                 showMessage('Item added to pantry!');
             }
@@ -519,6 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const category = pantryData.find(cat => cat.name === categoryName);
         if (category && category.items[itemIndex]) {
             category.items.splice(itemIndex, 1);
+            saveData();
             renderPantryCategories();
             showMessage('Item deleted from pantry!');
         }
@@ -527,34 +658,30 @@ document.addEventListener('DOMContentLoaded', () => {
     function duplicateItem(categoryName, itemIndex) {
         const category = pantryData.find(cat => cat.name === categoryName);
         if (category && category.items[itemIndex]) {
-            const itemToDuplicate = category.items[itemIndex];
+            const itemToDuplicate = { ...category.items[itemIndex] };
             category.items.push(itemToDuplicate);
+            saveData();
             renderPantryCategories();
             showMessage('Item duplicated!');
         }
     }
 
-    function saveEditedItem(oldCategoryName, itemIndex, newItemName, newCategoryName) {
-        if (oldCategoryName !== newCategoryName) {
-            const oldCategory = pantryData.find(cat => cat.name === oldCategoryName);
-            if (oldCategory && oldCategory.items[itemIndex] !== undefined) {
+    function saveEditedItem(oldCategoryName, itemIndex, newCategoryName, newItemData) {
+        const oldCategory = pantryData.find(cat => cat.name === oldCategoryName);
+        if (oldCategory && oldCategory.items[itemIndex] !== undefined) {
+             if (oldCategoryName !== newCategoryName) {
                 oldCategory.items.splice(itemIndex, 1);
-            }
-            const newCategory = pantryData.find(cat => cat.name === newCategoryName);
-            if (newCategory) {
-                newCategory.items.push(newItemName);
-            }
-
-        } else {
-            const category = pantryData.find(cat => cat.name === oldCategoryName);
-            if (category && category.items[itemIndex] !== undefined) {
-                category.items[itemIndex] = newItemName;
+                const newCategory = pantryData.find(cat => cat.name === newCategoryName);
+                if (newCategory) {
+                    newCategory.items.push(newItemData);
+                }
+            } else {
+                oldCategory.items[itemIndex] = newItemData;
             }
         }
-
+        saveData();
         renderPantryCategories();
         showMessage('Item updated!');
-
     }
 
 
@@ -564,8 +691,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const newStoreColor = newStoreColorInput.value;
         if (newStoreName) {
             stores.push({ name: newStoreName, color: newStoreColor });
+            saveData();
             renderSidebarStores();
             renderStoreButtons();
+            populateAllStoreSelects();
             newStoreNameInput.value = '';
             newStoreColorInput.value = '#000000';
             showMessage('Store added!');
@@ -576,16 +705,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function deleteStore(index) {
         stores.splice(index, 1);
+        saveData();
         renderSidebarStores();
         renderStoreButtons();
+        populateAllStoreSelects();
         showMessage('Store deleted!');
     }
 
     function editStore(index, newName, newColor) {
         stores[index].name = newName;
         stores[index].color = newColor;
+        saveData();
         renderSidebarStores();
         renderStoreButtons();
+        populateAllStoreSelects();
         showMessage('Store updated!');
     }
 
@@ -604,6 +737,12 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
             const afterElement = getDragAfterElement(categoryList, event.clientY);
             const draggable = document.querySelector('.dragging');
+            
+            if (lastDropTarget) lastDropTarget.classList.remove('drop-indicator');
+            if (afterElement) {
+                afterElement.classList.add('drop-indicator');
+                lastDropTarget = afterElement;
+            }
 
             if (afterElement == null) {
                 categoryList.appendChild(draggable);
@@ -614,6 +753,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         categoryList.addEventListener('dragend', (event) => {
             event.target.classList.remove('dragging');
+            if (lastDropTarget) lastDropTarget.classList.remove('drop-indicator');
+            lastDropTarget = null;
             draggingCategory = null;
             updateCategoryOrder();
         });
@@ -631,10 +772,15 @@ document.addEventListener('DOMContentLoaded', () => {
         pantryCategoriesContainer.addEventListener('dragover', (event) => {
             event.preventDefault();
             if (!event.target.classList.contains('item-list') && !event.target.closest('.item-list')) return;
-            const afterElement = getDragAfterElement(event.target.closest('.item-list'), event.clientY);
-            const draggable = document.querySelector('.dragging');
             const targetItemList = event.target.classList.contains('item-list') ? event.target : event.target.closest('.item-list');
+            const afterElement = getDragAfterElement(targetItemList, event.clientY);
+            const draggable = document.querySelector('.dragging');
 
+            if (lastDropTarget) lastDropTarget.classList.remove('drop-indicator');
+            if (afterElement) {
+                 afterElement.classList.add('drop-indicator');
+                 lastDropTarget = afterElement;
+            }
 
             if (afterElement == null) {
                 targetItemList.appendChild(draggable);
@@ -646,6 +792,8 @@ document.addEventListener('DOMContentLoaded', () => {
         pantryCategoriesContainer.addEventListener('dragend', (event) => {
             if (!event.target.classList.contains('pantry-item')) return;
             event.target.classList.remove('dragging');
+            if (lastDropTarget) lastDropTarget.classList.remove('drop-indicator');
+            lastDropTarget = null;
             draggingItem = null;
             updatePantryItemOrder();
         });
@@ -665,10 +813,15 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
             if (!event.target.classList.contains('shopping-item-list') && !event.target.closest('.shopping-item-list')) return;
 
-            const afterElement = getDragAfterElement(event.target.closest('.shopping-item-list'), event.clientY);
-            const draggable = document.querySelector('.dragging');
             const targetItemList = event.target.classList.contains('shopping-item-list') ? event.target : event.target.closest('.shopping-item-list');
+            const afterElement = getDragAfterElement(targetItemList, event.clientY);
+            const draggable = document.querySelector('.dragging');
 
+            if (lastDropTarget) lastDropTarget.classList.remove('drop-indicator');
+            if (afterElement) {
+                 afterElement.classList.add('drop-indicator');
+                 lastDropTarget = afterElement;
+            }
 
             if (afterElement == null) {
                 targetItemList.appendChild(draggable);
@@ -680,6 +833,8 @@ document.addEventListener('DOMContentLoaded', () => {
         shoppingListContainer.addEventListener('dragend', (event) => {
             if (!event.target.classList.contains('shopping-item')) return;
             event.target.classList.remove('dragging');
+            if (lastDropTarget) lastDropTarget.classList.remove('drop-indicator');
+            lastDropTarget = null;
             draggingShoppingItem = null;
             updateShoppingListItemOrder();
         });
@@ -698,6 +853,12 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
             const afterElement = getDragAfterElement(storeList, event.clientY);
             const draggable = document.querySelector('.dragging');
+            
+            if (lastDropTarget) lastDropTarget.classList.remove('drop-indicator');
+            if (afterElement) {
+                afterElement.classList.add('drop-indicator');
+                lastDropTarget = afterElement;
+            }
 
             if (afterElement == null) {
                 storeList.appendChild(draggable);
@@ -708,6 +869,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         storeList.addEventListener('dragend', (event) => {
             event.target.classList.remove('dragging');
+            if (lastDropTarget) lastDropTarget.classList.remove('drop-indicator');
+            lastDropTarget = null;
             draggingStore = null;
             updateStoreOrder();
         });
@@ -732,9 +895,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateCategoryOrder() {
         const orderedCategories = [];
         document.querySelectorAll('#category-list .list-item-draggable').forEach(item => {
-            orderedCategories.push(pantryData[item.dataset.categoryIndex]);
+            const originalCategory = pantryData.find(cat => cat.name === item.dataset.categoryName);
+            if(originalCategory) orderedCategories.push(originalCategory);
         });
         pantryData = orderedCategories;
+        saveData();
         renderSidebarCategories();
         renderPantryCategories();
         populatePantryCategorySelect();
@@ -743,25 +908,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function updatePantryItemOrder() {
-        const updatedPantryData = [];
-        document.querySelectorAll('#pantry-categories .category').forEach((categoryDiv) => {
-            const categoryName = categoryDiv.querySelector('.category-title').textContent;
-            const orderedItems = [];
-            categoryDiv.querySelectorAll('.pantry-item').forEach(item => {
-                const span = item.querySelector('span');
-                orderedItems.push(span.textContent);
-            });
-            updatedPantryData.push({ name: categoryName, items: orderedItems });
+        const newPantryData = pantryData.map(category => ({ ...category, items: [] }));
+        const itemsMap = new Map();
+        pantryData.forEach(cat => cat.items.forEach(item => itemsMap.set(item.name, item)));
+
+        document.querySelectorAll('#pantry-categories .item-list').forEach(list => {
+            const categoryName = list.closest('.category').querySelector('.category-title').textContent;
+            const targetCategory = newPantryData.find(cat => cat.name === categoryName);
+            if (targetCategory) {
+                list.querySelectorAll('.pantry-item').forEach(itemEl => {
+                    const itemName = itemEl.querySelector('.pantry-item-main span').textContent;
+                    if (itemsMap.has(itemName)) {
+                        targetCategory.items.push(itemsMap.get(itemName));
+                    }
+                });
+            }
         });
-        pantryData = updatedPantryData;
+
+        pantryData = newPantryData;
+        saveData();
         renderPantryCategories();
     }
+
 
 
     function updateStoreOrder() {
         const orderedStores = [];
         const currentStoresOrder = Array.from(storeList.children).map(item => stores[item.dataset.storeIndex]);
         stores = currentStoresOrder;
+        saveData();
         renderSidebarStores();
         renderStoreButtons();
     }
@@ -782,9 +957,85 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         shoppingList = updatedShoppingList;
+        saveData();
         renderShoppingList();
     }
 
+    // --- Swipe Functionality ---
+    function addSwipeFunctionality(item) {
+        let startX = 0;
+        let currentX = 0;
+        let isDragging = false;
+        let isScrolling = false;
+        const content = item.querySelector('.pantry-item-content');
+
+        function handleDragStart(e) {
+            if (e.target.closest('.stock-input')) return;
+            startX = e.pageX || e.touches[0].pageX;
+            isDragging = true;
+            isScrolling = false;
+            content.style.transition = 'none';
+        }
+
+        function handleDragMove(e) {
+            if (!isDragging) return;
+            currentX = e.pageX || e.touches[0].pageX;
+            const diffX = currentX - startX;
+
+            if (Math.abs(diffX) > 10 && !isScrolling) {
+                if (Math.abs(e.movementY) > Math.abs(e.movementX)) {
+                    isScrolling = true;
+                    isDragging = false;
+                    return;
+                }
+                
+                if (currentlySwipedItem && currentlySwipedItem !== item) {
+                    closeSwipedItem();
+                }
+
+                if (diffX < 0 && diffX > -160) { // Swiping left
+                    content.style.transform = `translateX(${diffX}px)`;
+                }
+            }
+        }
+
+        function handleDragEnd() {
+            if (!isDragging) return;
+            isDragging = false;
+            content.style.transition = 'transform 0.3s ease-out';
+            const diffX = currentX - startX;
+
+            if (diffX < -50) { // Threshold for swipe
+                item.classList.add('is-swiped');
+                content.style.transform = 'translateX(-150px)';
+                currentlySwipedItem = item;
+            } else if (diffX > 50) {
+                 closeSwipedItem();
+            } else if (Math.abs(diffX) < 10) { // It's a click
+                // No action on click anymore
+            }
+            else {
+                content.style.transform = 'translateX(0)';
+            }
+        }
+        
+        content.addEventListener('mousedown', handleDragStart);
+        content.addEventListener('mousemove', handleDragMove);
+        content.addEventListener('mouseup', handleDragEnd);
+        content.addEventListener('mouseleave', () => { if (isDragging) handleDragEnd() });
+        
+        content.addEventListener('touchstart', handleDragStart, { passive: true });
+        content.addEventListener('touchmove', handleDragMove, { passive: true });
+        content.addEventListener('touchend', handleDragEnd);
+    }
+    
+    function closeSwipedItem() {
+        if (currentlySwipedItem) {
+            currentlySwipedItem.classList.remove('is-swiped');
+            currentlySwipedItem.querySelector('.pantry-item-content').style.transform = 'translateX(0)';
+            currentlySwipedItem = null;
+        }
+    }
 
 
     // --- Message Functions ---
@@ -807,26 +1058,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners ---
     pantrySearchInput.addEventListener('input', (e) => {
-        filterItems(e.target.value, document.querySelectorAll('#pantry-categories .pantry-item'));
+        const searchTerm = e.target.value.toLowerCase();
+        document.querySelectorAll('#pantry-categories .category').forEach(category => {
+            let hasVisibleItems = false;
+            category.querySelectorAll('.pantry-item').forEach(item => {
+                const itemText = item.querySelector('.pantry-item-main span').textContent.toLowerCase();
+                if (itemText.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                    hasVisibleItems = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+    
+            if (hasVisibleItems) {
+                category.style.display = 'block';
+            } else {
+                category.style.display = 'none';
+            }
+        });
     });
 
     shoppingSearchInput.addEventListener('input', (e) => {
-        filterItems(e.target.value, document.querySelectorAll('#shopping-list .shopping-item'));
-    });
-
-    function filterItems(searchText, items) {
-        const searchTerm = searchText.toLowerCase();
-        items.forEach(item => {
-            const itemSpan = item.querySelector('span');
-            if (itemSpan) {
-                const itemText = itemSpan.textContent.toLowerCase().trim();
-                item.style.display = itemText.includes(searchTerm) ? 'flex' : 'none';
+        const searchTerm = e.target.value.toLowerCase();
+        document.querySelectorAll('#shopping-list .store-group').forEach(storeGroup => {
+            let hasVisibleItems = false;
+            storeGroup.querySelectorAll('.shopping-item').forEach(item => {
+                const itemText = item.querySelector('span').textContent.toLowerCase();
+                if (itemText.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                    hasVisibleItems = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+    
+            if (hasVisibleItems) {
+                storeGroup.style.display = 'block';
             } else {
-                item.style.display = 'none';
+                storeGroup.style.display = 'none';
             }
         });
-    }
-
+    });
 
 
     pantryTab.addEventListener('click', () => {
@@ -859,17 +1132,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     window.addEventListener('click', (event) => {
-        if (event.target == storeModal) {
-            storeModal.style.display = "none";
-        }
-        if (event.target == editItemModal) {
-            editItemModal.style.display = 'none';
-        }
-        if (event.target == addPantryItemModal) {
-            addPantryItemModal.style.display = 'none';
-        }
-        if (event.target == messageModal) {
-            messageModal.style.display = 'none';
+        if (event.target == storeModal) storeModal.style.display = "none";
+        if (event.target == editItemModal) editItemModal.style.display = 'none';
+        if (event.target == addPantryItemModal) addPantryItemModal.style.display = 'none';
+        if (event.target == messageModal) messageModal.style.display = 'none';
+        
+        if (!event.target.closest('.pantry-item')) {
+            closeSwipedItem();
         }
     });
 
@@ -988,27 +1257,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     pantryCategoriesContainer.addEventListener('click', (event) => {
         const target = event.target;
-        const itemElement = target.closest('.pantry-item');
-        if (!itemElement) return;
+        const button = target.closest('button');
+        if (!button) return;
 
-        const categoryName = itemElement.dataset.categoryName;
-        const itemIndex = parseInt(itemElement.dataset.itemIndex);
+        const categoryName = button.dataset.categoryName;
+        const itemIndex = parseInt(button.dataset.itemIndex);
 
-
-        if (target.closest('.delete-item-btn')) {
+        if (button.classList.contains('delete-item-btn')) {
             deleteItem(categoryName, itemIndex);
-        } else if (target.closest('.duplicate-item-btn')) {
+        } else if (button.classList.contains('duplicate-item-btn')) {
             duplicateItem(categoryName, itemIndex);
-        } else if (target.closest('.edit-item-btn')) {
-            const itemName = pantryData.find(cat => cat.name === categoryName).items[itemIndex];
-            editItemNameInput.value = itemName;
+        } else if (button.classList.contains('edit-item-btn')) {
+            const item = pantryData.find(cat => cat.name === categoryName).items[itemIndex];
+            const editItemStoreSelect = document.getElementById('edit-item-store-select');
+            editItemNameInput.value = item.name;
+            editItemUrlInput.value = item.url || '';
+            editItemImageInput.value = item.image || '';
+            editItemStockInput.value = item.stock;
+            editItemMinInput.value = item.min;
+            editItemMinUnitInput.value = item.minUnit;
+            editItemPriceInput.value = item.price > 0 ? item.price : '';
             populateEditCategorySelect();
             editItemCategorySelect.value = categoryName;
+            populateAllStoreSelects();
+            editItemStoreSelect.value = item.defaultStore || '';
             editItemModal.style.display = 'block';
             currentEditItem = { categoryName: categoryName, itemIndex: itemIndex };
         }
     });
 
+    pantryCategoriesContainer.addEventListener('change', (event) => {
+        const target = event.target;
+        if (target.classList.contains('stock-input')) {
+            const categoryName = target.dataset.categoryName;
+            const itemIndex = parseInt(target.dataset.itemIndex, 10);
+            const newStock = parseFloat(target.value) || 0;
+            updateStock(categoryName, itemIndex, newStock);
+        }
+    });
 
 
     closeEditModalButton.addEventListener('click', () => {
@@ -1023,11 +1309,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveItemButton.addEventListener('click', () => {
         if (currentEditItem) {
+            const editItemStoreSelect = document.getElementById('edit-item-store-select');
             const newItemName = editItemNameInput.value.trim();
             const newCategoryName = editItemCategorySelect.value;
+            const newStock = parseFloat(editItemStockInput.value) || 0;
+            const newMin = parseFloat(editItemMinInput.value) || 0;
+            const newMinUnit = editItemMinUnitInput.value.trim() || 'units';
+            const newDefaultStore = editItemStoreSelect.value;
+            const newUrl = editItemUrlInput.value.trim();
+            const newImage = editItemImageInput.value.trim();
+            const newPrice = parseFloat(editItemPriceInput.value) || 0;
 
             if (newItemName && newCategoryName) {
-                saveEditedItem(currentEditItem.categoryName, currentEditItem.itemIndex, newItemName, newCategoryName);
+                const newItemData = {name: newItemName, stock: newStock, min: newMin, minUnit: newMinUnit, defaultStore: newDefaultStore, url: newUrl, price: newPrice, image: newImage};
+                saveEditedItem(currentEditItem.categoryName, currentEditItem.itemIndex, newCategoryName, newItemData);
                 editItemModal.style.display = 'none';
                 currentEditItem = null;
             } else {
@@ -1079,17 +1374,30 @@ document.addEventListener('DOMContentLoaded', () => {
             if (messageModal.style.display === 'block') {
                 messageModal.style.display = 'none';
             }
+            closeSwipedItem();
         } else if (event.key === 'Enter') {
             if (addPantryItemModal.style.display === 'block') {
                 addPantryItem();
             }
             if (editItemModal.style.display === 'block' && currentEditItem) {
-                const newItemName = editItemNameInput.value.trim();
-                const newCategoryName = editItemCategorySelect.value;
-                if (newItemName && newCategoryName) {
-                    saveEditedItem(currentEditItem.categoryName, currentEditItem.itemIndex, newItemName, newCategoryName);
-                    editItemModal.style.display = 'none';
-                    currentEditItem = null;
+                 if (currentEditItem) {
+                    const newItemName = editItemNameInput.value.trim();
+                    const newCategoryName = editItemCategorySelect.value;
+                    const newStock = parseFloat(editItemStockInput.value) || 0;
+                    const newMin = parseFloat(editItemMinInput.value) || 0;
+                    const newMinUnit = editItemMinUnitInput.value.trim() || 'units';
+                    const editItemStoreSelect = document.getElementById('edit-item-store-select');
+                    const newDefaultStore = editItemStoreSelect.value;
+                    const newUrl = editItemUrlInput.value.trim();
+                    const newImage = editItemImageInput.value.trim();
+                    const newPrice = parseFloat(editItemPriceInput.value) || 0;
+
+                    if (newItemName && newCategoryName) {
+                        const newItemData = {name: newItemName, stock: newStock, min: newMin, minUnit: newMinUnit, defaultStore: newDefaultStore, url: newUrl, price: newPrice, image: newImage };
+                        saveEditedItem(currentEditItem.categoryName, currentEditItem.itemIndex, newCategoryName, newItemData);
+                        editItemModal.style.display = 'none';
+                        currentEditItem = null;
+                    }
                 }
             }
             if (messageModal.style.display === 'block') {
@@ -1102,9 +1410,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initial Load ---
     loadData();
-
-    // Render items on initial load
-    renderPantryCategories();
 
     // Set initial active tab to Pantry
     pantryTab.classList.add('active');
