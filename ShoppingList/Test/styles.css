@@ -98,7 +98,7 @@ body {
 }
 
 .drop-indicator {
-    border-top: 4px dashed #007aff !important;
+    border-top: 1px solid #666666 !important;
 }
 
 
@@ -391,7 +391,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     padding: 12px;
     background-color: #f9f9f9;
     position: relative;
@@ -404,6 +404,14 @@ body {
     transform: translateX(-150px);
 }
 
+.pantry-item-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0; /* Prevents the image from shrinking */
+}
+
 .pantry-item-main {
     flex-grow: 1;
     display: flex;
@@ -414,6 +422,16 @@ body {
 .pantry-item-main small {
     font-size: 0.8em;
     color: #888;
+}
+
+.pantry-item-main small a {
+    color: #007aff;
+    text-decoration: none;
+    margin-left: 5px;
+}
+
+.pantry-item-main small a:hover {
+    text-decoration: underline;
 }
 
 .stock-input {
