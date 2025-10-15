@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minutes to Hours</title>
-    <link rel="icon" type="image/x-icon" href="https://i.postimg.cc/3RkpGK84/time-converter.png">
+    <link rel="icon" type="image/x-icon" href="favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <!-- Corrected math.js CDN version for global 'math' object -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/7.0.0/math.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* CSS styles */
+        /* Base styles */
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #282c34;
@@ -17,8 +20,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         .container {
@@ -27,23 +32,56 @@
             border-radius: 10px;
             text-align: center;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            width: 400px;
+            max-width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
-        h1 {
+        /* Removed h1 specific styling as h1 is removed */
+        h2, h3 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            color: #61dafb;
+            color: #4a4f5b;
+        }
+
+        /* Total Result section (moved to top) */
+        .total-result {
+            padding-top: 0.5rem;
+        }
+
+        .result {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #61dafb;
+            margin-top: 0.5rem;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #4a4f5b;
+            margin: 1rem 0;
+        }
+
+        /* Input Group for adding tasks */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
             margin-bottom: 1.5rem;
         }
 
         .input-container {
             position: relative;
-            margin-bottom: 1rem;
             width: 100%;
         }
 
         input {
             font-family: 'Poppins', sans-serif;
             font-size: 1rem;
-            padding: 1.5rem 1rem;
+            padding: 0.8rem 1rem;
             width: 100%;
             box-sizing: border-box;
             border: none;
@@ -57,9 +95,10 @@
             box-shadow: 0 0 0 2px #61dafb;
         }
 
-        .convert-btn {
+        /* Buttons */
+        .add-task-btn, .remove-task-btn, .download-btn {
             width: 100%;
-            padding: 0.5rem;
+            padding: 0.8rem;
             background-color: #61dafb;
             color: #FFF;
             border: none;
@@ -68,30 +107,113 @@
             font-size: 1rem;
             cursor: pointer;
             transition: background-color 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        .convert-btn:hover {
+        .add-task-btn:hover {
             background-color: #4fa8c7;
         }
 
-        .convert-btn i {
+        .add-task-btn i, .download-btn i {
             margin-right: 0.5rem;
         }
 
-        .result {
-            font-size: 40px;
-            font-weight: 600;
-            margin-top: 1rem;
+        .remove-task-btn {
+            background-color: #f33b6f;
+            width: auto;
+            padding: 0.4rem 0.6rem; /* Adjusted padding for icon */
+            font-size: 1.1rem; /* Larger icon */
+            margin-left: 10px;
+            flex-shrink: 0;
+            display: inline-flex; /* Use inline-flex to center icon */
+            justify-content: center;
+            align-items: center;
         }
 
+        .remove-task-btn:hover {
+            background-color: #d12e5a;
+        }
+
+        /* Task list display */
+        .task-list {
+            background-color: #3a3f4b;
+            border-radius: 5px;
+            text-align: left;
+            max-height: 250px;
+            overflow-y: auto;
+            /* Scrollbar styling for WebKit browsers */
+            scrollbar-width: thin; /* Firefox */
+            scrollbar-color: #61dafb #3a3f4b; /* Firefox scrollbar color thumb track */
+        }
+
+        .task-list::-webkit-scrollbar {
+            width: 8px; /* Width of the scrollbar */
+        }
+
+        .task-list::-webkit-scrollbar-track {
+            background: #3a3f4b; /* Color of the scrollbar track */
+            border-radius: 10px;
+        }
+
+        .task-list::-webkit-scrollbar-thumb {
+            background-color: #61dafb; /* Color of the scrollbar thumb */
+            border-radius: 10px;
+            border: 2px solid #3a3f4b; /* Border around the thumb to make it appear slimmer/less visible */
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #4a4f5b;
+            padding: 0.7rem 1rem;
+            border-bottom: 1px solid #3a3f4b;
+            transition: background-color 0.2s ease-in-out;
+            cursor: grab;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-item-details {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            word-break: break-word;
+            margin-right: 10px;
+        }
+
+        .task-item-name {
+            font-weight: 600;
+            color: #FFF;
+        }
+
+        .task-item-time {
+            font-size: 0.9em;
+            color: #bbb;
+        }
+
+        .no-tasks-message {
+            padding: 1rem;
+            color: #aaa;
+            font-style: italic;
+            text-align: center;
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Tooltip */
         .tooltip {
             position: relative;
-            display: inline-block;
+            display: block;
         }
 
         .tooltip .tooltiptext {
             visibility: hidden;
-            width: 200px;
+            width: 280px;
             background-color: #555;
             color: #fff;
             text-align: center;
@@ -99,11 +221,12 @@
             padding: 5px;
             position: absolute;
             z-index: 1;
-            bottom: 125%;
+            bottom: 110%;
             left: 50%;
-            margin-left: -100px;
+            transform: translateX(-50%);
             opacity: 0;
             transition: opacity 0.3s;
+            font-size: 0.9em;
         }
 
         .tooltip:hover .tooltiptext {
@@ -111,63 +234,161 @@
             opacity: 1;
         }
 
+        /* Message popup */
+        .message-popup {
+            position: fixed;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            animation: fadeInOut 3s forwards;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translate(-50%, -20px); }
+            10% { opacity: 1; transform: translate(-50%, 0); }
+            90% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -20px); }
+        }
+
+        /* Dragging styles */
+        .dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .drag-placeholder {
+            height: 3px;
+            background-color: #61dafb;
+            margin: 5px 0;
+            border-radius: 2px;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .download-btn {
+            background-color: #555;
+        }
+
+        .download-btn:hover {
+            background-color: #666;
+        }
+
         /* Responsive design */
         @media (max-width: 480px) {
             .container {
+                width: 95%;
+                padding: 1rem;
+            }
+            input {
+                padding: 0.6rem 0.8rem;
+            }
+            .add-task-btn, .download-btn {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+            .result {
+                font-size: 2rem;
+            }
+            .tooltip .tooltiptext {
                 width: 90%;
-                padding: 1.5rem;
+                bottom: 105%;
+            }
+            .task-item {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 0.5rem 0.8rem;
+            }
+            .task-item-details {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+            .remove-task-btn {
+                width: 100%;
+                margin-left: 0;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Minutes to Hours</h1>
-        <div class="input-container tooltip">
-            <input type="text" id="minutesInput" placeholder="Insert minutes" aria-label="Enter minutes or arithmetic expression">
-            <span class="tooltiptext">Example: 10+10-15</span>
+    <div class="container" id="captureArea">
+        <!-- Total Result section -->
+        <div class="total-result">
+            <h3>Total Time</h3>
+            <div class="result" id="totalResult" aria-live="polite">0 Hrs 0 min</div>
         </div>
-        <button class="convert-btn" onclick="convertMinutes()" aria-label="Convert minutes to hours">
-            <i class="fa-solid fa-clock"></i> Convert
-        </button>
-        <div class="result" id="result" aria-live="polite"></div>
+
+        <hr>
+
+        <div class="input-group">
+            <input type="text" id="taskNameInput" placeholder="Task Name" aria-label="Enter task name">
+            <div class="input-container tooltip">
+                <input type="text" id="taskDurationInput" placeholder="Duration (e.g., 90, 1.5h, 60+30)" aria-label="Enter duration in minutes or hours">
+            </div>
+            <button class="add-task-btn" onclick="addTask()" aria-label="Add task">
+                <i class="fa-solid fa-plus"></i> Add Task
+            </button>
+        </div>
+
+        <h2>Current Tasks</h2>
+        <!-- Message for when no tasks are added -->
+        <div id="noTasksMessage" class="no-tasks-message">No tasks added yet.</div>
+        <div id="taskList" class="task-list">
+            <!-- Tasks will be dynamically added here -->
+        </div>
+
+        <div class="download-buttons">
+            <button class="download-btn" onclick="downloadAsImage()" aria-label="Download as Image">
+                <i class="fa-solid fa-file-image"></i> Download Image
+            </button>
+            <button class="download-btn" onclick="downloadAsPDF()" aria-label="Download as PDF">
+                <i class="fa-solid fa-file-pdf"></i> Download PDF
+            </button>
+        </div>
     </div>
 
     <script>
-        // JavaScript functionality
-        function convertMinutes() {
-            const input = document.getElementById('minutesInput').value;
-            const resultElement = document.getElementById('result');
+        window.jsPDF = window.jspdf.jsPDF;
+        let tasks = []; // Array to store task objects
+        let nextTaskId = 0; // Simple ID counter for tasks
 
-            try {
-                // Use math.js to evaluate the input expression
-                const totalMinutes = math.evaluate(input);
-
-                if (isNaN(totalMinutes)) {
-                    throw new Error('Invalid input');
-                }
-
-                const hours = Math.floor(totalMinutes / 60);
-                const minutes = Math.round(totalMinutes % 60);
-
-                resultElement.textContent = `${hours} Hrs ${minutes} min`;
-            } catch (error) {
-                showMessage('Please enter a valid number or expression');
+        // Helper to convert total minutes into H:M format
+        function convertMinutesToHrsMin(totalMinutes) {
+            if (isNaN(totalMinutes) || totalMinutes < 0) {
+                return 'Invalid Time';
             }
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = Math.round(totalMinutes % 60); 
+            return `${hours} Hrs ${minutes} min`;
         }
 
-        function showMessage(message) {
+        // Displays a temporary message popup (success or error)
+        function showMessage(message, type = 'error') {
+            let existingPopup = document.querySelector('.message-popup');
+            if (existingPopup) {
+                existingPopup.remove();
+            }
+
             const popup = document.createElement('div');
             popup.textContent = message;
-            popup.style.position = 'fixed';
-            popup.style.top = '10%';
-            popup.style.left = '50%';
-            popup.style.transform = 'translateX(-50%)';
-            popup.style.backgroundColor = '#f33b6f';
-            popup.style.color = 'white';
-            popup.style.padding = '15px';
-            popup.style.borderRadius = '5px';
-            popup.style.zIndex = '1000';
+            popup.classList.add('message-popup');
+            
+            if (type === 'success') {
+                popup.style.backgroundColor = '#4CAF50';
+            } else { 
+                popup.style.backgroundColor = '#f33b6f';
+            }
 
             document.body.appendChild(popup);
 
@@ -176,11 +397,288 @@
             }, 3000);
         }
 
-        // Event listener for Enter key
-        document.getElementById('minutesInput').addEventListener('keyup', function(event) {
-            if (event.key === 'Enter') {
-                convertMinutes();
+        // Parses duration input, handling 'h' for hours and arithmetic expressions
+        function parseDurationInput(input) {
+            let totalMinutes = 0;
+            const originalInput = input.trim();
+
+            if (!originalInput) {
+                return NaN;
             }
+
+            try {
+                if (originalInput.toLowerCase().endsWith('h')) {
+                    const hoursStr = originalInput.slice(0, -1);
+                    const hours = math.evaluate(hoursStr);
+                    if (isNaN(hours)) {
+                        throw new Error('Invalid hours expression');
+                    }
+                    totalMinutes = hours * 60;
+                } else {
+                    totalMinutes = math.evaluate(originalInput);
+                }
+
+                if (isNaN(totalMinutes) || totalMinutes < 0) {
+                    throw new Error('Calculated value is not a valid positive number');
+                }
+                return totalMinutes;
+            } catch (error) {
+                console.error("Error parsing duration:", error);
+                return NaN;
+            }
+        }
+
+        // Adds a new task to the list
+        function addTask() {
+            const taskNameInput = document.getElementById('taskNameInput');
+            const taskDurationInput = document.getElementById('taskDurationInput');
+
+            const name = taskNameInput.value.trim();
+            const durationStr = taskDurationInput.value.trim();
+
+            if (!name) {
+                showMessage('Please enter a task name.');
+                return;
+            }
+
+            const parsedMinutes = parseDurationInput(durationStr);
+
+            if (isNaN(parsedMinutes)) {
+                showMessage('Please enter a valid duration (e.g., 90, 1.5h, 60+30).');
+                return;
+            }
+
+            const newTask = {
+                id: nextTaskId++,
+                name: name,
+                totalMinutes: parsedMinutes
+            };
+
+            tasks.push(newTask);
+            renderTasks();
+            updateTotalTime();
+
+            taskNameInput.value = '';
+            taskDurationInput.value = '';
+            taskNameInput.focus(); 
+        }
+
+        // Removes a task by its unique ID
+        function removeTask(id) {
+            const initialTaskCount = tasks.length;
+            tasks = tasks.filter(task => task.id !== id);
+
+            if (tasks.length < initialTaskCount) {
+                renderTasks();
+                updateTotalTime();
+                showMessage('Task removed.', 'success');
+            }
+        }
+
+        // --- DRAG AND DROP LOGIC ---
+        let draggedElement = null; 
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.task-item:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2; 
+                if (offset < 0 && offset > closest.offset) { 
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: -Infinity, element: null }).element;
+        }
+
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            e.dataTransfer.setData('text/plain', e.target.dataset.taskId); 
+            e.dataTransfer.effectAllowed = 'move';
+
+            setTimeout(() => {
+                if (draggedElement) {
+                    draggedElement.classList.add('dragging');
+                }
+            }, 0); 
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault(); 
+            e.dataTransfer.dropEffect = 'move';
+            
+            const taskListElement = document.getElementById('taskList');
+            
+            const existingPlaceholder = taskListElement.querySelector('.drag-placeholder');
+            if (existingPlaceholder) {
+                existingPlaceholder.remove();
+            }
+
+            const afterElement = getDragAfterElement(taskListElement, e.clientY);
+            
+            const placeholder = document.createElement('div');
+            placeholder.classList.add('drag-placeholder');
+
+            if (afterElement == null) { 
+                taskListElement.appendChild(placeholder);
+            } else { 
+                taskListElement.insertBefore(placeholder, afterElement);
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const taskListElement = document.getElementById('taskList');
+            const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
+            
+            const existingPlaceholder = taskListElement.querySelector('.drag-placeholder');
+            if (existingPlaceholder) {
+                existingPlaceholder.remove();
+            }
+
+            const draggedTaskIndex = tasks.findIndex(task => task.id === draggedId);
+            if (draggedTaskIndex === -1) return;
+
+            const draggedTask = tasks[draggedTaskIndex];
+            tasks.splice(draggedTaskIndex, 1); 
+
+            const afterElement = getDragAfterElement(taskListElement, e.clientY);
+            let newIndex;
+
+            if (afterElement) {
+                const afterTaskId = parseInt(afterElement.dataset.taskId);
+                newIndex = tasks.findIndex(task => task.id === afterTaskId);
+            } else {
+                newIndex = tasks.length; 
+            }
+
+            tasks.splice(newIndex, 0, draggedTask);
+
+            renderTasks();
+            updateTotalTime();
+            showMessage('Task reordered!', 'success');
+        }
+
+        function handleDragEnd(e) {
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+                draggedElement = null;
+            }
+            const existingPlaceholder = document.querySelector('.drag-placeholder');
+            if (existingPlaceholder) {
+                existingPlaceholder.remove();
+            }
+        }
+
+        // Renders the list of tasks in the UI
+        function renderTasks() {
+            const taskListElement = document.getElementById('taskList');
+            const noTasksMessage = document.getElementById('noTasksMessage');
+
+            taskListElement.innerHTML = ''; 
+
+            if (tasks.length === 0) {
+                noTasksMessage.style.display = 'block';
+            } else {
+                noTasksMessage.style.display = 'none';
+                
+                tasks.forEach(task => {
+                    const taskItem = document.createElement('div');
+                    taskItem.classList.add('task-item');
+                    taskItem.setAttribute('draggable', 'true');
+                    taskItem.dataset.taskId = task.id;
+
+                    taskItem.addEventListener('dragstart', handleDragStart);
+                    taskItem.addEventListener('dragend', handleDragEnd);
+
+                    taskItem.setAttribute('aria-labelledby', `task-name-${task.id}`);
+                    taskItem.setAttribute('aria-describedby', `task-time-${task.id}`);
+
+                    const taskDetails = document.createElement('div');
+                    taskDetails.classList.add('task-item-details');
+
+                    const taskName = document.createElement('div');
+                    taskName.classList.add('task-item-name');
+                    taskName.id = `task-name-${task.id}`;
+                    taskName.textContent = task.name;
+
+                    const taskTime = document.createElement('div');
+                    taskTime.classList.add('task-item-time');
+                    taskTime.id = `task-time-${task.id}`;
+                    taskTime.textContent = convertMinutesToHrsMin(task.totalMinutes);
+
+                    taskDetails.appendChild(taskName);
+                    taskDetails.appendChild(taskTime);
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.classList.add('remove-task-btn');
+                    removeBtn.innerHTML = '<i class="fa-regular fa-trash-can"></i>';
+                    removeBtn.setAttribute('aria-label', `Remove task ${task.name}`);
+                    removeBtn.onclick = () => removeTask(task.id);
+
+                    taskItem.appendChild(taskDetails);
+                    taskItem.appendChild(removeBtn);
+                    taskListElement.appendChild(taskItem);
+                });
+            }
+        }
+
+        // Calculates and updates the cumulative total time display
+        function updateTotalTime() {
+            const totalResultElement = document.getElementById('totalResult');
+            const totalMinutesSum = tasks.reduce((sum, task) => sum + task.totalMinutes, 0);
+            totalResultElement.textContent = convertMinutesToHrsMin(totalMinutesSum);
+        }
+
+        function downloadAsImage() {
+            const captureArea = document.getElementById('captureArea');
+            html2canvas(captureArea).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'tasks.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+
+        function downloadAsPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const totalTime = document.getElementById('totalResult').textContent;
+
+            doc.text("Total Time", 10, 10);
+            doc.text(totalTime, 10, 20);
+            doc.text("Current Tasks", 10, 40);
+            let y = 50;
+            tasks.forEach(task => {
+                doc.text(`${task.name}: ${convertMinutesToHrsMin(task.totalMinutes)}`, 10, y);
+                y += 10;
+            });
+            doc.save('tasks.pdf');
+        }
+
+        // Event listener for 'Enter' key to add a task
+        document.getElementById('taskDurationInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                addTask();
+            }
+        });
+
+        // Event listener for 'Enter' key to move focus
+        document.getElementById('taskNameInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                document.getElementById('taskDurationInput').focus();
+            }
+        });
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTasks();
+            updateTotalTime();
+
+            const taskListElement = document.getElementById('taskList');
+            taskListElement.addEventListener('dragover', handleDragOver);
+            taskListElement.addEventListener('drop', handleDrop);
         });
     </script>
 </body>
